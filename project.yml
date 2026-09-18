@@ -53,7 +53,11 @@ packages:
     # (`init(title:help:control:)`) no longer existed in the framework the host
     # embedded. Source compiled either way — only linking told the truth. That
     # is the failure mode this comment exists to prevent recurring.
-    revision: 7bb80e9f1d01d468949f6c776dd111c9d6b8d690
+    # c315110: generation 11 -- Basic Mode (`AinkradAppModes`,
+    # `AinkradBasicShell`). NOT releasable until an installed host is
+    # generation 11: a plugin pinned ahead of the host that loads it dies at
+    # `Bundle.load()` with no diagnostic.
+    revision: c315110481461b1b2f14c129401b72d25107aab3
 targets:
   QuestFeature:
     type: library.static
