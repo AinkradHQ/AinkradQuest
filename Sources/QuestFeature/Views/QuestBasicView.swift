@@ -22,7 +22,14 @@ struct QuestBasicView: View {
         AinkradBasicShell(icon: "checklist", title: "Quest", subtitle: subtitle) {
             TodaySurface(store: store,
                          report: { toasts.show($0, status: $1) },
-                         onOpen: { _ in setPaneMode(.advanced) })
+                         // Escalates AND carries the target. An earlier version
+                         // dropped the item: `QuestShell` is rebuilt on the
+                         // switch, so `surface` starts `.landing` — you tapped
+                         // an item and arrived nowhere near it.
+                         onOpen: { item in
+                             store.pendingOpenItem = item
+                             setPaneMode(.advanced)
+                         })
         }
     }
 
