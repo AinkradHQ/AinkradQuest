@@ -37,6 +37,30 @@ struct QuestBasicModeTests {
                 "basic mode must not open a project document")
     }
 
+    @Test("An item opened in basic survives the escalation to advanced")
+    func openedItemCarriesAcrossTheModeSwitch() {
+        // The bug this guards, which shipped once: basic dropped the item on
+        // the claim advanced would re-derive it. It does not — `QuestShell` is
+        // rebuilt on the switch, so `surface` starts `.landing` — so tapping an
+        // item in Today landed you nowhere near it.
+        let store = makeProjectStore(InMemoryProjectRepository())
+        let project = store.createProject(name: "Ainkrad", kind: .general, actor: .user)
+        let item = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
+                                         title: "Ship basic mode", statusID: "todo", actor: .user)
+
+        store.pendingOpenItem = item
+        #expect(store.takePendingOpenItem()?.id == item.id, "advanced must find the target")
+        #expect(store.takePendingOpenItem() == nil, "and it is consumed exactly once")
+    }
+
+    @Test("With nothing pending, advanced opens on its own landing surface")
+    func noPendingItemOpensClean() {
+        // The other half: a plain switch to advanced must not jump somewhere
+        // out of a stale request.
+        let store = makeProjectStore(InMemoryProjectRepository())
+        #expect(store.takePendingOpenItem() == nil)
+    }
+
     @Test("Basic mode reads the project count without opening the projects")
     func subtitleIsIndexOnly() {
         // The count comes from the index, which is already loaded — reading it

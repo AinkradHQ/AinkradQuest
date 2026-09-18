@@ -218,6 +218,13 @@ struct QuestShellContent: View {
             }
         }
         .background(shortcuts)
+        // Land on an item opened from BASIC mode. Basic shows Today and has no
+        // list, so it escalates and leaves the target on the store — the one
+        // object both modes share. Without this the switch dropped it and you
+        // arrived on the landing surface instead.
+        .onAppear {
+            if let pending = store.takePendingOpenItem() { open(pending) }
+        }
     }
 
     @ViewBuilder private var content: some View {
