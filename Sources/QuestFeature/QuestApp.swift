@@ -112,7 +112,8 @@ public struct QuestApp: AinkradApp {
     }
 
     public static func makeSettingsView(host: HostServices) -> AnyView {
-        AnyView(QuestSettingsView(presentation: host.presentation, documents: host.documents,
+        AnyView(QuestSettingsView(presentation: host.presentation, modeControl: host.mode,
+                                  documents: host.documents,
                                   store: store(for: host), registry: registry(for: host),
                                   snapshots: snapshotStore(for: host)))
     }
