@@ -111,6 +111,15 @@ public struct QuestApp: AinkradApp {
         makeRootView(host: host, mode: .advanced)
     }
 
+    @MainActor private static let settingsStates = PluginInstanceStorage<QuestSettingsState>()
+
+    public static func settingsCatalog(host: HostServices) -> SettingsPage? {
+        QuestSettingsCatalog.page(.init(
+            documents: host.documents, store: store(for: host), registry: registry(for: host),
+            snapshots: snapshotStore(for: host),
+            state: settingsStates.value(for: instance(of: host)) { QuestSettingsState() }))
+    }
+
     public static func makeSettingsView(host: HostServices) -> AnyView {
         AnyView(QuestSettingsView(presentation: host.presentation, modeControl: host.mode,
                                   documents: host.documents,
@@ -169,6 +178,7 @@ extension QuestApp: AinkradAppTeardown {
         stores.remove(instance)
         overlays.remove(instance)
         registries.remove(instance)
+        settingsStates.remove(instance)
         // BLOCKER 1: this is the closest thing to an "app is going away" hook
         // a plugin gets — there is no separate process-termination signal
         // exposed to `AinkradApp`/`HostServices`. It fires when the HOST
