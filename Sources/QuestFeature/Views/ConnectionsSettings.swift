@@ -454,7 +454,7 @@ struct ConnectionEditor: View {
     }
 }
 
-private extension ProviderKind {
+extension ProviderKind {
     /// The label the settings picker shows. Local to this file because it is a
     /// UI string, not part of the persisted vocabulary.
     var settingsTitle: String {
