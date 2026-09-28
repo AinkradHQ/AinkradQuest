@@ -1,4 +1,4 @@
-DEVELOPER_DIR ?= /Applications/Xcode-beta.app/Contents/Developer
+DEVELOPER_DIR ?= /Applications/Xcode.app/Contents/Developer
 export DEVELOPER_DIR
 DEV_PLUGINS := $(HOME)/Library/Application Support/com.ainkrad.devhost/Documents/DevPlugins
 
