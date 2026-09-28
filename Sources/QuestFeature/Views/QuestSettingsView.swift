@@ -20,6 +20,7 @@ import AinkradAppKit
 /// second control that can silently diverge from this one.
 struct QuestSettingsView: View {
     let presentation: any PluginPresentationControl
+    let modeControl: any PluginModeControl
     let documents: PluginDocumentStore
     @Bindable var store: ProjectStore
     @Bindable var registry: ConnectionRegistry
@@ -28,7 +29,6 @@ struct QuestSettingsView: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
-    @State private var mode: PluginPresentation
     /// Bumped whenever a grant is changed, to re-read `FolderBookmark.grant`.
     /// The grants themselves are NOT cached in `@State` seeded from `init`:
     /// this initializer re-runs on every parent re-render, and anything it
@@ -69,14 +69,16 @@ struct QuestSettingsView: View {
     /// from `rootRow` itself, for the identical clipping reason.
     @State private var pendingClearVaultGrant = false
 
-    init(presentation: any PluginPresentationControl, documents: PluginDocumentStore,
+    init(presentation: any PluginPresentationControl,
+         modeControl: any PluginModeControl,
+         documents: PluginDocumentStore,
          store: ProjectStore, registry: ConnectionRegistry, snapshots: SnapshotStore) {
         self.presentation = presentation
+        self.modeControl = modeControl
         self.documents = documents
         self.store = store
         self.registry = registry
         self.snapshots = snapshots
-        _mode = State(initialValue: presentation.current)
     }
 
     var body: some View {
@@ -85,11 +87,11 @@ struct QuestSettingsView: View {
                 VStack(alignment: .leading, spacing: AinkradSpacing.md) {
                     caption("Quest tracks projects and work items per workspace.")
 
-                    AinkradFormRow(title: "Presentation", help: "Applies the next time Quest opens.") {
-                        AinkradSegmentedPicker(items: [PluginPresentation.pane, .overlay], selection: $mode) {
-                            $0 == .pane ? "Pane" : "Overlay"
-                        }
-                    }
+                    // Shared rows, not a local copy: "Open as" and "Open in"
+                    // must read the same and sit in the same place everywhere.
+                    AinkradSurfaceSettings(appName: "Quest",
+                                           presentation: presentation,
+                                           mode: modeControl)
                 }
             }
 
@@ -144,7 +146,6 @@ struct QuestSettingsView: View {
             }
         }
         .padding(AinkradSpacing.lg)
-        .onChange(of: mode) { _, newValue in presentation.set(newValue) }
         // Presented HERE, at the settings root, rather than inside
         // `ConnectionsSettings` — see `connectionDraft`'s doc comment. This
         // gives the overlay the full settings surface as its bounds instead

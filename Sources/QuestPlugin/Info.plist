@@ -12,5 +12,6 @@
     <key>AinkradIconSymbol</key><string>checklist</string>
     <key>AinkradAPIVersion</key><integer>8</integer>
     <key>AinkradPresentation</key><string>pane</string>
+    <key>AinkradMode</key><string>basic</string>
 </dict>
 </plist>

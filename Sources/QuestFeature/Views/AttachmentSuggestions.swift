@@ -78,7 +78,7 @@ enum AttachmentSuggestions {
 /// Deliberately saves NO per-attachment bookmark. An attachment is a recorded
 /// path, not an open capability: nothing in Quest resolves an attached folder
 /// today, and the cross-app resolution spike
-/// (`docs/findings/2026-07-30-cross-app-resolution.md`) shows the resolver that
+/// (workspace `Docs/Audits/2026-07-30-cross-app-resolution.md`) shows the resolver that
 /// would need scoped access does not exist and is not next. Writing a bookmark
 /// blob per attachment that nothing ever reads is pure leak — every removal
 /// path (UI, `remove_link` over MCP, project delete) would have to remember to

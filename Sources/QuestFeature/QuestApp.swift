@@ -108,12 +108,12 @@ public struct QuestApp: AinkradApp {
     }
 
     public static func makeRootView(host: HostServices) -> AnyView {
-        AnyView(QuestShell(store: store(for: host), registry: registry(for: host),
-                          theme: host.theme, documents: host.documents))
+        makeRootView(host: host, mode: .advanced)
     }
 
     public static func makeSettingsView(host: HostServices) -> AnyView {
-        AnyView(QuestSettingsView(presentation: host.presentation, documents: host.documents,
+        AnyView(QuestSettingsView(presentation: host.presentation, modeControl: host.mode,
+                                  documents: host.documents,
                                   store: store(for: host), registry: registry(for: host),
                                   snapshots: snapshotStore(for: host)))
     }
@@ -181,5 +181,27 @@ extension QuestApp: AinkradAppTeardown {
         // captures this instance's store. Leaving it registered would let the
         // assistant keep driving an app the user shut.
         mcpServers.remove(instance)
+    }
+}
+
+/// Generation 11: Quest's basic mode is Today, without the shell around it.
+extension QuestApp: AinkradAppModes {
+    public static func makeRootView(host: HostServices, mode: PluginMode) -> AnyView {
+        switch mode {
+        case .basic:
+            // `.ainkradToastHost()` is applied here as well as in QuestShell:
+            // Today reports failures through the toast center, and without a
+            // host those reports go nowhere — a failed capture would look like
+            // a successful one.
+            return AnyView(QuestBasicView(store: store(for: host)).ainkradToastHost())
+        case .advanced:
+            return AnyView(QuestShell(store: store(for: host), registry: registry(for: host),
+                                      theme: host.theme, documents: host.documents))
+        // Resilient enum: fall back to advanced, never to a stripped view for a
+        // mode this build does not understand.
+        @unknown default:
+            return AnyView(QuestShell(store: store(for: host), registry: registry(for: host),
+                                      theme: host.theme, documents: host.documents))
+        }
     }
 }

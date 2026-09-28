@@ -45,6 +45,24 @@ public final class ProjectStore {
     /// `internal` for the same reason as `documents`.
     var deletedProjectIDs: Set<UUID> = []
 
+    /// An item opened from BASIC mode, waiting for advanced to land on it.
+    ///
+    /// Basic shows Today and has no list to open an item in, so it escalates.
+    /// Without this the escalation LOST the target: `QuestShell` is built fresh
+    /// on the mode switch, so `surface` starts `.landing` and `selectedProject`
+    /// starts nil — you tapped an item and arrived nowhere near it.
+    ///
+    /// Lives on the store because the store is the one thing both modes share;
+    /// the two root views do not outlive each other.
+    public var pendingOpenItem: WorkItem?
+
+    /// Takes and clears the pending item, if any. Consumed exactly once, by
+    /// whichever shell mounts next.
+    public func takePendingOpenItem() -> WorkItem? {
+        defer { pendingOpenItem = nil }
+        return pendingOpenItem
+    }
+
     /// `overlay` must be the ONE instance the rest of the app shares for this
     /// repository — `QuestApp` builds it once per host and passes it here.
     public init(repository: any ProjectRepository, overlay: OverlayStore) {
