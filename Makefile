@@ -1,6 +1,10 @@
 DEVELOPER_DIR ?= /Applications/Xcode.app/Contents/Developer
 export DEVELOPER_DIR
-DEV_PLUGINS := $(HOME)/Library/Application Support/com.ainkrad.devhost/Documents/DevPlugins
+# The sideload directory is `<cacheRoot>/DevPlugins`, and cacheRoot is
+# `~/Library/Application Support/<bundle-id>/Cache` (AinkradHome.defaultCacheRoot).
+# Deliberately NOT under the user's Ainkrad Home: dev plugin bundles are
+# rebuildable machine state, not vault data.
+DEV_PLUGINS := $(HOME)/Library/Application Support/com.ainkrad.app/Cache/DevPlugins
 
 generate: ; xcodegen generate
 build: generate ; xcodebuild -scheme QuestPlugin -configuration Debug -derivedDataPath build -destination 'platform=macOS' build
