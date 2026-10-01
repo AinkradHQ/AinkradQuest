@@ -41,6 +41,10 @@ public enum QuestError: Error, Equatable, Sendable {
     /// would let the next save overwrite the corrupt bytes with nothing,
     /// destroying whatever might have been salvageable by hand.
     case overlayCorrupt(UUID)
+    /// A document failed to decode and its bytes could not be verified aside,
+    /// so the original was kept and saving is turned off for that key — the
+    /// matching save throws this rather than overwriting the only copy.
+    case documentCorrupt(String)
 
     public var message: String {
         switch self {
@@ -85,6 +89,8 @@ public enum QuestError: Error, Equatable, Sendable {
             "'\(key)' is not a valid local project key (expected a UUID)."
         case .overlayCorrupt(let id):
             "The overlay for project \(id) could not be read and was not overwritten."
+        case .documentCorrupt(let key):
+            "The document '\(key)' could not be read and was not overwritten."
         }
     }
 }
