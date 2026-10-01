@@ -11,6 +11,10 @@ public final class DocumentProjectRepository: ProjectRepository {
     private let documents: PluginDocumentStore
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    /// Keys whose corrupt bytes could not be verified aside. Their originals
+    /// are the only copy of the user's data, so the matching save throws
+    /// `QuestError.documentCorrupt` rather than overwriting them.
+    private var blockedKeys: Set<String> = []
 
     static let indexKey = "project-index"
     static func projectKey(_ id: UUID) -> String { "project-\(id.uuidString)" }
@@ -22,27 +26,31 @@ public final class DocumentProjectRepository: ProjectRepository {
     }
 
     public func loadIndex() -> [ProjectSummary] {
-        guard let data = documents.data(forKey: Self.indexKey),
-              let summaries = try? decoder.decode([ProjectSummary].self, from: data)
-        else { return [] }
-        return summaries
+        let loaded = loadDocument(
+            [ProjectSummary].self, key: Self.indexKey, from: documents, decoder: decoder, app: "quest")
+        noteBlocked(loaded.canSave, key: Self.indexKey)
+        return loaded.value ?? []
     }
 
     public func saveIndex(_ summaries: [ProjectSummary]) throws {
+        try throwIfBlocked(Self.indexKey)
         let data = try encoder.encode(summaries)
         documents.setData(data, forKey: Self.indexKey)
     }
 
     public func loadProject(_ id: UUID) -> ProjectDocument? {
-        guard let data = documents.data(forKey: Self.projectKey(id)),
-              let document = try? decoder.decode(ProjectDocument.self, from: data)
-        else { return nil }
-        return document
+        let key = Self.projectKey(id)
+        let loaded = loadDocument(
+            ProjectDocument.self, key: key, from: documents, decoder: decoder, app: "quest")
+        noteBlocked(loaded.canSave, key: key)
+        return loaded.value
     }
 
     public func saveProject(_ document: ProjectDocument) throws {
+        let key = Self.projectKey(document.project.id)
+        try throwIfBlocked(key)
         let data = try encoder.encode(document)
-        documents.setData(data, forKey: Self.projectKey(document.project.id))
+        documents.setData(data, forKey: key)
     }
 
     public func removeProject(_ id: UUID) {
@@ -52,13 +60,14 @@ public final class DocumentProjectRepository: ProjectRepository {
     static let connectionsKey = "connection-index"
 
     public func loadConnections() -> [Connection] {
-        guard let data = documents.data(forKey: Self.connectionsKey),
-              let connections = try? decoder.decode([Connection].self, from: data)
-        else { return [] }
-        return connections
+        let loaded = loadDocument(
+            [Connection].self, key: Self.connectionsKey, from: documents, decoder: decoder, app: "quest")
+        noteBlocked(loaded.canSave, key: Self.connectionsKey)
+        return loaded.value ?? []
     }
 
     public func saveConnections(_ connections: [Connection]) throws {
+        try throwIfBlocked(Self.connectionsKey)
         let data = try encoder.encode(connections)
         documents.setData(data, forKey: Self.connectionsKey)
     }
@@ -85,24 +94,34 @@ public final class DocumentProjectRepository: ProjectRepository {
     }
 
     public func loadLinkMap() -> LinkMap {
-        guard let data = documents.data(forKey: Self.linkMapKey),
-              let map = try? decoder.decode(LinkMap.self, from: data)
-        else { return LinkMap() }
-        return map
+        let loaded = loadDocument(
+            LinkMap.self, key: Self.linkMapKey, from: documents, decoder: decoder, app: "quest")
+        noteBlocked(loaded.canSave, key: Self.linkMapKey)
+        return loaded.value ?? LinkMap()
     }
 
     public func saveLinkMap(_ map: LinkMap) throws {
+        try throwIfBlocked(Self.linkMapKey)
         documents.setData(try encoder.encode(map), forKey: Self.linkMapKey)
     }
 
     public func loadHubConfig() -> HubConfig {
-        guard let data = documents.data(forKey: Self.hubConfigKey),
-              let config = try? decoder.decode(HubConfig.self, from: data)
-        else { return HubConfig() }
-        return config
+        let loaded = loadDocument(
+            HubConfig.self, key: Self.hubConfigKey, from: documents, decoder: decoder, app: "quest")
+        noteBlocked(loaded.canSave, key: Self.hubConfigKey)
+        return loaded.value ?? HubConfig()
     }
 
     public func saveHubConfig(_ config: HubConfig) throws {
+        try throwIfBlocked(Self.hubConfigKey)
         documents.setData(try encoder.encode(config), forKey: Self.hubConfigKey)
+    }
+
+    private func noteBlocked(_ canSave: Bool, key: String) {
+        if !canSave { blockedKeys.insert(key) }
+    }
+
+    private func throwIfBlocked(_ key: String) throws {
+        if blockedKeys.contains(key) { throw QuestError.documentCorrupt(key) }
     }
 }
