@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// One-line capture syntax: `bug: title #label #label !!`. Deliberately tiny —
 /// anything richer belongs in the editor, and a capture box you have to think
@@ -45,9 +45,10 @@ public enum QuickCapture {
             }
         }
 
-        return Parsed(title: titleWords.joined(separator: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-                      type: type, labels: labels, priority: priority)
+        return Parsed(
+            title: titleWords.joined(separator: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+            type: type, labels: labels, priority: priority)
     }
 }
 
@@ -97,8 +98,9 @@ struct TodaySurface: View {
 
         for project in store.activeProjects {
             guard let document = store.openProject(project.id) else { continue }
-            let partial = TodayInbox.build(items: store.items(in: project.id),
-                                           scheme: document.project.statusScheme, now: Date())
+            let partial = TodayInbox.build(
+                items: store.items(in: project.id),
+                scheme: document.project.statusScheme, now: Date())
             overdue += partial.overdue
             dueToday += partial.dueToday
             active += partial.active
@@ -110,8 +112,9 @@ struct TodaySurface: View {
         active.sort { $0.priority > $1.priority }
         recent = Array(recent.sorted { $0.updatedAt > $1.updatedAt }.prefix(10))
 
-        return TodayInbox.Result(overdue: overdue, dueToday: dueToday,
-                                 active: active, recent: recent)
+        return TodayInbox.Result(
+            overdue: overdue, dueToday: dueToday,
+            active: active, recent: recent)
     }
 
     var body: some View {
@@ -121,11 +124,13 @@ struct TodaySurface: View {
                 if isEmpty {
                     // Previously every bucket being empty rendered as a capture
                     // box above blank space, with nothing explaining why.
-                    AinkradEmptyState(icon: "checkmark.circle",
-                                      title: "Nothing needs you",
-                                      message: "No overdue, due-today, or in-progress work "
-                                             + "across your active projects.")
-                        .padding(.top, AinkradSpacing.xl)
+                    AinkradEmptyState(
+                        icon: "checkmark.circle",
+                        title: "Nothing needs you",
+                        message: "No overdue, due-today, or in-progress work "
+                            + "across your active projects."
+                    )
+                    .padding(.top, AinkradSpacing.xl)
                 } else {
                     section("Overdue", result.overdue, status: .danger)
                     section("Due today", result.dueToday, status: .warning)
@@ -140,7 +145,8 @@ struct TodaySurface: View {
             // Re-seed only when the current target has left the active list, so
             // a deliberate choice survives unrelated mutations.
             if !store.activeProjects.contains(where: { $0.id == captureTargetID }),
-               let first = store.activeProjects.first?.id {
+                let first = store.activeProjects.first?.id
+            {
                 captureTargetID = first
             }
         }
@@ -153,11 +159,15 @@ struct TodaySurface: View {
 
     private var capture: some View {
         HStack(spacing: AinkradSpacing.sm) {
-            AinkradTextField(text: $captureText,
-                             placeholder: "Capture — e.g. bug: auth loops #backend !!")
-                .onSubmit(submitCapture)
-            AinkradSelect(items: store.activeProjects.map(\.id),
-                          selection: $captureTargetID) { id in
+            AinkradTextField(
+                text: $captureText,
+                placeholder: "Capture — e.g. bug: auth loops #backend !!"
+            )
+            .onSubmit(submitCapture)
+            AinkradSelect(
+                items: store.activeProjects.map(\.id),
+                selection: $captureTargetID
+            ) { id in
                 // Also the zero-active-projects label: nothing matches, so the
                 // trigger reads "Project", as the old Picker's placeholder tag did.
                 store.activeProjects.first { $0.id == id }?.name ?? "Project"
@@ -178,8 +188,10 @@ struct TodaySurface: View {
         // Selection first, then the first active project — an unseeded target
         // still captures somewhere. With no active project at all there is
         // nowhere to put it, and silence would look like a dropped capture.
-        guard let projectID = store.activeProjects.first(where: { $0.id == captureTargetID })?.id
-            ?? store.activeProjects.first?.id else {
+        guard
+            let projectID = store.activeProjects.first(where: { $0.id == captureTargetID })?.id
+                ?? store.activeProjects.first?.id
+        else {
             report("Create a project before capturing.", .danger)
             return
         }
@@ -192,15 +204,17 @@ struct TodaySurface: View {
         // store rejects an unknown status, so a hardcoded id would turn every
         // submit into a danger toast with no way to capture into that project.
         guard let document = store.openProject(projectID),
-              let statusID = document.project.statusScheme.openingStatusID else {
+            let statusID = document.project.statusScheme.openingStatusID
+        else {
             report("This project has no statuses to open an item in.", .danger)
             return
         }
         do {
             let epicID = try inboxEpic(in: projectID, statusID: statusID)
-            var item = try store.createItem(projectID: projectID, parentID: epicID,
-                                            type: parsed.type, title: parsed.title,
-                                            statusID: statusID, actor: .user)
+            var item = try store.createItem(
+                projectID: projectID, parentID: epicID,
+                type: parsed.type, title: parsed.title,
+                statusID: statusID, actor: .user)
             item.labels = parsed.labels
             item.priority = parsed.priority
             try store.updateItem(item, actor: .user)
@@ -226,9 +240,11 @@ struct TodaySurface: View {
             try store.setRole(.inbox, on: id)
             return id
         case .create:
-            return try store.createItem(projectID: projectID, parentID: nil, type: .epic,
-                                        title: InboxEpic.title, statusID: statusID,
-                                        actor: .user, role: .inbox).id
+            return try store.createItem(
+                projectID: projectID, parentID: nil, type: .epic,
+                title: InboxEpic.title, statusID: statusID,
+                actor: .user, role: .inbox
+            ).id
         }
     }
 
@@ -238,20 +254,22 @@ struct TodaySurface: View {
             AinkradSectionFrame(title: title) {
                 LazyVStack(spacing: AinkradSpacing.xs) {
                     ForEach(items) { item in
-                        AinkradListRow(onTap: { onOpen(item) },
-                                       leading: {
-                                           AinkradIconGlyph(systemName: icon(for: item.type))
-                                       },
-                                       title: item.title,
-                                       trailing: {
-                                           HStack(spacing: AinkradSpacing.xs) {
-                                               AinkradBadge(text: item.type.rawValue,
-                                                            status: status)
-                                               ForEach(item.labels, id: \.self) {
-                                                   AinkradChip(label: $0)
-                                               }
-                                           }
-                                       })
+                        AinkradListRow(
+                            onTap: { onOpen(item) },
+                            leading: {
+                                AinkradIconGlyph(systemName: icon(for: item.type))
+                            },
+                            title: item.title,
+                            trailing: {
+                                HStack(spacing: AinkradSpacing.xs) {
+                                    AinkradBadge(
+                                        text: item.type.rawValue,
+                                        status: status)
+                                    ForEach(item.labels, id: \.self) {
+                                        AinkradChip(label: $0)
+                                    }
+                                }
+                            })
                     }
                 }
             }

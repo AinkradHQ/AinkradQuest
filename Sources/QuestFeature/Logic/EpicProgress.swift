@@ -10,8 +10,10 @@ public enum EpicProgress {
 
     /// Counts every live descendant, not just direct children: a subtask is
     /// real work, and an epic whose progress ignored them would lie.
-    public static func rollup(epicID: UUID, in items: [WorkItem],
-                              scheme: StatusScheme) -> Progress {
+    public static func rollup(
+        epicID: UUID, in items: [WorkItem],
+        scheme: StatusScheme
+    ) -> Progress {
         let descendants = HierarchyRules.descendants(of: epicID, in: items)
             .filter { !$0.isDeleted }
         let done = descendants.filter { scheme.isDone($0.statusID) }.count

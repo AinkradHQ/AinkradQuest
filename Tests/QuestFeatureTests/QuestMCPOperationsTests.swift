@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -13,8 +14,9 @@ struct QuestMCPOperationsTests {
     @Test("create_project creates a project and reports its id")
     func createProject() async {
         let (operations, store) = makeSubject()
-        let result = await operations.run(operation: "createProject",
-                                          arguments: #"{"name":"Optimus","kind":"software"}"#)
+        let result = await operations.run(
+            operation: "createProject",
+            arguments: #"{"name":"Optimus","kind":"software"}"#)
         #expect(!result.isError)
         #expect(store.projects.map(\.name) == ["Optimus"])
         #expect(result.text.contains(store.projects[0].id.uuidString))
@@ -31,16 +33,21 @@ struct QuestMCPOperationsTests {
     func depthRefused() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "E", statusID: "todo", actor: .user)
-        let item = try! store.createItem(projectID: project.id, parentID: epic.id, type: .task,
-                                         title: "I", statusID: "todo", actor: .user)
-        let subtask = try! store.createItem(projectID: project.id, parentID: item.id, type: .task,
-                                            title: "S", statusID: "todo", actor: .user)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
+        let item = try! store.createItem(
+            projectID: project.id, parentID: epic.id, type: .task,
+            title: "I", statusID: "todo", actor: .user)
+        let subtask = try! store.createItem(
+            projectID: project.id, parentID: item.id, type: .task,
+            title: "S", statusID: "todo", actor: .user)
 
         let result = await operations.run(
             operation: "createItem",
-            arguments: #"{"projectID":"\#(project.id.uuidString)","parentID":"\#(subtask.id.uuidString)","type":"task","title":"X","statusID":"todo"}"#)
+            arguments:
+                #"{"projectID":"\#(project.id.uuidString)","parentID":"\#(subtask.id.uuidString)","type":"task","title":"X","statusID":"todo"}"#
+        )
 
         #expect(result.isError)
         #expect(result.text.contains("capped at 3 levels"))
@@ -65,10 +72,12 @@ struct QuestMCPOperationsTests {
     func search() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "Auth epic", statusID: "todo", actor: .user)
-        _ = try! store.createItem(projectID: project.id, parentID: epic.id, type: .bug,
-                                  title: "Refresh token loops", statusID: "todo", actor: .user)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Auth epic", statusID: "todo", actor: .user)
+        _ = try! store.createItem(
+            projectID: project.id, parentID: epic.id, type: .bug,
+            title: "Refresh token loops", statusID: "todo", actor: .user)
 
         let result = await operations.run(operation: "searchItems", arguments: #"{"query":"refresh"}"#)
         #expect(!result.isError)
@@ -80,11 +89,13 @@ struct QuestMCPOperationsTests {
     func softDelete() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "E", statusID: "todo", actor: .user)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
 
-        _ = await operations.run(operation: "deleteItem",
-                                 arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
+        _ = await operations.run(
+            operation: "deleteItem",
+            arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
 
         #expect(store.items(in: project.id).isEmpty)
         #expect(store.allItems(in: project.id).count == 1)
@@ -94,15 +105,18 @@ struct QuestMCPOperationsTests {
     func getItemReportsTrash() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "E", statusID: "todo", actor: .user)
-        let live = await operations.run(operation: "getItem",
-                                        arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
+        let live = await operations.run(
+            operation: "getItem",
+            arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
         #expect(!live.text.contains("IN TRASH"))
 
         try! store.deleteItem(epic.id, actor: .user)
-        let trashed = await operations.run(operation: "getItem",
-                                           arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
+        let trashed = await operations.run(
+            operation: "getItem",
+            arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
         #expect(!trashed.isError)
         #expect(trashed.text.contains("IN TRASH"))
     }
@@ -111,8 +125,9 @@ struct QuestMCPOperationsTests {
     func mutationsRefuseTrashedItem() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "E", statusID: "todo", actor: .user)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
         try! store.deleteItem(epic.id, actor: .user)
         let id = epic.id.uuidString
 
@@ -134,12 +149,14 @@ struct QuestMCPOperationsTests {
     func mutationsRefuseItemInTrashedProject() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "E", statusID: "todo", actor: .user)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
         try! store.deleteProject(project.id, actor: .user)
 
-        let result = await operations.run(operation: "setStatus",
-                                          arguments: #"{"itemID":"\#(epic.id.uuidString)","statusID":"done"}"#)
+        let result = await operations.run(
+            operation: "setStatus",
+            arguments: #"{"itemID":"\#(epic.id.uuidString)","statusID":"done"}"#)
         #expect(result.isError)
         #expect(result.text.lowercased().contains("trash"))
         #expect(store.allItems(in: project.id)[0].statusID == "todo")
@@ -149,13 +166,16 @@ struct QuestMCPOperationsTests {
     func createItemRefusesTrashedParent() async {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "E", statusID: "todo", actor: .user)
+        let epic = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
         try! store.deleteItem(epic.id, actor: .user)
 
         let result = await operations.run(
             operation: "createItem",
-            arguments: #"{"projectID":"\#(project.id.uuidString)","parentID":"\#(epic.id.uuidString)","type":"task","title":"Orphan"}"#)
+            arguments:
+                #"{"projectID":"\#(project.id.uuidString)","parentID":"\#(epic.id.uuidString)","type":"task","title":"Orphan"}"#
+        )
 
         #expect(result.isError)
         #expect(result.text.lowercased().contains("trash"))
@@ -201,14 +221,16 @@ struct QuestMCPOperationsTests {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
 
-        let live = await operations.run(operation: "getProject",
-                                        arguments: #"{"projectID":"\#(project.id.uuidString)"}"#)
+        let live = await operations.run(
+            operation: "getProject",
+            arguments: #"{"projectID":"\#(project.id.uuidString)"}"#)
         #expect(!live.isError)
         #expect(!live.text.contains("IN TRASH"))
 
         try! store.deleteProject(project.id, actor: .user)
-        let trashed = await operations.run(operation: "getProject",
-                                           arguments: #"{"projectID":"\#(project.id.uuidString)"}"#)
+        let trashed = await operations.run(
+            operation: "getProject",
+            arguments: #"{"projectID":"\#(project.id.uuidString)"}"#)
         #expect(!trashed.isError)
         #expect(trashed.text.contains("IN TRASH"))
     }
@@ -229,7 +251,8 @@ struct QuestMCPOperationsTests {
 
         let result = await operations.run(
             operation: "addLink",
-            arguments: #"{"projectID":"\#(project.id.uuidString)","scheme":"repo","identifier":"~/Projects/p","label":"p"}"#)
+            arguments:
+                #"{"projectID":"\#(project.id.uuidString)","scheme":"repo","identifier":"~/Projects/p","label":"p"}"#)
 
         #expect(!result.isError)
         #expect(store.openProject(project.id)?.project.links.count == 1)
@@ -242,7 +265,8 @@ struct QuestMCPOperationsTests {
 
         let result = await operations.run(
             operation: "addLink",
-            arguments: #"{"projectID":"\#(project.id.uuidString)","scheme":"branch","identifier":"main","label":"main"}"#)
+            arguments:
+                #"{"projectID":"\#(project.id.uuidString)","scheme":"branch","identifier":"main","label":"main"}"#)
 
         #expect(result.isError)
         #expect(result.text.contains("repo"))
@@ -257,7 +281,8 @@ struct QuestMCPOperationsTests {
 
         let result = await operations.run(
             operation: "addLink",
-            arguments: #"{"projectID":"\#(project.id.uuidString)","scheme":"url","identifier":"https://x.dev","label":"x"}"#)
+            arguments:
+                #"{"projectID":"\#(project.id.uuidString)","scheme":"url","identifier":"https://x.dev","label":"x"}"#)
 
         #expect(result.isError)
         #expect(result.text.lowercased().contains("trash"))
@@ -267,12 +292,14 @@ struct QuestMCPOperationsTests {
     func addItemLink() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "E", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
 
         let result = await operations.run(
             operation: "addLink",
-            arguments: #"{"itemID":"\#(epic.id.uuidString)","scheme":"pr","identifier":"42","label":"PR 42","repo":"quest"}"#)
+            arguments:
+                #"{"itemID":"\#(epic.id.uuidString)","scheme":"pr","identifier":"42","label":"PR 42","repo":"quest"}"#)
 
         #expect(!result.isError)
         #expect(store.items(in: project.id).first?.links.first?.repo == "quest")
@@ -282,8 +309,9 @@ struct QuestMCPOperationsTests {
     @Test("a call naming neither a project nor an item is refused")
     func requiresATarget() async {
         let (operations, _) = makeSubject()
-        let result = await operations.run(operation: "addLink",
-                                          arguments: #"{"scheme":"url","identifier":"https://x.dev"}"#)
+        let result = await operations.run(
+            operation: "addLink",
+            arguments: #"{"scheme":"url","identifier":"https://x.dev"}"#)
         #expect(result.isError)
     }
 
@@ -310,13 +338,16 @@ struct QuestMCPOperationsTests {
         for repo in ["alpha", "beta"] {
             let added = await operations.run(
                 operation: "addLink",
-                arguments: #"{"projectID":"\#(project.id.uuidString)","scheme":"branch","identifier":"main","label":"main","repo":"\#(repo)"}"#)
+                arguments:
+                    #"{"projectID":"\#(project.id.uuidString)","scheme":"branch","identifier":"main","label":"main","repo":"\#(repo)"}"#
+            )
             #expect(!added.isError)
         }
 
         let result = await operations.run(
             operation: "removeLink",
-            arguments: #"{"projectID":"\#(project.id.uuidString)","scheme":"branch","identifier":"main","repo":"beta"}"#)
+            arguments: #"{"projectID":"\#(project.id.uuidString)","scheme":"branch","identifier":"main","repo":"beta"}"#
+        )
 
         #expect(!result.isError)
         // The `repo` argument the tool advertises is now actually honoured when
@@ -327,8 +358,9 @@ struct QuestMCPOperationsTests {
     @Test("link tool errors name the tool the assistant called, not the internal operation")
     func errorNamesTheTool() async {
         let (operations, _) = makeSubject()
-        let result = await operations.run(operation: "addLink",
-                                          arguments: #"{"scheme":"url","identifier":"https://x.dev"}"#)
+        let result = await operations.run(
+            operation: "addLink",
+            arguments: #"{"scheme":"url","identifier":"https://x.dev"}"#)
 
         #expect(result.isError)
         #expect(result.text.contains("add_link"))
@@ -342,7 +374,9 @@ struct QuestMCPOperationsTests {
 
         let result = await operations.run(
             operation: "addLink",
-            arguments: #"{"itemID":"not-a-uuid","projectID":"\#(project.id.uuidString)","scheme":"url","identifier":"https://x.dev"}"#)
+            arguments:
+                #"{"itemID":"not-a-uuid","projectID":"\#(project.id.uuidString)","scheme":"url","identifier":"https://x.dev"}"#
+        )
 
         #expect(result.isError)
         #expect(result.text.contains("itemID"))
@@ -354,12 +388,15 @@ struct QuestMCPOperationsTests {
     func itemIDTakesPrecedence() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "E", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
 
         let result = await operations.run(
             operation: "addLink",
-            arguments: #"{"itemID":"\#(epic.id.uuidString)","projectID":"\#(project.id.uuidString)","scheme":"url","identifier":"https://x.dev"}"#)
+            arguments:
+                #"{"itemID":"\#(epic.id.uuidString)","projectID":"\#(project.id.uuidString)","scheme":"url","identifier":"https://x.dev"}"#
+        )
 
         #expect(!result.isError)
         #expect(store.items(in: project.id).first?.links.count == 1)
@@ -383,17 +420,18 @@ struct QuestMCPOperationsTests {
     func updateScheme() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "E", statusID: "in_review", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "in_review", actor: .user)
 
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[{"id":"todo","name":"Todo","category":"todo","colorToken":"accentPrimary"},
-                         {"id":"done","name":"Done","category":"done","colorToken":"success"}],
-             "reassignments":{"in_review":"todo","backlog":"todo","in_progress":"todo"}}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[{"id":"todo","name":"Todo","category":"todo","colorToken":"accentPrimary"},
+                             {"id":"done","name":"Done","category":"done","colorToken":"success"}],
+                 "reassignments":{"in_review":"todo","backlog":"todo","in_progress":"todo"}}
+                """#)
 
         #expect(!result.isError)
         #expect(store.items(in: project.id).first { $0.id == epic.id }?.statusID == "todo")
@@ -408,9 +446,9 @@ struct QuestMCPOperationsTests {
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[{"id":"todo","name":"Todo","category":"todo","colorToken":"accentPrimary"}]}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[{"id":"todo","name":"Todo","category":"todo","colorToken":"accentPrimary"}]}
+                """#)
 
         #expect(result.isError)
         #expect(result.text.lowercased().contains("done"))
@@ -421,16 +459,17 @@ struct QuestMCPOperationsTests {
     func refusesUnmappedRemoval() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        _ = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                 title: "E", statusID: "in_review", actor: .user)
+        _ = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "in_review", actor: .user)
 
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[{"id":"todo","name":"Todo","category":"todo","colorToken":"accentPrimary"},
-                         {"id":"done","name":"Done","category":"done","colorToken":"success"}]}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[{"id":"todo","name":"Todo","category":"todo","colorToken":"accentPrimary"},
+                             {"id":"done","name":"Done","category":"done","colorToken":"success"}]}
+                """#)
 
         #expect(result.isError)
         #expect(store.openProject(project.id)?.project.statusScheme == .softwareDefault)
@@ -445,9 +484,9 @@ struct QuestMCPOperationsTests {
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[{"id":"done","name":"Done","category":"done","colorToken":"success"}]}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[{"id":"done","name":"Done","category":"done","colorToken":"success"}]}
+                """#)
 
         #expect(result.isError)
         #expect(result.text.lowercased().contains("trash"))
@@ -457,8 +496,9 @@ struct QuestMCPOperationsTests {
     func schemeRefusesUnremovedReassignmentKey() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "E", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
 
         // The full scheme unchanged, plus a reassignment naming a status that
         // survives and a destination that does not exist. Pre-fix this
@@ -471,10 +511,10 @@ struct QuestMCPOperationsTests {
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[\#(statuses)],
-             "reassignments":{"todo":"nonexistent"}}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[\#(statuses)],
+                 "reassignments":{"todo":"nonexistent"}}
+                """#)
 
         #expect(result.isError)
         #expect(store.items(in: project.id).first { $0.id == epic.id }?.statusID == "todo")
@@ -485,8 +525,9 @@ struct QuestMCPOperationsTests {
     func schemeRefusesBulkMoveViaReassignment() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "E", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
         let statuses = StatusScheme.softwareDefault.statuses.map {
             #"{"id":"\#($0.id)","name":"\#($0.name)","category":"\#($0.category.rawValue)","colorToken":"\#($0.colorToken)"}"#
         }.joined(separator: ",")
@@ -494,10 +535,10 @@ struct QuestMCPOperationsTests {
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[\#(statuses)],
-             "reassignments":{"todo":"done"}}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[\#(statuses)],
+                 "reassignments":{"todo":"done"}}
+                """#)
 
         #expect(result.isError)
         #expect(store.items(in: project.id).first { $0.id == epic.id }?.statusID == "todo")
@@ -511,9 +552,9 @@ struct QuestMCPOperationsTests {
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)",
-             "statuses":[{"id":"done","name":"Done","category":"done","colorToken":"banana"}]}
-            """#)
+                {"projectID":"\#(project.id.uuidString)",
+                 "statuses":[{"id":"done","name":"Done","category":"done","colorToken":"banana"}]}
+                """#)
 
         #expect(result.isError)
         #expect(result.text.contains("banana"))
@@ -533,8 +574,8 @@ struct QuestMCPOperationsTests {
         let result = await operations.run(
             operation: "updateStatusScheme",
             arguments: #"""
-            {"projectID":"\#(project.id.uuidString)","statuses":[\#(statuses)]}
-            """#)
+                {"projectID":"\#(project.id.uuidString)","statuses":[\#(statuses)]}
+                """#)
 
         #expect(!result.isError)
         #expect(result.text.lowercased().contains("nothing"))
@@ -564,21 +605,29 @@ struct QuestMCPOperationsTests {
         // build a plan, change the scheme, then apply the stale plan.
         var proposedA = StatusScheme.softwareDefault
         proposedA.statuses.removeAll { $0.id == "in_review" }
-        let stale = try #require(SchemePlan.plan(current: .softwareDefault, proposed: proposedA,
-                                                reassignments: [:], items: []).value)
+        let stale = try #require(
+            SchemePlan.plan(
+                current: .softwareDefault, proposed: proposedA,
+                reassignments: [:], items: []
+            ).value)
 
         var proposedB = StatusScheme.softwareDefault
-        proposedB.statuses[0] = Status(id: "backlog", name: "Icebox",
-                                       category: .todo, colorToken: "muted")
-        let fresh = try #require(SchemePlan.plan(current: .softwareDefault, proposed: proposedB,
-                                                reassignments: [:], items: []).value)
+        proposedB.statuses[0] = Status(
+            id: "backlog", name: "Icebox",
+            category: .todo, colorToken: "muted")
+        let fresh = try #require(
+            SchemePlan.plan(
+                current: .softwareDefault, proposed: proposedB,
+                reassignments: [:], items: []
+            ).value)
         try store.applyScheme(fresh, to: project.id, actor: .agent)
 
         #expect(throws: QuestError.schemeChangedUnderneath) {
             try store.applyScheme(stale, to: project.id, actor: .agent)
         }
         // And the message the tool would relay names the recovery action.
-        #expect(QuestError.schemeChangedUnderneath.message.lowercased().contains("apply again")
+        #expect(
+            QuestError.schemeChangedUnderneath.message.lowercased().contains("apply again")
                 || QuestError.schemeChangedUnderneath.message.lowercased().contains("review"))
     }
 }

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("FolderBookmark")
@@ -23,20 +24,24 @@ struct FolderBookmarkTests {
         do {
             try FolderBookmark.save(folder, forKey: FolderBookmark.projectsRootKey, in: documents)
         } catch {
-            withKnownIssue("""
+            withKnownIssue(
+                """
                 Cannot exercise real security-scoped bookmarks in this test \
                 environment: bookmarkData(options: .withSecurityScope) failed \
                 for a plain temp directory (\(error)). This is expected outside \
                 a sandboxed host with a user-selected URL; production code is \
                 unchanged.
-                """) {
+                """
+            ) {
                 throw error
             }
             return
         }
 
-        let resolved = FolderBookmark.withAccess(forKey: FolderBookmark.projectsRootKey,
-                                                 in: documents) { $0 }
+        let resolved = FolderBookmark.withAccess(
+            forKey: FolderBookmark.projectsRootKey,
+            in: documents
+        ) { $0 }
 
         #expect(resolved?.standardizedFileURL.path == folder.standardizedFileURL.path)
     }
@@ -44,8 +49,10 @@ struct FolderBookmarkTests {
     @Test("no bookmark means withAccess skips the body and returns nil rather than failing")
     func absent() {
         var ran = false
-        let result = FolderBookmark.withAccess(forKey: FolderBookmark.vaultRootKey,
-                                               in: MemoryDocumentStore()) { _ -> Int in
+        let result = FolderBookmark.withAccess(
+            forKey: FolderBookmark.vaultRootKey,
+            in: MemoryDocumentStore()
+        ) { _ -> Int in
             ran = true
             return 1
         }
@@ -59,8 +66,10 @@ struct FolderBookmarkTests {
         documents.setData(Data("not a bookmark".utf8), forKey: FolderBookmark.vaultRootKey)
 
         var ran = false
-        let result = FolderBookmark.withAccess(forKey: FolderBookmark.vaultRootKey,
-                                               in: documents) { _ -> Int in
+        let result = FolderBookmark.withAccess(
+            forKey: FolderBookmark.vaultRootKey,
+            in: documents
+        ) { _ -> Int in
             ran = true
             return 1
         }
@@ -71,10 +80,12 @@ struct FolderBookmarkTests {
     @Test("the two roots use distinct keys")
     func distinctKeys() {
         #expect(FolderBookmark.projectsRootKey != FolderBookmark.vaultRootKey)
-        #expect(FolderBookmark.displayPathKey(forKey: FolderBookmark.projectsRootKey)
+        #expect(
+            FolderBookmark.displayPathKey(forKey: FolderBookmark.projectsRootKey)
                 != FolderBookmark.displayPathKey(forKey: FolderBookmark.vaultRootKey))
         // A display path must never collide with a bookmark blob's own key.
-        #expect(FolderBookmark.displayPathKey(forKey: FolderBookmark.projectsRootKey)
+        #expect(
+            FolderBookmark.displayPathKey(forKey: FolderBookmark.projectsRootKey)
                 != FolderBookmark.projectsRootKey)
     }
 
@@ -93,8 +104,10 @@ struct FolderBookmarkTests {
 
     /// A folder plus a saved bookmark for it, or `nil` when this environment
     /// cannot mint security-scoped bookmark data at all (see `roundTrip()`).
-    private func makeBookmarkedFolder(key: String,
-                                      in documents: MemoryDocumentStore) throws -> URL? {
+    private func makeBookmarkedFolder(
+        key: String,
+        in documents: MemoryDocumentStore
+    ) throws -> URL? {
         let folder = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("quest-access-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -112,13 +125,18 @@ struct FolderBookmarkTests {
     @Test("withAccess runs the body once, with the bookmarked folder, and returns its value")
     func withAccessRunsBody() throws {
         let documents = MemoryDocumentStore()
-        guard let folder = try makeBookmarkedFolder(key: FolderBookmark.projectsRootKey,
-                                                    in: documents) else { return }
+        guard
+            let folder = try makeBookmarkedFolder(
+                key: FolderBookmark.projectsRootKey,
+                in: documents)
+        else { return }
         defer { try? FileManager.default.removeItem(at: folder) }
 
         var calls = 0
-        let result = FolderBookmark.withAccess(forKey: FolderBookmark.projectsRootKey,
-                                               in: documents) { url -> String in
+        let result = FolderBookmark.withAccess(
+            forKey: FolderBookmark.projectsRootKey,
+            in: documents
+        ) { url -> String in
             calls += 1
             return url.standardizedFileURL.path
         }
@@ -132,14 +150,19 @@ struct FolderBookmarkTests {
     @Test("a throwing body propagates, and the folder stays usable afterwards")
     func withAccessReleasesOnThrow() throws {
         let documents = MemoryDocumentStore()
-        guard let folder = try makeBookmarkedFolder(key: FolderBookmark.projectsRootKey,
-                                                    in: documents) else { return }
+        guard
+            let folder = try makeBookmarkedFolder(
+                key: FolderBookmark.projectsRootKey,
+                in: documents)
+        else { return }
         defer { try? FileManager.default.removeItem(at: folder) }
 
         // The error comes back out — nothing is swallowed...
         #expect(throws: BodyFailure.self) {
-            _ = try FolderBookmark.withAccess(forKey: FolderBookmark.projectsRootKey,
-                                              in: documents) { _ -> Int in
+            _ = try FolderBookmark.withAccess(
+                forKey: FolderBookmark.projectsRootKey,
+                in: documents
+            ) { _ -> Int in
                 throw BodyFailure()
             }
         }
@@ -148,8 +171,10 @@ struct FolderBookmarkTests {
         // grant usable. An unbalanced acquisition is what eventually breaks
         // this under a sandbox; balanced reuse never does.
         for _ in 0..<50 {
-            let path = FolderBookmark.withAccess(forKey: FolderBookmark.projectsRootKey,
-                                                 in: documents) { $0.standardizedFileURL.path }
+            let path = FolderBookmark.withAccess(
+                forKey: FolderBookmark.projectsRootKey,
+                in: documents
+            ) { $0.standardizedFileURL.path }
             #expect(path == folder.standardizedFileURL.path)
         }
     }
@@ -158,20 +183,24 @@ struct FolderBookmarkTests {
 
     @Test("no bookmark reads as notGranted")
     func grantNotSet() {
-        #expect(FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey,
-                                     in: MemoryDocumentStore()) == .notGranted)
+        #expect(
+            FolderBookmark.grant(
+                forKey: FolderBookmark.vaultRootKey,
+                in: MemoryDocumentStore()) == .notGranted)
     }
 
     @Test("a bookmark that no longer resolves reads as unresolvable, not notGranted")
     func grantUnresolvable() {
         let documents = MemoryDocumentStore()
         documents.setData(Data("not a bookmark".utf8), forKey: FolderBookmark.vaultRootKey)
-        documents.setData(Data("/somewhere/gone".utf8),
-                          forKey: FolderBookmark.displayPathKey(forKey: FolderBookmark.vaultRootKey))
+        documents.setData(
+            Data("/somewhere/gone".utf8),
+            forKey: FolderBookmark.displayPathKey(forKey: FolderBookmark.vaultRootKey))
 
         // Distinct from `.notGranted`: that distinction is what gives the user
         // an explanation and a reachable Clear button for a broken grant.
-        #expect(FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey, in: documents)
+        #expect(
+            FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey, in: documents)
                 == .unresolvable(path: "/somewhere/gone"))
     }
 
@@ -180,7 +209,8 @@ struct FolderBookmarkTests {
         let documents = MemoryDocumentStore()
         documents.setData(Data("not a bookmark".utf8), forKey: FolderBookmark.vaultRootKey)
 
-        #expect(FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey, in: documents)
+        #expect(
+            FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey, in: documents)
                 == .unresolvable(path: nil))
     }
 
@@ -188,21 +218,27 @@ struct FolderBookmarkTests {
     func clearRemovesDisplayPath() {
         let documents = MemoryDocumentStore()
         documents.setData(Data("x".utf8), forKey: FolderBookmark.vaultRootKey)
-        documents.setData(Data("/p".utf8),
-                          forKey: FolderBookmark.displayPathKey(forKey: FolderBookmark.vaultRootKey))
+        documents.setData(
+            Data("/p".utf8),
+            forKey: FolderBookmark.displayPathKey(forKey: FolderBookmark.vaultRootKey))
 
         FolderBookmark.clear(forKey: FolderBookmark.vaultRootKey, in: documents)
 
         #expect(documents.keys.isEmpty)
-        #expect(FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey,
-                                     in: documents) == .notGranted)
+        #expect(
+            FolderBookmark.grant(
+                forKey: FolderBookmark.vaultRootKey,
+                in: documents) == .notGranted)
     }
 
     @Test("saving a grant records a display path, so settings can render without acquiring access")
     func saveRecordsDisplayPath() throws {
         let documents = MemoryDocumentStore()
-        guard let folder = try makeBookmarkedFolder(key: FolderBookmark.vaultRootKey,
-                                                    in: documents) else { return }
+        guard
+            let folder = try makeBookmarkedFolder(
+                key: FolderBookmark.vaultRootKey,
+                in: documents)
+        else { return }
         defer { try? FileManager.default.removeItem(at: folder) }
 
         let stored = documents.data(
@@ -211,8 +247,10 @@ struct FolderBookmarkTests {
 
         // Resolvable right now, so it must read as granted rather than
         // unresolvable — and getting here acquired no scoped resource.
-        if case .granted(let path) = FolderBookmark.grant(forKey: FolderBookmark.vaultRootKey,
-                                                          in: documents) {
+        if case .granted(let path) = FolderBookmark.grant(
+            forKey: FolderBookmark.vaultRootKey,
+            in: documents)
+        {
             #expect(path.hasSuffix(folder.lastPathComponent))
         } else {
             Issue.record("a freshly saved, still-present folder must read as .granted")

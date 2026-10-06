@@ -17,8 +17,10 @@ public struct AttachedRepo: Codable, Sendable, Identifiable, Hashable {
 
     public var slug: String { "\(owner)/\(name)" }
 
-    public init(id: UUID, connectionID: UUID, owner: String, name: String,
-                localPath: String? = nil) {
+    public init(
+        id: UUID, connectionID: UUID, owner: String, name: String,
+        localPath: String? = nil
+    ) {
         self.id = id
         self.connectionID = connectionID
         self.owner = owner

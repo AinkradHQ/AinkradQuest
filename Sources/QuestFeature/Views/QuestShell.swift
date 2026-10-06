@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// Quest's root — deliberately a thin wrapper whose only job is to mount the
 /// toast host ABOVE the view that reads it.
@@ -20,8 +20,10 @@ public struct QuestShell: View {
     let theme: HostTheme
     let documents: PluginDocumentStore
 
-    public init(store: ProjectStore, registry: ConnectionRegistry, theme: HostTheme,
-               documents: PluginDocumentStore) {
+    public init(
+        store: ProjectStore, registry: ConnectionRegistry, theme: HostTheme,
+        documents: PluginDocumentStore
+    ) {
         self.store = store
         self.registry = registry
         self.theme = theme
@@ -96,8 +98,9 @@ struct QuestShellContent: View {
     }
 
     private var globalActionsEnabled: Bool {
-        GlobalActionGate.globalActionsEnabled(surfaceModalOpen: surfaceModalOpen,
-                                              shellModalOpen: shellModalOpen)
+        GlobalActionGate.globalActionsEnabled(
+            surfaceModalOpen: surfaceModalOpen,
+            shellModalOpen: shellModalOpen)
     }
 
     var body: some View {
@@ -105,19 +108,21 @@ struct QuestShellContent: View {
         // the header, banner and body are flush by design, and the smallest
         // token (`AinkradSpacing.xs`) would open a seam between them.
         VStack(spacing: 0) {
-            QuestHeader(surface: $surface,
-                        searchText: $searchText,
-                        searchFocused: $searchFocused,
-                        showsSwitcher: SurfaceVisibility.showsSwitcher(hasProject: hasProject),
-                        showsSettings: SurfaceVisibility
-                            .showsProjectSettings(hasProject: hasProject),
-                        // `.ainkradModal` is a scoped overlay, so the header is
-                        // NOT covered by an editor a surface put up — without
-                        // this it stays clickable behind the scrim.
-                        actionsEnabled: globalActionsEnabled,
-                        onNew: { newItemOrProject() },
-                        onSettings: { settingsProject = selectedProject },
-                        onTrash: { showingTrash = true })
+            QuestHeader(
+                surface: $surface,
+                searchText: $searchText,
+                searchFocused: $searchFocused,
+                showsSwitcher: SurfaceVisibility.showsSwitcher(hasProject: hasProject),
+                showsSettings:
+                    SurfaceVisibility
+                    .showsProjectSettings(hasProject: hasProject),
+                // `.ainkradModal` is a scoped overlay, so the header is
+                // NOT covered by an editor a surface put up — without
+                // this it stays clickable behind the scrim.
+                actionsEnabled: globalActionsEnabled,
+                onNew: { newItemOrProject() },
+                onSettings: { settingsProject = selectedProject },
+                onTrash: { showingTrash = true })
 
             // A failed persist is a standing condition, not an event, so it is
             // a banner rather than a toast — a toast would expire while the
@@ -131,11 +136,13 @@ struct QuestShellContent: View {
             // Also a structural zero: the `Divider()` below is the separation
             // between sidebar and content, so any gap here would float it.
             HStack(spacing: 0) {
-                QuestSidebar(store: store, documents: documents,
-                             selection: $selectedProject, surface: $surface,
-                             settingsProject: $settingsProject,
-                             report: { report($0, status: $1) })
-                    .frame(width: 232)
+                QuestSidebar(
+                    store: store, documents: documents,
+                    selection: $selectedProject, surface: $surface,
+                    settingsProject: $settingsProject,
+                    report: { report($0, status: $1) }
+                )
+                .frame(width: 232)
                 Divider()
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -156,8 +163,10 @@ struct QuestShellContent: View {
         .environment(\.questNewProject, QuestNewProjectAction { showingNewProject = true })
         .environment(\.questSurfaceModal, QuestModalScopeAction { surfaceModalOpen = $0 })
         .ainkradModal(isPresented: $showingNewProject) {
-            NewProjectForm(store: store, documents: documents,
-                           report: { report($0, status: $1) }) { created, suggestions in
+            NewProjectForm(
+                store: store, documents: documents,
+                report: { report($0, status: $1) }
+            ) { created, suggestions in
                 showingNewProject = false
                 selectedProject = created
                 surface = .overview
@@ -165,8 +174,9 @@ struct QuestShellContent: View {
                 // something to offer — the normal (no granted root) case leaves
                 // this nil and shows no picker.
                 if !suggestions.isEmpty {
-                    suggestionState = SuggestionSheetState(projectID: created,
-                                                           suggestions: suggestions)
+                    suggestionState = SuggestionSheetState(
+                        projectID: created,
+                        suggestions: suggestions)
                 }
             }
         }
@@ -175,23 +185,30 @@ struct QuestShellContent: View {
         // overlay, so a picker presented from within the form could never
         // render. The shell outlives the form, so this presenter is still
         // mounted when `suggestionState` is set — one statement earlier, above.
-        .ainkradModal(isPresented: Binding(get: { suggestionState != nil },
-                                           set: { if !$0 { suggestionState = nil } })) {
+        .ainkradModal(
+            isPresented: Binding(
+                get: { suggestionState != nil },
+                set: { if !$0 { suggestionState = nil } })
+        ) {
             if let state = suggestionState {
                 // `.ainkradModal` REUSES its content view across a change of
                 // the underlying item — unlike `.sheet(item:)` — so a second
                 // project's suggestions would otherwise render into the first
                 // picker's `@State`. Keyed like the other item-derived
                 // presentations in this file.
-                AttachmentPicker(store: store, projectID: state.projectID,
-                                 suggestions: state.suggestions,
-                                 report: { report($0, status: $1) }) { suggestionState = nil }
-                    .id(state.projectID)
+                AttachmentPicker(
+                    store: store, projectID: state.projectID,
+                    suggestions: state.suggestions,
+                    report: { report($0, status: $1) }
+                ) { suggestionState = nil }
+                .id(state.projectID)
             }
         }
         .ainkradModal(isPresented: $showingCommands) {
-            QuestCommandMenu(store: store, hasProject: hasProject,
-                             statuses: currentStatuses) { perform($0) }
+            QuestCommandMenu(
+                store: store, hasProject: hasProject,
+                statuses: currentStatuses
+            ) { perform($0) }
         }
         // `.ainkradModal` injects no `DismissAction`, so — like
         // `ProjectSettingsSheet` below — the shell owns closing this. A
@@ -199,8 +216,9 @@ struct QuestShellContent: View {
         // No `.id(...)` key is needed: the content is not item-derived, it
         // reads the store's trash lists directly.
         .ainkradModal(isPresented: $showingTrash) {
-            TrashView(store: store, report: { report($0, status: $1) },
-                      onClose: { showingTrash = false })
+            TrashView(
+                store: store, report: { report($0, status: $1) },
+                onClose: { showingTrash = false })
         }
         // `ProjectSettingsSheet` no longer reads `@Environment(\.dismiss)` —
         // `.ainkradModal` is an overlay and injects none — so the shell owns
@@ -208,13 +226,18 @@ struct QuestShellContent: View {
         // reused across a change of `settingsProject`; without it, opening a
         // second project's settings would keep the first project's `@State`
         // draft.
-        .ainkradModal(isPresented: Binding(get: { settingsProject != nil },
-                                           set: { if !$0 { settingsProject = nil } })) {
+        .ainkradModal(
+            isPresented: Binding(
+                get: { settingsProject != nil },
+                set: { if !$0 { settingsProject = nil } })
+        ) {
             if let id = settingsProject, let project = store.openProject(id)?.project {
-                ProjectSettingsSheet(store: store, registry: registry, project: project,
-                                     report: { report($0, status: $1) },
-                                     onClose: { settingsProject = nil })
-                    .id(project.id)
+                ProjectSettingsSheet(
+                    store: store, registry: registry, project: project,
+                    report: { report($0, status: $1) },
+                    onClose: { settingsProject = nil }
+                )
+                .id(project.id)
             }
         }
         .background(shortcuts)
@@ -236,22 +259,30 @@ struct QuestShellContent: View {
             case .overview, .list, .board, .timeline:
                 if let id = selectedProject, let document = store.openProject(id) {
                     switch surface {
-                    case .overview: OverviewSurface(store: store, document: document,
-                                                    report: { report($0, status: $1) })
-                    case .list: ListSurface(store: store, document: document,
-                                            searchText: $searchText,
-                                            report: { report($0, status: $1) })
-                    case .board: BoardSurface(store: store, document: document,
-                                              searchText: $searchText,
-                                              report: { report($0, status: $1) })
+                    case .overview:
+                        OverviewSurface(
+                            store: store, document: document,
+                            report: { report($0, status: $1) })
+                    case .list:
+                        ListSurface(
+                            store: store, document: document,
+                            searchText: $searchText,
+                            report: { report($0, status: $1) })
+                    case .board:
+                        BoardSurface(
+                            store: store, document: document,
+                            searchText: $searchText,
+                            report: { report($0, status: $1) })
                     case .timeline: TimelineSurface(document: document)
                     case .today: EmptyView()
                     }
                 } else {
-                    let reason = EmptyReason.classify(totalCount: 0, visibleCount: 0,
-                                                      hasProject: false)
-                    AinkradEmptyState(icon: reason.icon, title: reason.title,
-                                      message: reason.message)
+                    let reason = EmptyReason.classify(
+                        totalCount: 0, visibleCount: 0,
+                        hasProject: false)
+                    AinkradEmptyState(
+                        icon: reason.icon, title: reason.title,
+                        message: reason.message)
                 }
             }
         }
@@ -308,8 +339,9 @@ struct QuestShellContent: View {
     @ViewBuilder private var shortcuts: some View {
         ForEach(KeyBindings.all, id: \.id) { binding in
             Button("") { activate(binding.id) }
-                .keyboardShortcut(KeyEquivalent(binding.key),
-                                  modifiers: binding.modifiers.eventModifiers)
+                .keyboardShortcut(
+                    KeyEquivalent(binding.key),
+                    modifiers: binding.modifiers.eventModifiers)
         }
         .opacity(0)
         .frame(width: 0, height: 0)

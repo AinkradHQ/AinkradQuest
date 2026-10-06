@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("ProjectStore.revision")
@@ -22,8 +23,9 @@ struct StoreRevisionTests {
     func editItem() throws {
         let store = makeProjectStore(InMemoryProjectRepository())
         let project = store.createProject(name: "A", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "E", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "E", statusID: "todo", actor: .user)
         let before = store.revision
         try store.setStatus(epic.id, statusID: "done", actor: .user)
         #expect(store.revision > before)
@@ -35,8 +37,9 @@ struct StoreRevisionTests {
         var seen = store.revision
         let project = store.createProject(name: "A", kind: .software, actor: .user)
         for index in 0..<5 {
-            _ = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                     title: "E\(index)", statusID: "todo", actor: .user)
+            _ = try store.createItem(
+                projectID: project.id, parentID: nil, type: .epic,
+                title: "E\(index)", statusID: "todo", actor: .user)
             #expect(store.revision >= seen)
             seen = store.revision
         }
@@ -50,8 +53,9 @@ struct StoreRevisionTests {
         // A task at root has no parent, which `HierarchyRules.validate` refuses
         // via `nonEpicMustHaveParent` — a genuinely-rejected write.
         #expect(throws: (any Error).self) {
-            _ = try store.createItem(projectID: project.id, parentID: nil, type: .task,
-                                     title: "orphan", statusID: "todo", actor: .user)
+            _ = try store.createItem(
+                projectID: project.id, parentID: nil, type: .task,
+                title: "orphan", statusID: "todo", actor: .user)
         }
         #expect(store.revision == before)
     }

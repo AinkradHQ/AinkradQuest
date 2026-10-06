@@ -1,10 +1,15 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
 final class RecordingLinkOpener: LinkOpener {
-    enum Call: Equatable { case reveal(URL), openFolder(URL), openWeb(URL) }
+    enum Call: Equatable {
+        case reveal(URL)
+        case openFolder(URL)
+        case openWeb(URL)
+    }
     var calls: [Call] = []
     var failure: Error?
 
@@ -27,7 +32,7 @@ final class RecordingLinkOpener: LinkOpener {
 struct LinkOpenerTests {
     /// Best-effort temp cleanup; a failure here must not fail the test.
     private func discard(_ url: URL) {
-        do { try FileManager.default.removeItem(at: url) } catch { }
+        do { try FileManager.default.removeItem(at: url) } catch {}
     }
 
     private func link(_ scheme: LinkScheme, _ identifier: String) -> Link {

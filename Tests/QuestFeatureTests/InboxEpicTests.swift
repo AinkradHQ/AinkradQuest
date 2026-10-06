@@ -1,21 +1,26 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("InboxEpic")
 struct InboxEpicTests {
     private let projectID = UUID()
 
-    private func epic(_ title: String, deleted: Bool = false,
-                      role: WorkItemRole? = nil) -> WorkItem {
-        WorkItem(id: UUID(), projectID: projectID, parentID: nil, type: .epic,
-                 title: title, statusID: "todo",
-                 deletedAt: deleted ? Date() : nil, role: role)
+    private func epic(
+        _ title: String, deleted: Bool = false,
+        role: WorkItemRole? = nil
+    ) -> WorkItem {
+        WorkItem(
+            id: UUID(), projectID: projectID, parentID: nil, type: .epic,
+            title: title, statusID: "todo",
+            deletedAt: deleted ? Date() : nil, role: role)
     }
 
     private func task(_ title: String, parent: UUID?) -> WorkItem {
-        WorkItem(id: UUID(), projectID: projectID, parentID: parent, type: .task,
-                 title: title, statusID: "todo")
+        WorkItem(
+            id: UUID(), projectID: projectID, parentID: parent, type: .task,
+            title: title, statusID: "todo")
     }
 
     @Test("with no items at all, the caller must create the Inbox")
@@ -94,11 +99,11 @@ struct WorkItemRoleDecodingTests {
     @Test("an item JSON with no role key decodes, with a nil role")
     func decodesWithoutRole() throws {
         let json = """
-        {"id":"\(UUID().uuidString)","projectID":"\(UUID().uuidString)","type":"epic",
-         "title":"Inbox","body":"","statusID":"todo","priority":0,"labels":[],
-         "orderIndex":0,"links":[],
-         "createdAt":0,"updatedAt":0}
-        """
+            {"id":"\(UUID().uuidString)","projectID":"\(UUID().uuidString)","type":"epic",
+             "title":"Inbox","body":"","statusID":"todo","priority":0,"labels":[],
+             "orderIndex":0,"links":[],
+             "createdAt":0,"updatedAt":0}
+            """
         let item = try JSONDecoder().decode(WorkItem.self, from: Data(json.utf8))
         #expect(item.role == nil)
         #expect(item.title == "Inbox")
@@ -106,10 +111,12 @@ struct WorkItemRoleDecodingTests {
 
     @Test("a role round-trips")
     func roundTrips() throws {
-        let item = WorkItem(id: UUID(), projectID: UUID(), parentID: nil, type: .epic,
-                            title: "Captured", statusID: "todo", role: .inbox)
-        let decoded = try JSONDecoder().decode(WorkItem.self,
-                                               from: JSONEncoder().encode(item))
+        let item = WorkItem(
+            id: UUID(), projectID: UUID(), parentID: nil, type: .epic,
+            title: "Captured", statusID: "todo", role: .inbox)
+        let decoded = try JSONDecoder().decode(
+            WorkItem.self,
+            from: JSONEncoder().encode(item))
         #expect(decoded.role == .inbox)
     }
 }
@@ -123,15 +130,16 @@ struct OpeningStatusTests {
 
     @Test("a scheme without 'todo' still resolves — the editor can remove it")
     func todoRemoved() {
-        let scheme = StatusScheme(statuses: StatusScheme.softwareDefault.statuses
-            .filter { $0.id != "todo" && $0.id != "backlog" })
+        let scheme = StatusScheme(
+            statuses: StatusScheme.softwareDefault.statuses
+                .filter { $0.id != "todo" && $0.id != "backlog" })
         #expect(scheme.openingStatusID == "in_progress")
     }
 
     @Test("an all-done scheme falls back to the first status")
     func allDone() {
         let scheme = StatusScheme(statuses: [
-            Status(id: "shipped", name: "Shipped", category: .done, colorToken: "success"),
+            Status(id: "shipped", name: "Shipped", category: .done, colorToken: "success")
         ])
         #expect(scheme.openingStatusID == "shipped")
     }

@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// Which projects the sidebar lists. `all` exists so no state can strand a
 /// project out of reach — the bug this filter was added to fix.
@@ -56,7 +56,8 @@ struct QuestNewProjectAction: Equatable {
     /// `Sendable`, which makes a stored global a Swift 6 concurrency error.
     static var unwired: QuestNewProjectAction {
         QuestNewProjectAction {
-            assertionFailure("QuestSidebar was mounted without \\.questNewProject injected — the New project button is inert")
+            assertionFailure(
+                "QuestSidebar was mounted without \\.questNewProject injected — the New project button is inert")
         }
     }
 
@@ -89,11 +90,15 @@ struct QuestSidebar: View {
             // Today stays in the sidebar: it is the cross-project entry point,
             // not a surface of the selected project, so the header's switcher
             // (which is project-scoped) is the wrong home for it.
-            AinkradListRow(isSelected: surface == .today,
-                           onTap: { surface = .today; selection = nil },
-                           leading: { AinkradIconGlyph(systemName: QuestSurface.today.icon) },
-                           title: QuestSurface.today.title,
-                           trailing: { EmptyView() })
+            AinkradListRow(
+                isSelected: surface == .today,
+                onTap: {
+                    surface = .today
+                    selection = nil
+                },
+                leading: { AinkradIconGlyph(systemName: QuestSurface.today.icon) },
+                title: QuestSurface.today.title,
+                trailing: { EmptyView() })
 
             HStack {
                 AinkradSectionHeader(title: "Projects")
@@ -105,12 +110,14 @@ struct QuestSidebar: View {
             ScrollView {
                 LazyVStack(spacing: AinkradSpacing.xs) {
                     ForEach(visibleProjects) { project in
-                        AinkradListRow(isSelected: selection == project.id,
-                                       onTap: { selection = project.id },
-                                       leading: { AinkradIconGlyph(systemName: project.icon) },
-                                       title: project.name,
-                                       trailing: { EmptyView() })
-                            .ainkradContextMenu(menu(for: project))
+                        AinkradListRow(
+                            isSelected: selection == project.id,
+                            onTap: { selection = project.id },
+                            leading: { AinkradIconGlyph(systemName: project.icon) },
+                            title: project.name,
+                            trailing: { EmptyView() }
+                        )
+                        .ainkradContextMenu(menu(for: project))
                     }
                 }
             }

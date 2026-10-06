@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -17,8 +18,9 @@ struct OverlayHealthTests {
     func unreadable() {
         let documents = MemoryDocumentStore()
         let projectID = UUID()
-        documents.setData(Data("{not json".utf8),
-                          forKey: DocumentProjectRepository.overlayKey(projectID))
+        documents.setData(
+            Data("{not json".utf8),
+            forKey: DocumentProjectRepository.overlayKey(projectID))
         let store = OverlayStore(repository: DocumentProjectRepository(documents: documents))
 
         _ = store.overlay(for: projectID)
@@ -33,11 +35,14 @@ struct OverlayHealthTests {
     @Test("two corrupt projects are BOTH tracked, not just the most recent")
     func twoUnreadableProjectsBothTracked() {
         let documents = MemoryDocumentStore()
-        let first = UUID(), second = UUID()
-        documents.setData(Data("{not json".utf8),
-                          forKey: DocumentProjectRepository.overlayKey(first))
-        documents.setData(Data("{not json".utf8),
-                          forKey: DocumentProjectRepository.overlayKey(second))
+        let first = UUID()
+        let second = UUID()
+        documents.setData(
+            Data("{not json".utf8),
+            forKey: DocumentProjectRepository.overlayKey(first))
+        documents.setData(
+            Data("{not json".utf8),
+            forKey: DocumentProjectRepository.overlayKey(second))
         let store = OverlayStore(repository: DocumentProjectRepository(documents: documents))
 
         _ = store.overlay(for: first)
@@ -68,9 +73,11 @@ struct OverlayHealthTests {
     @Test("a successful write does not clear an unresolved unreadable state")
     func successDoesNotMaskUnreadable() {
         let documents = MemoryDocumentStore()
-        let corrupt = UUID(), healthy = UUID()
-        documents.setData(Data("{not json".utf8),
-                          forKey: DocumentProjectRepository.overlayKey(corrupt))
+        let corrupt = UUID()
+        let healthy = UUID()
+        documents.setData(
+            Data("{not json".utf8),
+            forKey: DocumentProjectRepository.overlayKey(corrupt))
         let store = OverlayStore(repository: DocumentProjectRepository(documents: documents))
         _ = store.overlay(for: corrupt)
 
@@ -84,9 +91,11 @@ struct OverlayHealthTests {
     @Test("a successful write does not mask an unresolved write-blocked state")
     func successDoesNotMaskWriteBlocked() {
         let documents = MemoryDocumentStore()
-        let blocked = UUID(), healthy = UUID()
-        documents.setData(Data("{not json".utf8),
-                          forKey: DocumentProjectRepository.overlayKey(blocked))
+        let blocked = UUID()
+        let healthy = UUID()
+        documents.setData(
+            Data("{not json".utf8),
+            forKey: DocumentProjectRepository.overlayKey(blocked))
         let store = OverlayStore(repository: DocumentProjectRepository(documents: documents))
         _ = store.overlay(for: blocked)
 

@@ -1,21 +1,24 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("WorkItemView")
 struct WorkItemViewTests {
     private func makeItem(_ projectID: UUID, title: String) -> WorkItem {
-        WorkItem(id: UUID(), projectID: projectID, parentID: nil, type: .task,
-                 title: title, statusID: "todo")
+        WorkItem(
+            id: UUID(), projectID: projectID, parentID: nil, type: .task,
+            title: title, statusID: "todo")
     }
 
     @Test("a native item joins to an empty overlay and no remote ref")
     func nativeItem() {
         let projectID = UUID()
         let item = makeItem(projectID, title: "Local work")
-        let views = WorkItemViewBuilder.build(items: [item],
-                                              overlay: ProjectOverlay(projectID: projectID),
-                                              linkMap: LinkMap())
+        let views = WorkItemViewBuilder.build(
+            items: [item],
+            overlay: ProjectOverlay(projectID: projectID),
+            linkMap: LinkMap())
 
         #expect(views.count == 1)
         #expect(views[0].title == "Local work")
@@ -53,9 +56,10 @@ struct WorkItemViewTests {
         let ref = RemoteRef(connectionID: UUID(), remoteKey: "QST-42")
         map.link(ref, to: item.id)
 
-        let views = WorkItemViewBuilder.build(items: [item],
-                                              overlay: ProjectOverlay(projectID: projectID),
-                                              linkMap: map)
+        let views = WorkItemViewBuilder.build(
+            items: [item],
+            overlay: ProjectOverlay(projectID: projectID),
+            linkMap: map)
 
         #expect(views[0].remoteRef == ref)
         #expect(views[0].isLinked)
@@ -81,9 +85,10 @@ struct WorkItemViewTests {
         let projectID = UUID()
         let items = ["a", "b", "c"].map { makeItem(projectID, title: $0) }
 
-        let views = WorkItemViewBuilder.build(items: items,
-                                              overlay: ProjectOverlay(projectID: projectID),
-                                              linkMap: LinkMap())
+        let views = WorkItemViewBuilder.build(
+            items: items,
+            overlay: ProjectOverlay(projectID: projectID),
+            linkMap: LinkMap())
 
         // Ordering is the caller's business — the surfaces already sort. The
         // join must not quietly reorder.

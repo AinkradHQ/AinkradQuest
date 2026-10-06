@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// The theme lookup for `ProjectColorToken` (declared in `Models/`, so the MCP
 /// layer can validate against the same closed set without importing a view).
@@ -55,8 +55,10 @@ enum ProjectSettingsValidation {
 /// untouched, so nothing this sheet doesn't own can ever be reverted by a
 /// stale `draft`, no matter what changed elsewhere while the sheet was open.
 enum ProjectSettingsSheetWrite {
-    static func apply(draft: Project, colorToken: ProjectColorToken, validatedName: String,
-                      to live: Project) -> Project {
+    static func apply(
+        draft: Project, colorToken: ProjectColorToken, validatedName: String,
+        to live: Project
+    ) -> Project {
         var live = live
         live.name = validatedName
         // Genuinely owned by this sheet alone — nothing else writes it, so
@@ -94,9 +96,11 @@ struct ProjectSettingsSheet: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradStatusColors) private var statusColors
 
-    init(store: ProjectStore, registry: ConnectionRegistry, project: Project,
-         report: @escaping (String, AinkradStatus) -> Void,
-         onClose: @escaping () -> Void) {
+    init(
+        store: ProjectStore, registry: ConnectionRegistry, project: Project,
+        report: @escaping (String, AinkradStatus) -> Void,
+        onClose: @escaping () -> Void
+    ) {
         self.store = store
         self.registry = registry
         self.report = report
@@ -124,11 +128,13 @@ struct ProjectSettingsSheet: View {
                     // through `ProjectStore` (like `StatusSchemeEditor`'s
                     // Apply), so this must reflect what was just written
                     // rather than the snapshot captured at `init`.
-                    ProjectConnectionSection(store: store, registry: registry,
-                                             project: store.openProject(draft.id)?.project ?? draft,
-                                             report: report)
-                    StatusSchemeEditor(store: store, project: draft, report: report,
-                                       pendingPlan: $pendingSchemePlan)
+                    ProjectConnectionSection(
+                        store: store, registry: registry,
+                        project: store.openProject(draft.id)?.project ?? draft,
+                        report: report)
+                    StatusSchemeEditor(
+                        store: store, project: draft, report: report,
+                        pendingPlan: $pendingSchemePlan)
                 }
                 .padding(.trailing, AinkradSpacing.xs)
             }
@@ -174,17 +180,20 @@ struct ProjectSettingsSheet: View {
             AinkradTextField(text: $draft.icon, placeholder: "SF Symbol")
         }
         AinkradFormRow(title: "Colour") {
-            AinkradSelect(items: ProjectColorToken.allCases, selection: $colorToken,
-                          label: { $0.title },
-                          swatch: { $0.color(tokens: theme, statusColors: statusColors) })
+            AinkradSelect(
+                items: ProjectColorToken.allCases, selection: $colorToken,
+                label: { $0.title },
+                swatch: { $0.color(tokens: theme, statusColors: statusColors) })
         }
         // The kind picker only relabels the project; it does NOT change an
         // existing project's status scheme. Schemes ARE editable now, via
         // the `StatusSchemeEditor` below — this picker still does not
         // retroactively switch one.
         AinkradFormRow(title: "Kind") {
-            AinkradSegmentedPicker(items: [ProjectKind.software, .general],
-                                   selection: $draft.kind) { $0.settingsTitle }
+            AinkradSegmentedPicker(
+                items: [ProjectKind.software, .general],
+                selection: $draft.kind
+            ) { $0.settingsTitle }
         }
     }
 
@@ -226,8 +235,9 @@ struct ProjectSettingsSheet: View {
             report(QuestError.projectNotFound(draft.id).message, .danger)
             return
         }
-        let toSave = ProjectSettingsSheetWrite.apply(draft: draft, colorToken: colorToken,
-                                                     validatedName: name, to: live)
+        let toSave = ProjectSettingsSheetWrite.apply(
+            draft: draft, colorToken: colorToken,
+            validatedName: name, to: live)
         do {
             try store.updateProject(toSave, actor: .user)
             // LAST statement on this path — everything after it would run in an
@@ -241,10 +251,10 @@ struct ProjectSettingsSheet: View {
     }
 }
 
-private extension ProjectKind {
+extension ProjectKind {
     /// The label the settings picker shows. Local to this file because it is a
     /// UI string, not part of the persisted vocabulary.
-    var settingsTitle: String {
+    fileprivate var settingsTitle: String {
         switch self {
         case .software: "Software"
         case .general: "General"

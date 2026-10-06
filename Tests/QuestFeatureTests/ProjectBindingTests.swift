@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -43,14 +44,19 @@ struct ProjectBindingTests {
     func multipleRepos() throws {
         let store = makeStore()
         let project = store.createProject(name: "Ainkrad", kind: .software, actor: .user)
-        let work = UUID(), personal = UUID()
+        let work = UUID()
+        let personal = UUID()
 
-        try store.attachRepo(AttachedRepo(id: UUID(), connectionID: work,
-                                          owner: "acme", name: "api"),
-                             to: project.id, actor: .user)
-        try store.attachRepo(AttachedRepo(id: UUID(), connectionID: personal,
-                                          owner: "AhmedMElhalaby", name: "AinkradQuest"),
-                             to: project.id, actor: .user)
+        try store.attachRepo(
+            AttachedRepo(
+                id: UUID(), connectionID: work,
+                owner: "acme", name: "api"),
+            to: project.id, actor: .user)
+        try store.attachRepo(
+            AttachedRepo(
+                id: UUID(), connectionID: personal,
+                owner: "AhmedMElhalaby", name: "AinkradQuest"),
+            to: project.id, actor: .user)
 
         let updated = store.overlay.overlay(for: project.id).repos
         #expect(updated.map(\.slug) == ["acme/api", "AhmedMElhalaby/AinkradQuest"])
@@ -62,14 +68,18 @@ struct ProjectBindingTests {
         let store = makeStore()
         let project = store.createProject(name: "Ainkrad", kind: .software, actor: .user)
         let connectionID = UUID()
-        try store.attachRepo(AttachedRepo(id: UUID(), connectionID: connectionID,
-                                          owner: "a", name: "b"),
-                             to: project.id, actor: .user)
+        try store.attachRepo(
+            AttachedRepo(
+                id: UUID(), connectionID: connectionID,
+                owner: "a", name: "b"),
+            to: project.id, actor: .user)
 
         #expect(throws: QuestError.duplicateRepo("a/b")) {
-            try store.attachRepo(AttachedRepo(id: UUID(), connectionID: connectionID,
-                                              owner: "a", name: "b"),
-                                 to: project.id, actor: .user)
+            try store.attachRepo(
+                AttachedRepo(
+                    id: UUID(), connectionID: connectionID,
+                    owner: "a", name: "b"),
+                to: project.id, actor: .user)
         }
     }
 
@@ -77,10 +87,14 @@ struct ProjectBindingTests {
     func sameSlugDifferentConnection() throws {
         let store = makeStore()
         let project = store.createProject(name: "Ainkrad", kind: .software, actor: .user)
-        try store.attachRepo(AttachedRepo(id: UUID(), connectionID: UUID(),
-                                          owner: "a", name: "b"), to: project.id, actor: .user)
-        try store.attachRepo(AttachedRepo(id: UUID(), connectionID: UUID(),
-                                          owner: "a", name: "b"), to: project.id, actor: .user)
+        try store.attachRepo(
+            AttachedRepo(
+                id: UUID(), connectionID: UUID(),
+                owner: "a", name: "b"), to: project.id, actor: .user)
+        try store.attachRepo(
+            AttachedRepo(
+                id: UUID(), connectionID: UUID(),
+                owner: "a", name: "b"), to: project.id, actor: .user)
         #expect(store.overlay.overlay(for: project.id).repos.count == 2)
     }
 
@@ -125,12 +139,13 @@ struct ProjectBindingTests {
     @Test("a project document written before binding existed still loads")
     func lenientDecoding() throws {
         let json = """
-        {"id":"\(UUID().uuidString)","name":"Legacy","summaryText":"","icon":"folder",
-         "colorToken":"accent","kind":"software","state":"active",
-         "statusScheme":\(String(data: try JSONEncoder().encode(StatusScheme.softwareDefault), encoding: .utf8)!),
-         "links":[],"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}
-        """
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+            {"id":"\(UUID().uuidString)","name":"Legacy","summaryText":"","icon":"folder",
+             "colorToken":"accent","kind":"software","state":"active",
+             "statusScheme":\(String(data: try JSONEncoder().encode(StatusScheme.softwareDefault), encoding: .utf8)!),
+             "links":[],"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}
+            """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let project = try decoder.decode(Project.self, from: Data(json.utf8))
         #expect(project.legacyConnectionID == nil)
         #expect(project.legacyRepos.isEmpty)
@@ -156,9 +171,11 @@ struct ProjectBindingTests {
 
         let connectionID = UUID()
         try store.bindProject(project.id, to: connectionID, remoteProjectKey: "QST", actor: .user)
-        try store.attachRepo(AttachedRepo(id: UUID(), connectionID: connectionID,
-                                          owner: "acme", name: "api"),
-                             to: project.id, actor: .user)
+        try store.attachRepo(
+            AttachedRepo(
+                id: UUID(), connectionID: connectionID,
+                owner: "acme", name: "api"),
+            to: project.id, actor: .user)
 
         var draft = staleDraft
         draft.name = "Quest Renamed"
@@ -177,9 +194,9 @@ struct ProjectBindingTests {
     @Test("an AttachedRepo carrying an unrecognized extra field still decodes")
     func attachedRepoToleratesUnknownField() throws {
         let json = """
-        {"id":"\(UUID().uuidString)","connectionID":"\(UUID().uuidString)",
-         "owner":"acme","name":"api","fromTheFuture":"whatever it is"}
-        """
+            {"id":"\(UUID().uuidString)","connectionID":"\(UUID().uuidString)",
+             "owner":"acme","name":"api","fromTheFuture":"whatever it is"}
+            """
         let repo = try JSONDecoder().decode(AttachedRepo.self, from: Data(json.utf8))
         #expect(repo.slug == "acme/api")
     }
@@ -189,14 +206,15 @@ struct ProjectBindingTests {
         let repoID = UUID()
         let connectionID = UUID()
         let json = """
-        {"id":"\(UUID().uuidString)","name":"Legacy","summaryText":"","icon":"folder",
-         "colorToken":"accent","kind":"software","state":"active",
-         "statusScheme":\(String(data: try JSONEncoder().encode(StatusScheme.softwareDefault), encoding: .utf8)!),
-         "links":[],"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z",
-         "repos":[{"id":"\(repoID.uuidString)","connectionID":"\(connectionID.uuidString)",
-                   "owner":"acme","name":"api","fromTheFuture":"whatever it is"}]}
-        """
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+            {"id":"\(UUID().uuidString)","name":"Legacy","summaryText":"","icon":"folder",
+             "colorToken":"accent","kind":"software","state":"active",
+             "statusScheme":\(String(data: try JSONEncoder().encode(StatusScheme.softwareDefault), encoding: .utf8)!),
+             "links":[],"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z",
+             "repos":[{"id":"\(repoID.uuidString)","connectionID":"\(connectionID.uuidString)",
+                       "owner":"acme","name":"api","fromTheFuture":"whatever it is"}]}
+            """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let project = try decoder.decode(Project.self, from: Data(json.utf8))
         #expect(project.legacyRepos.map(\.slug) == ["acme/api"])
     }

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 /// Tripwires for the view-tree traps that M5 hit. Each one names a defect that
@@ -31,7 +32,9 @@ struct ViewSourceInvariantsTests {
                 // while the presentation stays up.
                 guard body.contains(where: { $0.code.contains("if let ") }) else { continue }
                 let keyed = body.contains { $0.code.contains(".id(") }
-                #expect(keyed, """
+                #expect(
+                    keyed,
+                    """
                     \(file.name):\(start) presents item-derived content without `.id(…)`. \
                     `.ainkradModal` reuses its content view across a change of the item, so the \
                     previous item's @State draft would be applied to the new one.
@@ -50,7 +53,9 @@ struct ViewSourceInvariantsTests {
             for type in ViewSource.types(in: file) {
                 let mounts = type.lines.contains { $0.code.contains(".ainkradToastHost()") }
                 let reads = type.lines.contains { $0.code.contains("\\.ainkradToastCenter") }
-                #expect(!(mounts && reads), """
+                #expect(
+                    !(mounts && reads),
+                    """
                     \(file.name): `\(type.name)` both applies `.ainkradToastHost()` and reads \
                     `\\.ainkradToastCenter`. The read resolves ABOVE the modifier and returns the \
                     @Entry default, so every report() is dropped. Split it: a wrapper applies the \
@@ -69,7 +74,9 @@ struct ViewSourceInvariantsTests {
     func noEnvironmentDismiss() throws {
         for file in try ViewSource.load() {
             let sites = file.lineNumbers(containing: "\\.dismiss")
-            #expect(sites.isEmpty, """
+            #expect(
+                sites.isEmpty,
+                """
                 \(file.name):\(sites.map(String.init).joined(separator: ",")) uses \
                 `\\.dismiss`. `.ainkradModal` injects no DismissAction — the call would compile \
                 and do nothing. Take an `onClose` from the presenter instead.
@@ -101,14 +108,18 @@ struct ViewSourceInvariantsTests {
     func saveNeverWritesBareStaleDraft() throws {
         let found = try ViewSource.load().first { $0.name == "ProjectSettingsSheet.swift" }
         let file = try #require(found, "ProjectSettingsSheet.swift not found in \(ViewSource.viewsDirectory.path)")
-        #expect(file.contains("ProjectSettingsSheetWrite.apply"), """
+        #expect(
+            file.contains("ProjectSettingsSheetWrite.apply"),
+            """
             ProjectSettingsSheet.swift no longer calls `ProjectSettingsSheetWrite.apply`. That \
             function is what keeps `save()` from writing the sheet's stale `draft` straight \
             through — without it, a state/links/etc. change made elsewhere while the sheet is \
             open is silently reverted on Save.
             """)
         let updatesWithBareDraft = file.lineNumbers(containing: "updateProject(draft,")
-        #expect(updatesWithBareDraft.isEmpty, """
+        #expect(
+            updatesWithBareDraft.isEmpty,
+            """
             \(file.name):\(updatesWithBareDraft.map(String.init).joined(separator: ",")) calls \
             `store.updateProject(draft, ...)` directly — the exact shape of the bug this guard \
             exists to catch. Route it through `ProjectSettingsSheetWrite.apply` instead.
@@ -129,7 +140,9 @@ struct ViewSourceInvariantsTests {
         let sectionFile = try #require(
             try ViewSource.load().first { $0.name == "ConnectionsSettings.swift" },
             "ConnectionsSettings.swift not found in \(ViewSource.viewsDirectory.path)")
-        #expect(!sectionFile.contains(".ainkradModal("), """
+        #expect(
+            !sectionFile.contains(".ainkradModal("),
+            """
             ConnectionsSettings.swift presents `.ainkradModal` itself again. That view renders as \
             an `AinkradSectionFrame` inside `QuestSettingsView`'s stack — a narrow, offset box, not \
             a window — so the overlay would be clipped off the left edge as it was before this fix. \
@@ -140,7 +153,9 @@ struct ViewSourceInvariantsTests {
         let rootFile = try #require(
             try ViewSource.load().first { $0.name == "QuestSettingsView.swift" },
             "QuestSettingsView.swift not found in \(ViewSource.viewsDirectory.path)")
-        #expect(rootFile.contains(".ainkradModal("), """
+        #expect(
+            rootFile.contains(".ainkradModal("),
+            """
             QuestSettingsView.swift no longer presents the add-connection modal from the settings \
             root — without it the editor has nowhere full-size to render from.
             """)
@@ -159,7 +174,9 @@ struct ViewSourceInvariantsTests {
                 let hasPrimary = type.lines.contains { $0.code.contains("style: .primary") }
                 guard hasPrimary else { continue }
                 let hasDefault = type.lines.contains { $0.code.contains(".defaultAction") }
-                #expect(hasDefault, """
+                #expect(
+                    hasDefault,
+                    """
                     \(file.name): `\(type.name)` has a `.primary` AinkradButton but no \
                     `.keyboardShortcut(.defaultAction)`. AinkradButton binds no keys, so Return \
                     does nothing here. Add a hidden default-action Button, as ItemEditor does.

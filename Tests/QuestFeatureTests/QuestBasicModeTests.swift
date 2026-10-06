@@ -1,6 +1,7 @@
-import Testing
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
+import Testing
+
 @testable import QuestFeature
 
 /// Quest's basic mode: Today, without the shell around it.
@@ -33,8 +34,9 @@ struct QuestBasicModeTests {
         // pass even if basic mode did open every document.
         _ = QuestBasicView(store: store).body
 
-        #expect(store.documents.isEmpty,
-                "basic mode must not open a project document")
+        #expect(
+            store.documents.isEmpty,
+            "basic mode must not open a project document")
     }
 
     @Test("An item opened in basic survives the escalation to advanced")
@@ -45,8 +47,9 @@ struct QuestBasicModeTests {
         // item in Today landed you nowhere near it.
         let store = makeProjectStore(InMemoryProjectRepository())
         let project = store.createProject(name: "Ainkrad", kind: .general, actor: .user)
-        let item = try! store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                         title: "Ship basic mode", statusID: "todo", actor: .user)
+        let item = try! store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Ship basic mode", statusID: "todo", actor: .user)
 
         store.pendingOpenItem = item
         #expect(store.takePendingOpenItem()?.id == item.id, "advanced must find the target")

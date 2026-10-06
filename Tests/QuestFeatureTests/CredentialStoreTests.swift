@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Credential store")
@@ -21,7 +22,7 @@ struct CredentialStoreTests {
 
     @Test("a keychain failure's message is not Foundation's generic localizedDescription string")
     func keychainErrorHasAReadableMessage() {
-        let error = CredentialError.keychain(.save, -25291) // errSecNotAvailable
+        let error = CredentialError.keychain(.save, -25291)  // errSecNotAvailable
         #expect(error.message.contains("-25291"))
         #expect(!error.message.contains("couldn't be completed"))
         #expect((error as any Error).localizedDescription == error.message)
@@ -48,9 +49,10 @@ struct CredentialStoreTests {
         repository.failSaves = false
         let credentials = DeleteFailingCredentialStore()
         let registry = ConnectionRegistry(repository: repository, credentials: credentials)
-        let connection = try registry.addConnection(provider: .jira, accountLabel: "Acme",
-                                                     accountIdentifier: "acme@example.com",
-                                                     baseURL: nil, secret: "token")
+        let connection = try registry.addConnection(
+            provider: .jira, accountLabel: "Acme",
+            accountIdentifier: "acme@example.com",
+            baseURL: nil, secret: "token")
         try registry.removeConnection(connection.id, boundProjectCount: 0)
         let message = try #require(registry.persistenceFailure)
         #expect(message.contains("could not be deleted"))

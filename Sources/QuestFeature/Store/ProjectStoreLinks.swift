@@ -12,8 +12,10 @@ extension ProjectStore {
     /// with the same identity are not useful to anyone, and they reintroduce the
     /// ambiguity the repo-qualified `Link.id` exists to remove.
     public func addLink(to target: LinkTarget, link: Link, actor: ActivityActor) throws {
-        try mutateLinks(target, actor: actor, kind: .linkAdded,
-                        verb: "added") { links in
+        try mutateLinks(
+            target, actor: actor, kind: .linkAdded,
+            verb: "added"
+        ) { links in
             guard !links.contains(where: { $0.id == link.id }) else {
                 throw QuestError.linkAlreadyExists(link.id)
             }
@@ -21,10 +23,14 @@ extension ProjectStore {
         }
     }
 
-    public func removeLink(from target: LinkTarget, link: Link,
-                           actor: ActivityActor) throws {
-        try mutateLinks(target, actor: actor, kind: .linkRemoved,
-                        verb: "removed") { links in
+    public func removeLink(
+        from target: LinkTarget, link: Link,
+        actor: ActivityActor
+    ) throws {
+        try mutateLinks(
+            target, actor: actor, kind: .linkRemoved,
+            verb: "removed"
+        ) { links in
             guard let position = links.firstIndex(where: { $0.id == link.id }) else {
                 throw QuestError.linkNotFound(link.id)
             }
@@ -32,9 +38,11 @@ extension ProjectStore {
         }
     }
 
-    private func mutateLinks(_ target: LinkTarget, actor: ActivityActor,
-                             kind: ActivityKind, verb: String,
-                             _ change: (inout [Link]) throws -> Void) throws {
+    private func mutateLinks(
+        _ target: LinkTarget, actor: ActivityActor,
+        kind: ActivityKind, verb: String,
+        _ change: (inout [Link]) throws -> Void
+    ) throws {
         // Trashed-target refusal lives HERE, on both branches, rather than only
         // at the MCP boundary: a link attached to something in the trash is
         // invisible on every surface, and a second caller (a view, a future
@@ -45,33 +53,35 @@ extension ProjectStore {
         switch target {
         case .project(let projectID):
             guard var document = openProject(projectID),
-                  !isTrashed(projectID)
+                !isTrashed(projectID)
             else { throw QuestError.projectNotFound(projectID) }
             try change(&document.project.links)
             document.project.updatedAt = Date()
             document.activity.append(
-                ActivityEvent(projectID: projectID, actor: actor, kind: kind,
-                              summary: "\(verb) a link on \(document.project.name)"))
+                ActivityEvent(
+                    projectID: projectID, actor: actor, kind: kind,
+                    summary: "\(verb) a link on \(document.project.name)"))
             commit(document)
 
         case .item(let itemID):
             guard let projectID = projectID(owning: itemID),
-                  var document = openProject(projectID),
-                  // An item whose PROJECT is trashed is just as invisible as a
-                  // soft-deleted item; both hide the link.
-                  !isTrashed(projectID),
-                  let position = document.items.firstIndex(where: { $0.id == itemID }),
-                  // A trashed item is invisible on every surface; attaching work
-                  // to it would hide the link too.
-                  !document.items[position].isDeleted
+                var document = openProject(projectID),
+                // An item whose PROJECT is trashed is just as invisible as a
+                // soft-deleted item; both hide the link.
+                !isTrashed(projectID),
+                let position = document.items.firstIndex(where: { $0.id == itemID }),
+                // A trashed item is invisible on every surface; attaching work
+                // to it would hide the link too.
+                !document.items[position].isDeleted
             else { throw QuestError.itemNotFound(itemID) }
 
             try change(&document.items[position].links)
             document.items[position].updatedAt = Date()
             document.activity.append(
-                ActivityEvent(projectID: projectID, itemID: itemID, actor: actor,
-                              kind: kind,
-                              summary: "\(verb) a link on \(document.items[position].title)"))
+                ActivityEvent(
+                    projectID: projectID, itemID: itemID, actor: actor,
+                    kind: kind,
+                    summary: "\(verb) a link on \(document.items[position].title)"))
             commit(document)
         }
     }

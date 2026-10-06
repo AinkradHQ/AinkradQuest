@@ -1,11 +1,14 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("LinkResolution")
 struct LinkResolutionTests {
-    private func link(_ scheme: LinkScheme, _ identifier: String,
-                      repo: String? = nil) -> Link {
+    private func link(
+        _ scheme: LinkScheme, _ identifier: String,
+        repo: String? = nil
+    ) -> Link {
         Link(scheme: scheme, identifier: identifier, label: "L", repo: repo)
     }
 
@@ -24,8 +27,10 @@ struct LinkResolutionTests {
 
     @Test("a url identifier that is not http(s) is inert, not handed to the system opener")
     func nonHTTPURLRefused() {
-        for identifier in ["file:///etc/passwd", "not a url", "ftp://example.com",
-                           "javascript:alert(1)", ""] {
+        for identifier in [
+            "file:///etc/passwd", "not a url", "ftp://example.com",
+            "javascript:alert(1)", "",
+        ] {
             guard case .inert(let reason) = LinkResolution.route(for: link(.url, identifier))
             else { return #expect(Bool(false), "expected .inert for \(identifier)") }
             #expect(!reason.isEmpty)
@@ -59,8 +64,9 @@ struct LinkResolutionTests {
     @Test("git schemes are inert and name Git Mage as their future home")
     func gitSchemesInert() {
         for scheme in [LinkScheme.repo, .branch, .pr, .commit] {
-            guard case .inert(let reason) = LinkResolution.route(
-                for: link(scheme, "/tmp/repo", repo: "quest"))
+            guard
+                case .inert(let reason) = LinkResolution.route(
+                    for: link(scheme, "/tmp/repo", repo: "quest"))
             else { return #expect(Bool(false), "expected .inert for \(scheme)") }
             #expect(reason.lowercased().contains("git mage"))
         }

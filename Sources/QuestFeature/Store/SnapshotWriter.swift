@@ -119,14 +119,17 @@ public enum SnapshotWriter {
         let staleTemps = allNames.filter { $0.hasPrefix("quest-overlay-") && $0.hasSuffix(".json.tmp") }
         for name in staleTemps {
             let url = directory.appendingPathComponent(name)
-            guard let modified = try? FileManager.default
-                .attributesOfItem(atPath: url.path)[.modificationDate] as? Date else { continue }
+            guard
+                let modified = try? FileManager.default
+                    .attributesOfItem(atPath: url.path)[.modificationDate] as? Date
+            else { continue }
             if Date().timeIntervalSince(modified) >= staleTempAge {
                 try? FileManager.default.removeItem(at: url)
             }
         }
 
-        let names = allNames
+        let names =
+            allNames
             .filter { $0.hasPrefix("quest-overlay-") && $0.hasSuffix(".json") }
             .sorted(by: >)
         let urls = names.map { directory.appendingPathComponent($0) }

@@ -18,9 +18,11 @@ public enum ItemSort: Sendable, Equatable {
 /// Pure filtering and sorting. Every surface funnels through this so "what is
 /// visible" has one definition.
 public enum ItemQuery {
-    public static func apply(_ filter: ItemFilter, sort: ItemSort,
-                             to items: [WorkItem],
-                             scheme: StatusScheme) -> [WorkItem] {
+    public static func apply(
+        _ filter: ItemFilter, sort: ItemSort,
+        to items: [WorkItem],
+        scheme: StatusScheme
+    ) -> [WorkItem] {
         let query = filter.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let matched = items.filter { item in
             guard !item.isDeleted else { return false }
@@ -50,7 +52,7 @@ public enum ItemQuery {
             // date is unscheduled, not overdue.
             items.sorted { a, b in
                 switch (a.dueDate, b.dueDate) {
-                case let (x?, y?): x < y
+                case (let x?, let y?): x < y
                 case (_?, nil): true
                 case (nil, _?): false
                 case (nil, nil): a.orderIndex < b.orderIndex

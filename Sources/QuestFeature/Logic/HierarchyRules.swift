@@ -28,8 +28,10 @@ public enum HierarchyRules {
 
     /// Validates a placement. `movingItemID` is the item being reparented, or
     /// nil when creating — it exists only to catch the cycle case.
-    public static func validate(parentID: UUID?, type: WorkItemType,
-                                movingItemID: UUID?, in items: [WorkItem]) throws {
+    public static func validate(
+        parentID: UUID?, type: WorkItemType,
+        movingItemID: UUID?, in items: [WorkItem]
+    ) throws {
         if type == .epic {
             guard parentID == nil else { throw QuestError.epicMustBeRoot }
             return
@@ -44,7 +46,8 @@ public enum HierarchyRules {
         guard !parent.isDeleted else { throw QuestError.parentIsDeleted(parentID) }
         if let movingItemID {
             if parentID == movingItemID
-                || descendants(of: movingItemID, in: items).contains(where: { $0.id == parentID }) {
+                || descendants(of: movingItemID, in: items).contains(where: { $0.id == parentID })
+            {
                 throw QuestError.cyclicParent
             }
         }

@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// The rule an inline row edit must satisfy. Pure so it is testable without a
 /// view, and shared with nothing else — an empty title from an inline field is
@@ -54,19 +54,22 @@ struct ListSurface: View {
         // Classified against the SAME tree with no filter applied, so
         // "this project has no items" and "your filter hid them all" are
         // distinguished by the filter and not by an unrelated count.
-        let reason = EmptyReason.classify(totalCount: total(tree(ItemFilter())),
-                                          visibleCount: total(visible),
-                                          hasProject: true)
+        let reason = EmptyReason.classify(
+            totalCount: total(tree(ItemFilter())),
+            visibleCount: total(visible),
+            hasProject: true)
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             controls
             if reason == .notEmpty {
                 list(visible)
             } else {
-                AinkradEmptyState(icon: reason.icon, title: reason.title,
-                                  message: reason.message,
-                                  actionTitle: reason.actionTitle,
-                                  action: action(for: reason))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AinkradEmptyState(
+                    icon: reason.icon, title: reason.title,
+                    message: reason.message,
+                    actionTitle: reason.actionTitle,
+                    action: action(for: reason)
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .padding(AinkradSpacing.md)
@@ -75,16 +78,21 @@ struct ListSurface: View {
         // closing it, via `onClose`. Keyed by `.id(item.id)` because the modal
         // content view is REUSED across a change of `editing`: without the id,
         // tapping a second row would keep the first item's `@State draft`.
-        .ainkradModal(isPresented: Binding(get: { editing != nil },
-                                           set: { if !$0 { editing = nil } })) {
+        .ainkradModal(
+            isPresented: Binding(
+                get: { editing != nil },
+                set: { if !$0 { editing = nil } })
+        ) {
             if let item = editing {
-                ItemEditor(store: store, document: document,
-                           // Re-resolved so an edit made elsewhere since the row
-                           // was tapped is not overwritten by a stale snapshot.
-                           item: document.items.first { $0.id == item.id } ?? item,
-                           report: report,
-                           onClose: { editing = nil })
-                    .id(item.id)
+                ItemEditor(
+                    store: store, document: document,
+                    // Re-resolved so an edit made elsewhere since the row
+                    // was tapped is not overwritten by a stale snapshot.
+                    item: document.items.first { $0.id == item.id } ?? item,
+                    report: report,
+                    onClose: { editing = nil }
+                )
+                .id(item.id)
             }
         }
         // The editor is an overlay scoped to this pane, so the header above it
@@ -104,16 +112,21 @@ struct ListSurface: View {
 
     private func tree(_ query: ItemFilter) -> [Group] {
         let scheme = document.project.statusScheme
-        return ItemQuery.apply(query, sort: sort,
-                               to: document.items.filter { $0.type == .epic },
-                               scheme: scheme)
-            .map { epic in
-                Group(epic: epic,
-                      items: ItemQuery.apply(query, sort: sort,
-                                             to: HierarchyRules.descendants(of: epic.id,
-                                                                            in: document.items),
-                                             scheme: scheme))
-            }
+        return ItemQuery.apply(
+            query, sort: sort,
+            to: document.items.filter { $0.type == .epic },
+            scheme: scheme
+        )
+        .map { epic in
+            Group(
+                epic: epic,
+                items: ItemQuery.apply(
+                    query, sort: sort,
+                    to: HierarchyRules.descendants(
+                        of: epic.id,
+                        in: document.items),
+                    scheme: scheme))
+        }
     }
 
     private func total(_ groups: [Group]) -> Int {
@@ -137,8 +150,9 @@ struct ListSurface: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
             HStack(spacing: AinkradSpacing.sm) {
-                AinkradSegmentedPicker(items: Self.sorts, selection: $sort,
-                                       label: Self.sortLabel)
+                AinkradSegmentedPicker(
+                    items: Self.sorts, selection: $sort,
+                    label: Self.sortLabel)
                 AinkradCheckbox(isOn: $filter.includeDone, label: "Show done")
                 Spacer(minLength: AinkradSpacing.sm)
             }
@@ -147,8 +161,9 @@ struct ListSurface: View {
                 // own — the old surface could only show you the text box.
                 HStack(spacing: AinkradSpacing.xs) {
                     ForEach(chips, id: \.label) { chip in
-                        AinkradChip(label: chip.label, systemName: chip.icon,
-                                    onRemove: chip.clear)
+                        AinkradChip(
+                            label: chip.label, systemName: chip.icon,
+                            onRemove: chip.clear)
                     }
                 }
             }
@@ -165,21 +180,29 @@ struct ListSurface: View {
         var result: [FilterChip] = []
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !query.isEmpty {
-            result.append(FilterChip(label: "“\(query)”", icon: "magnifyingglass",
-                                     clear: { searchText = "" }))
+            result.append(
+                FilterChip(
+                    label: "“\(query)”", icon: "magnifyingglass",
+                    clear: { searchText = "" }))
         }
         for type in filter.types.sorted(by: { $0.rawValue < $1.rawValue }) {
-            result.append(FilterChip(label: type.rawValue.capitalized,
-                                     icon: itemGlyph(for: type),
-                                     clear: { filter.types.remove(type) }))
+            result.append(
+                FilterChip(
+                    label: type.rawValue.capitalized,
+                    icon: itemGlyph(for: type),
+                    clear: { filter.types.remove(type) }))
         }
         for label in filter.labels.sorted() {
-            result.append(FilterChip(label: "#\(label)", icon: "tag",
-                                     clear: { filter.labels.remove(label) }))
+            result.append(
+                FilterChip(
+                    label: "#\(label)", icon: "tag",
+                    clear: { filter.labels.remove(label) }))
         }
         if !filter.includeDone {
-            result.append(FilterChip(label: "Done hidden", icon: "checkmark.circle",
-                                     clear: { filter.includeDone = true }))
+            result.append(
+                FilterChip(
+                    label: "Done hidden", icon: "checkmark.circle",
+                    clear: { filter.includeDone = true }))
         }
         return result
     }
@@ -193,14 +216,16 @@ struct ListSurface: View {
                     VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
                         header(group.epic)
                         ForEach(group.items) { item in
-                            ListRow(store: store, document: document, item: item,
-                                    indent: HierarchyRules.depth(of: item.id,
-                                                                 in: document.items) - 2,
-                                    isRenaming: renaming == item.id,
-                                    beginRename: { renaming = item.id },
-                                    endRename: { if renaming == item.id { renaming = nil } },
-                                    openEditor: { editing = item },
-                                    report: report)
+                            ListRow(
+                                store: store, document: document, item: item,
+                                indent: HierarchyRules.depth(
+                                    of: item.id,
+                                    in: document.items) - 2,
+                                isRenaming: renaming == item.id,
+                                beginRename: { renaming = item.id },
+                                endRename: { if renaming == item.id { renaming = nil } },
+                                openEditor: { editing = item },
+                                report: report)
                         }
                     }
                 }
@@ -210,10 +235,12 @@ struct ListSurface: View {
     }
 
     private func header(_ epic: WorkItem) -> some View {
-        let progress = EpicProgress.rollup(epicID: epic.id, in: document.items,
-                                           scheme: document.project.statusScheme)
-        return AinkradSectionHeader(title: epic.title,
-                                    subtitle: "\(progress.done)/\(progress.total) done")
+        let progress = EpicProgress.rollup(
+            epicID: epic.id, in: document.items,
+            scheme: document.project.statusScheme)
+        return AinkradSectionHeader(
+            title: epic.title,
+            subtitle: "\(progress.done)/\(progress.total) done")
     }
 
     // MARK: - Empty-state actions
@@ -258,9 +285,10 @@ struct ListSurface: View {
         guard let statusID = openingStatusID else { return }
         do {
             let epicID = try inboxEpic(statusID: statusID)
-            editing = try store.createItem(projectID: document.project.id, parentID: epicID,
-                                           type: .task, title: "New item",
-                                           statusID: statusID, actor: .user)
+            editing = try store.createItem(
+                projectID: document.project.id, parentID: epicID,
+                type: .task, title: "New item",
+                statusID: statusID, actor: .user)
         } catch let failure as QuestError {
             report(failure.message, .danger)
         } catch {
@@ -281,9 +309,11 @@ struct ListSurface: View {
             try store.setRole(.inbox, on: id)
             return id
         case .create:
-            return try store.createItem(projectID: document.project.id, parentID: nil, type: .epic,
-                                        title: InboxEpic.title, statusID: statusID,
-                                        actor: .user, role: .inbox).id
+            return try store.createItem(
+                projectID: document.project.id, parentID: nil, type: .epic,
+                title: InboxEpic.title, statusID: statusID,
+                actor: .user, role: .inbox
+            ).id
         }
     }
 }
@@ -334,8 +364,9 @@ private struct ListRow: View {
         .ainkradContextMenu([
             AinkradMenuItem(title: "Rename", systemName: "pencil", action: beginRename),
             AinkradMenuItem(title: "Details", systemName: "square.and.pencil", action: openEditor),
-            AinkradMenuItem(title: "Delete", systemName: "trash", isDestructive: true,
-                            action: delete)
+            AinkradMenuItem(
+                title: "Delete", systemName: "trash", isDestructive: true,
+                action: delete),
         ])
     }
 
@@ -368,21 +399,24 @@ private struct ListRow: View {
                 titleFocused = true
             }
         } else {
-            AinkradListRow(onTap: beginRename,
-                           leading: { AinkradIconGlyph(systemName: itemGlyph(for: item.type)) },
-                           title: item.title,
-                           subtitle: item.type.rawValue.capitalized,
-                           trailing: {
-                               HStack(spacing: AinkradSpacing.xs) {
-                                   ForEach(item.labels, id: \.self) { AinkradChip(label: $0) }
-                               }
-                           })
+            AinkradListRow(
+                onTap: beginRename,
+                leading: { AinkradIconGlyph(systemName: itemGlyph(for: item.type)) },
+                title: item.title,
+                subtitle: item.type.rawValue.capitalized,
+                trailing: {
+                    HStack(spacing: AinkradSpacing.xs) {
+                        ForEach(item.labels, id: \.self) { AinkradChip(label: $0) }
+                    }
+                })
         }
     }
 
     private var statusSelect: some View {
-        AinkradSelect(items: document.project.statusScheme.statuses.map(\.id),
-                      selection: statusBinding) { id in
+        AinkradSelect(
+            items: document.project.statusScheme.statuses.map(\.id),
+            selection: statusBinding
+        ) { id in
             document.project.statusScheme.statuses.first { $0.id == id }?.name ?? id
         }
         .frame(width: 140)

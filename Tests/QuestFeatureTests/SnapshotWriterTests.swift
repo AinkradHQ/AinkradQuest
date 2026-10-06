@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Snapshot writer")
@@ -16,15 +17,18 @@ struct SnapshotWriterTests {
         overlay.notes = "private thinking"
         var map = LinkMap()
         map.link(RemoteRef(connectionID: UUID(), remoteKey: "Q-1"), to: UUID())
-        return OverlaySnapshot(takenAt: taken, overlays: [overlay], linkMap: map,
-                               migratedRepoProjects: ["a"], migratedBindingProjects: ["b"])
+        return OverlaySnapshot(
+            takenAt: taken, overlays: [overlay], linkMap: map,
+            migratedRepoProjects: ["a"], migratedBindingProjects: ["b"])
     }
 
     @Test("a snapshot round-trips through JSON")
     func roundTrip() throws {
         let snapshot = makeSnapshot()
-        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
 
         let decoded = try decoder.decode(OverlaySnapshot.self, from: encoder.encode(snapshot))
 
@@ -36,7 +40,8 @@ struct SnapshotWriterTests {
 
     @Test("the payload is human-readable JSON, not a flat array")
     func readableShape() throws {
-        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(makeSnapshot())
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
@@ -55,7 +60,8 @@ struct SnapshotWriterTests {
         let url = try SnapshotWriter.write(makeSnapshot(), into: directory)
 
         #expect(FileManager.default.fileExists(atPath: url.path))
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let reloaded = try decoder.decode(OverlaySnapshot.self, from: Data(contentsOf: url))
         #expect(reloaded.overlays.first?.notes == "private thinking")
     }
@@ -108,10 +114,11 @@ struct SnapshotWriterTests {
     @Test("decoding fails when version is absent")
     func decodeFailsWithoutVersion() throws {
         let json = """
-        {"takenAt":"2025-08-24T00:00:00Z","overlays":[],
-         "migratedRepoProjects":[],"migratedBindingProjects":[]}
-        """
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+            {"takenAt":"2025-08-24T00:00:00Z","overlays":[],
+             "migratedRepoProjects":[],"migratedBindingProjects":[]}
+            """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         #expect(throws: (any Error).self) {
             _ = try decoder.decode(OverlaySnapshot.self, from: Data(json.utf8))
         }
@@ -120,10 +127,11 @@ struct SnapshotWriterTests {
     @Test("decoding fails when takenAt is absent")
     func decodeFailsWithoutTakenAt() throws {
         let json = """
-        {"version":1,"overlays":[],
-         "migratedRepoProjects":[],"migratedBindingProjects":[]}
-        """
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+            {"version":1,"overlays":[],
+             "migratedRepoProjects":[],"migratedBindingProjects":[]}
+            """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         #expect(throws: (any Error).self) {
             _ = try decoder.decode(OverlaySnapshot.self, from: Data(json.utf8))
         }
@@ -135,9 +143,10 @@ struct SnapshotWriterTests {
         // this is what stops someone "fixing" the failure above by making
         // every field required.
         let json = """
-        {"version":1,"takenAt":"2025-08-24T00:00:00Z"}
-        """
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+            {"version":1,"takenAt":"2025-08-24T00:00:00Z"}
+            """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let decoded = try decoder.decode(OverlaySnapshot.self, from: Data(json.utf8))
 
         #expect(decoded.overlays.isEmpty)

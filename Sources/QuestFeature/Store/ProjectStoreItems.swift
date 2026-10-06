@@ -14,32 +14,38 @@ extension ProjectStore {
     }
 
     @discardableResult
-    public func createItem(projectID: UUID, parentID: UUID?, type: WorkItemType,
-                           title: String, statusID: String,
-                           actor: ActivityActor,
-                           role: WorkItemRole? = nil) throws -> WorkItem {
+    public func createItem(
+        projectID: UUID, parentID: UUID?, type: WorkItemType,
+        title: String, statusID: String,
+        actor: ActivityActor,
+        role: WorkItemRole? = nil
+    ) throws -> WorkItem {
         guard var document = openProject(projectID) else {
             throw QuestError.projectNotFound(projectID)
         }
         guard document.project.statusScheme.status(id: statusID) != nil else {
             throw QuestError.unknownStatus(statusID)
         }
-        try HierarchyRules.validate(parentID: parentID, type: type,
-                                    movingItemID: nil, in: document.items)
+        try HierarchyRules.validate(
+            parentID: parentID, type: type,
+            movingItemID: nil, in: document.items)
 
         // Includes soft-deleted siblings — one still holding a high orderIndex
         // would otherwise collide with the new item once it's restored.
         let siblingOrderIndexes = document.items
             .filter { $0.parentID == parentID }
             .map(\.orderIndex)
-        let item = WorkItem(id: UUID(), projectID: projectID, parentID: parentID,
-                            type: type, title: title, statusID: statusID,
-                            orderIndex: (siblingOrderIndexes.max() ?? -1) + 1,
-                            role: role)
+        let item = WorkItem(
+            id: UUID(), projectID: projectID, parentID: parentID,
+            type: type, title: title, statusID: statusID,
+            orderIndex: (siblingOrderIndexes.max() ?? -1) + 1,
+            role: role)
         document.items.append(item)
-        document.activity.append(ActivityEvent(projectID: projectID, itemID: item.id,
-                                               actor: actor, kind: .itemCreated,
-                                               summary: "created \(type.rawValue) \(title)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, itemID: item.id,
+                actor: actor, kind: .itemCreated,
+                summary: "created \(type.rawValue) \(title)"))
         commit(document)
         return item
     }
@@ -59,22 +65,25 @@ extension ProjectStore {
         // reparent or retype through updateItem and skip the depth/cycle/
         // epic-at-root rules that createItem and moveItem enforce.
         if item.parentID != stored.parentID || item.type != stored.type {
-            try HierarchyRules.validate(parentID: item.parentID, type: item.type,
-                                        movingItemID: item.id, in: document.items)
+            try HierarchyRules.validate(
+                parentID: item.parentID, type: item.type,
+                movingItemID: item.id, in: document.items)
         }
         var updated = item
         updated.updatedAt = Date()
         document.items[position] = updated
-        document.activity.append(ActivityEvent(projectID: item.projectID, itemID: item.id,
-                                               actor: actor, kind: .itemUpdated,
-                                               summary: "updated \(item.title)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: item.projectID, itemID: item.id,
+                actor: actor, kind: .itemUpdated,
+                summary: "updated \(item.title)"))
         commit(document)
     }
 
     public func setStatus(_ id: UUID, statusID: String, actor: ActivityActor) throws {
         guard let projectID = projectID(owning: id),
-              var document = openProject(projectID),
-              let position = document.items.firstIndex(where: { $0.id == id })
+            var document = openProject(projectID),
+            let position = document.items.firstIndex(where: { $0.id == id })
         else { throw QuestError.itemNotFound(id) }
         guard document.project.statusScheme.status(id: statusID) != nil else {
             throw QuestError.unknownStatus(statusID)
@@ -86,27 +95,33 @@ extension ProjectStore {
         document.items[position].closedAt =
             document.project.statusScheme.isDone(statusID) ? Date() : nil
         document.activity.append(
-            ActivityEvent(projectID: projectID, itemID: id, actor: actor,
-                          kind: .itemStatusChanged,
-                          summary: "\(document.items[position].title) → \(statusID)"))
+            ActivityEvent(
+                projectID: projectID, itemID: id, actor: actor,
+                kind: .itemStatusChanged,
+                summary: "\(document.items[position].title) → \(statusID)"))
         commit(document)
     }
 
-    public func moveItem(_ id: UUID, toParent parentID: UUID?, orderIndex: Int,
-                         actor: ActivityActor) throws {
+    public func moveItem(
+        _ id: UUID, toParent parentID: UUID?, orderIndex: Int,
+        actor: ActivityActor
+    ) throws {
         guard let projectID = projectID(owning: id),
-              var document = openProject(projectID),
-              let position = document.items.firstIndex(where: { $0.id == id })
+            var document = openProject(projectID),
+            let position = document.items.firstIndex(where: { $0.id == id })
         else { throw QuestError.itemNotFound(id) }
 
-        try HierarchyRules.validate(parentID: parentID, type: document.items[position].type,
-                                    movingItemID: id, in: document.items)
+        try HierarchyRules.validate(
+            parentID: parentID, type: document.items[position].type,
+            movingItemID: id, in: document.items)
         document.items[position].parentID = parentID
         document.items[position].orderIndex = orderIndex
         document.items[position].updatedAt = Date()
-        document.activity.append(ActivityEvent(projectID: projectID, itemID: id, actor: actor,
-                                               kind: .itemMoved,
-                                               summary: "moved \(document.items[position].title)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, itemID: id, actor: actor,
+                kind: .itemMoved,
+                summary: "moved \(document.items[position].title)"))
         commit(document)
     }
 
@@ -128,9 +143,11 @@ extension ProjectStore {
         for position in document.items.indices where affected.contains(document.items[position].id) {
             document.items[position].deletedAt = stamp
         }
-        document.activity.append(ActivityEvent(projectID: projectID, itemID: id, actor: actor,
-                                               kind: .itemDeleted,
-                                               summary: "moved \(affected.count) item(s) to trash"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, itemID: id, actor: actor,
+                kind: .itemDeleted,
+                summary: "moved \(affected.count) item(s) to trash"))
         commit(document)
     }
 
@@ -164,12 +181,15 @@ extension ProjectStore {
         for position in document.items.indices where affected.contains(document.items[position].id) {
             document.items[position].deletedAt = nil
         }
-        let ancestorNote = ancestorIDs.isEmpty
+        let ancestorNote =
+            ancestorIDs.isEmpty
             ? ""
             : " (including \(ancestorIDs.count) parent item(s), so it is reachable again)"
-        document.activity.append(ActivityEvent(projectID: projectID, itemID: id, actor: actor,
-                                               kind: .itemRestored,
-                                               summary: "restored \(affected.count) item(s)\(ancestorNote)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, itemID: id, actor: actor,
+                kind: .itemRestored,
+                summary: "restored \(affected.count) item(s)\(ancestorNote)"))
         commit(document)
     }
 
@@ -219,11 +239,14 @@ extension ProjectStore {
         // The activity event outlives the item it names, so it carries the
         // title: `itemID` now resolves to nothing, and "deleted an item" with
         // no name makes the feed useless exactly where it matters most.
-        document.activity.append(ActivityEvent(projectID: projectID, itemID: id, actor: actor,
-                                               kind: .itemDeleted,
-                                               summary: "permanently deleted \(item.title)"
-                                                   + (descendantIDs.isEmpty ? ""
-                                                      : " and \(descendantIDs.count) item(s) under it")))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, itemID: id, actor: actor,
+                kind: .itemDeleted,
+                summary: "permanently deleted \(item.title)"
+                    + (descendantIDs.isEmpty
+                        ? ""
+                        : " and \(descendantIDs.count) item(s) under it")))
         commit(document)
     }
 
@@ -231,7 +254,8 @@ extension ProjectStore {
     func projectID(owning itemID: UUID) -> UUID? {
         for summary in projects + trashedProjects {
             if let document = openProject(summary.id),
-               document.items.contains(where: { $0.id == itemID }) {
+                document.items.contains(where: { $0.id == itemID })
+            {
                 return summary.id
             }
         }

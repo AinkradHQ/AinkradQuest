@@ -45,9 +45,11 @@ public struct Connection: Codable, Sendable, Identifiable, Hashable {
         "quest.connection.\(id.uuidString)"
     }
 
-    public init(id: UUID, provider: ProviderKind, accountLabel: String,
-                accountIdentifier: String, baseURL: URL? = nil,
-                createdAt: Date = Date(), tokenProvenance: TokenProvenance = .manual) {
+    public init(
+        id: UUID, provider: ProviderKind, accountLabel: String,
+        accountIdentifier: String, baseURL: URL? = nil,
+        createdAt: Date = Date(), tokenProvenance: TokenProvenance = .manual
+    ) {
         self.id = id
         self.provider = provider
         self.accountLabel = accountLabel
@@ -74,14 +76,16 @@ public struct Connection: Codable, Sendable, Identifiable, Hashable {
         accountLabel = try container.decode(String.self, forKey: .accountLabel)
         accountIdentifier = try container.decode(String.self, forKey: .accountIdentifier)
         baseURL = try container.decodeIfPresent(URL.self, forKey: .baseURL)
-        credentialRef = try container.decodeIfPresent(String.self, forKey: .credentialRef)
+        credentialRef =
+            try container.decodeIfPresent(String.self, forKey: .credentialRef)
             ?? Self.credentialRef(for: id)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         // A connection written before this feature has no provenance field at
         // all — decode leniently to `.manual` rather than failing the whole
         // registry load, matching `Project.connectionID` and
         // `AttachedRepo.owner`'s lenient-decode convention.
-        tokenProvenance = try container.decodeIfPresent(TokenProvenance.self, forKey: .tokenProvenance)
+        tokenProvenance =
+            try container.decodeIfPresent(TokenProvenance.self, forKey: .tokenProvenance)
             ?? .manual
     }
 }

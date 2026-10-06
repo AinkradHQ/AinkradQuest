@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// Quest's **basic** mode: Today, and nothing else.
 ///
@@ -20,16 +20,17 @@ struct QuestBasicView: View {
 
     var body: some View {
         AinkradBasicShell(icon: "checklist", title: "Quest", subtitle: subtitle) {
-            TodaySurface(store: store,
-                         report: { toasts.show($0, status: $1) },
-                         // Escalates AND carries the target. An earlier version
-                         // dropped the item: `QuestShell` is rebuilt on the
-                         // switch, so `surface` starts `.landing` — you tapped
-                         // an item and arrived nowhere near it.
-                         onOpen: { item in
-                             store.pendingOpenItem = item
-                             setPaneMode(.advanced)
-                         })
+            TodaySurface(
+                store: store,
+                report: { toasts.show($0, status: $1) },
+                // Escalates AND carries the target. An earlier version
+                // dropped the item: `QuestShell` is rebuilt on the
+                // switch, so `surface` starts `.landing` — you tapped
+                // an item and arrived nowhere near it.
+                onOpen: { item in
+                    store.pendingOpenItem = item
+                    setPaneMode(.advanced)
+                })
         }
     }
 

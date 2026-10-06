@@ -10,9 +10,11 @@ public final class KeychainCredentialStore: CredentialStore, @unchecked Sendable
     }
 
     private func query(_ ref: String) -> [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: service,
-         kSecAttrAccount as String: ref]
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: ref,
+        ]
     }
 
     public func secret(forRef ref: String) -> String? {
@@ -21,7 +23,7 @@ public final class KeychainCredentialStore: CredentialStore, @unchecked Sendable
         lookup[kSecMatchLimit as String] = kSecMatchLimitOne
         var result: CFTypeRef?
         guard SecItemCopyMatching(lookup as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data
+            let data = result as? Data
         else { return nil }
         return String(data: data, encoding: .utf8)
     }

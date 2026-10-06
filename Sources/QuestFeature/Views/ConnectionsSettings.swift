@@ -1,7 +1,7 @@
-import SwiftUI
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
+import SwiftUI
 
 /// The add/edit form's state, split out of the view so validation is testable
 /// without a view host — the same split `ProjectSettingsValidationTests` uses.
@@ -29,8 +29,8 @@ public struct ConnectionDraft: Equatable {
     public var baseURL: URL? {
         let trimmed = baseURLText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty,
-              let url = URL(string: trimmed),
-              url.scheme != nil, url.host != nil
+            let url = URL(string: trimmed),
+            url.scheme != nil, url.host != nil
         else { return nil }
         return url
     }
@@ -213,15 +213,18 @@ struct ConnectionsSettings: View {
         // Attached at this view's root, matching `TrashView`: the kit dims
         // and centres the dialog within the view it modifies, so an inner
         // attachment (e.g. on a single row) would scope the scrim to that row.
-        .ainkradConfirmDialog(isPresented: Binding(get: { pendingRemoval != nil },
-                                                   set: { if !$0 { pendingRemoval = nil } }),
-                              title: "Remove connection?",
-                              message: pendingRemoval.map {
-                                  "“\($0.accountLabel)” and its saved token will be deleted. "
-                                      + "You will need to re-enter the token to reconnect. This cannot be undone."
-                              } ?? "",
-                              confirmTitle: "Remove",
-                              isDestructive: true) {
+        .ainkradConfirmDialog(
+            isPresented: Binding(
+                get: { pendingRemoval != nil },
+                set: { if !$0 { pendingRemoval = nil } }),
+            title: "Remove connection?",
+            message: pendingRemoval.map {
+                "“\($0.accountLabel)” and its saved token will be deleted. "
+                    + "You will need to re-enter the token to reconnect. This cannot be undone."
+            } ?? "",
+            confirmTitle: "Remove",
+            isDestructive: true
+        ) {
             if let connection = pendingRemoval {
                 performRemoval(connection)
             }
@@ -231,8 +234,11 @@ struct ConnectionsSettings: View {
 
     private func row(_ connection: Connection) -> some View {
         let bound = store.projectCount(boundTo: connection.id)
-        return AinkradFormRow(title: connection.accountLabel,
-                              help: "\(connection.provider.rawValue) · \(connection.accountIdentifier) · \(bound) project\(bound == 1 ? "" : "s")") {
+        return AinkradFormRow(
+            title: connection.accountLabel,
+            help:
+                "\(connection.provider.rawValue) · \(connection.accountIdentifier) · \(bound) project\(bound == 1 ? "" : "s")"
+        ) {
             AinkradButton(title: "Remove", style: .secondary) {
                 // Opens the confirm dialog rather than removing directly: a
                 // healthy, unbound connection's Keychain secret would
@@ -290,10 +296,12 @@ struct ConnectionEditor: View {
     /// native tracker, never something anyone connects to.
     private static let addableProviders: [ProviderKind] = [.jira, .linear, .githubProjects]
 
-    init(draft: ConnectionDraft, registry: ConnectionRegistry,
-         report: @escaping (String, AinkradStatus) -> Void,
-         onClose: @escaping () -> Void,
-         accountSource: (any GitHubAccountSource)? = nil) {
+    init(
+        draft: ConnectionDraft, registry: ConnectionRegistry,
+        report: @escaping (String, AinkradStatus) -> Void,
+        onClose: @escaping () -> Void,
+        accountSource: (any GitHubAccountSource)? = nil
+    ) {
         _draft = State(initialValue: draft)
         self.registry = registry
         self.report = report
@@ -435,12 +443,13 @@ struct ConnectionEditor: View {
     private func submit() {
         guard draft.isValid else { return }
         do {
-            try registry.addConnection(provider: draft.provider,
-                                       accountLabel: draft.accountLabel.trimmingCharacters(in: .whitespacesAndNewlines),
-                                       accountIdentifier: draft.accountIdentifier.trimmingCharacters(in: .whitespacesAndNewlines),
-                                       baseURL: draft.baseURL,
-                                       secret: draft.secret,
-                                       tokenProvenance: draft.tokenProvenance)
+            try registry.addConnection(
+                provider: draft.provider,
+                accountLabel: draft.accountLabel.trimmingCharacters(in: .whitespacesAndNewlines),
+                accountIdentifier: draft.accountIdentifier.trimmingCharacters(in: .whitespacesAndNewlines),
+                baseURL: draft.baseURL,
+                secret: draft.secret,
+                tokenProvenance: draft.tokenProvenance)
             // LAST statement on this path — everything after it would run in an
             // unmounted subtree.
             onClose()

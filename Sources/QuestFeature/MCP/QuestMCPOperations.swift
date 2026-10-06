@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// Dispatches one MCP call onto the store.
 ///
@@ -15,7 +15,8 @@ public final class QuestMCPOperations {
 
     public func run(operation: String, arguments: String) async -> AgentActionResult {
         guard let data = arguments.data(using: .utf8),
-              let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        else {
             return failure("\(operation): arguments must be a JSON object")
         }
         do {
@@ -64,10 +65,12 @@ public final class QuestMCPOperations {
             .map { describe($0, scheme: document.project.statusScheme) }
         // Consistent with getItem: a read of a trashed thing is answered, but
         // never answered as if it were live.
-        let trashNote = located.isTrashed
+        let trashNote =
+            located.isTrashed
             ? "\nIN TRASH: this project is in the trash\n"
             : ""
-        return success("""
+        return success(
+            """
             \(document.project.name) [\(document.project.kind.rawValue)]\(trashNote)
             statuses: \(statuses)
             links: \(document.project.links.map(\.label).joined(separator: ", "))
@@ -80,14 +83,16 @@ public final class QuestMCPOperations {
         var filter = ItemFilter()
         filter.text = json["query"] as? String ?? ""
         if let raw = json["statusID"] as? String { filter.statusIDs = [raw] }
-        let projectIDs = (json["projectID"] as? String).flatMap(UUID.init(uuidString:))
+        let projectIDs =
+            (json["projectID"] as? String).flatMap(UUID.init(uuidString:))
             .map { [$0] } ?? store.projects.map(\.id)
 
         var lines: [String] = []
         for projectID in projectIDs {
             guard let document = store.openProject(projectID) else { continue }
-            let matched = ItemQuery.apply(filter, sort: .updated, to: document.items,
-                                          scheme: document.project.statusScheme)
+            let matched = ItemQuery.apply(
+                filter, sort: .updated, to: document.items,
+                scheme: document.project.statusScheme)
             lines += matched.map { "\(document.project.name): " + describe($0, scheme: document.project.statusScheme) }
         }
         return success(lines.isEmpty ? "No matching items." : lines.joined(separator: "\n"))
@@ -102,7 +107,8 @@ public final class QuestMCPOperations {
         // gets told instead, because silently answering about a trashed item
         // as if it were live is how an agent reports work that no longer exists.
         let trashNote = located.trashDescription.map { "\nIN TRASH: \($0)\n" } ?? ""
-        return success("""
+        return success(
+            """
             \(item.title)\(trashNote)
             id: \(item.id.uuidString)
             type: \(item.type.rawValue)  status: \(item.statusID)  priority: \(item.priority)
@@ -144,14 +150,17 @@ public final class QuestMCPOperations {
         // no rollup. The store allows it (the parent still exists); the
         // assistant must not ask for it.
         if let parentID,
-           let parent = located.document.items.first(where: { $0.id == parentID }),
-           parent.isDeleted {
-            throw ArgumentError(message:
-                "createItem: the parent item \(parent.title) is in the trash. "
-                + "Restore it from Quest's Trash before filing work under it.")
+            let parent = located.document.items.first(where: { $0.id == parentID }),
+            parent.isDeleted
+        {
+            throw ArgumentError(
+                message:
+                    "createItem: the parent item \(parent.title) is in the trash. "
+                    + "Restore it from Quest's Trash before filing work under it.")
         }
-        let item = try store.createItem(projectID: projectID, parentID: parentID, type: type,
-                                        title: title, statusID: statusID, actor: .agent)
+        let item = try store.createItem(
+            projectID: projectID, parentID: parentID, type: type,
+            title: title, statusID: statusID, actor: .agent)
         return success("Created \(type.rawValue) \(item.title) (\(item.id.uuidString))")
     }
 
@@ -223,20 +232,23 @@ public final class QuestMCPOperations {
         let located = try locateProjectForMutation(projectID, operation: "update_status_scheme")
 
         guard let rawStatuses = json["statuses"] as? [[String: Any]], !rawStatuses.isEmpty else {
-            throw ArgumentError(message:
-                "update_status_scheme: 'statuses' must be a non-empty array of "
-                + "{id, name, category, colorToken} objects, in board column order.")
+            throw ArgumentError(
+                message:
+                    "update_status_scheme: 'statuses' must be a non-empty array of "
+                    + "{id, name, category, colorToken} objects, in board column order.")
         }
 
         var statuses: [Status] = []
         for raw in rawStatuses {
             guard let id = raw["id"] as? String, !id.isEmpty,
-                  let name = raw["name"] as? String,
-                  let rawCategory = raw["category"] as? String,
-                  let category = StatusCategory(rawValue: rawCategory) else {
-                throw ArgumentError(message:
-                    "update_status_scheme: each status needs id, name and category "
-                    + "(todo, active or done).")
+                let name = raw["name"] as? String,
+                let rawCategory = raw["category"] as? String,
+                let category = StatusCategory(rawValue: rawCategory)
+            else {
+                throw ArgumentError(
+                    message:
+                        "update_status_scheme: each status needs id, name and category "
+                        + "(todo, active or done).")
             }
             // The colour vocabulary is a closed set, and it has to be closed on
             // BOTH write paths. An unknown token persists, renders as a
@@ -245,34 +257,41 @@ public final class QuestMCPOperations {
             // recolour the user never made.
             let rawColor = raw["colorToken"] as? String ?? ProjectColorToken.accentPrimary.rawValue
             guard ProjectColorToken(rawValue: rawColor) != nil else {
-                throw ArgumentError(message:
-                    "update_status_scheme: '\(rawColor)' is not a valid colorToken. "
-                    + "Valid values: \(ProjectColorToken.validNames).")
+                throw ArgumentError(
+                    message:
+                        "update_status_scheme: '\(rawColor)' is not a valid colorToken. "
+                        + "Valid values: \(ProjectColorToken.validNames).")
             }
-            statuses.append(Status(id: id, name: name, category: category,
-                                   colorToken: rawColor))
+            statuses.append(
+                Status(
+                    id: id, name: name, category: category,
+                    colorToken: rawColor))
         }
 
         let reassignments = json["reassignments"] as? [String: String] ?? [:]
         let items = store.allItems(in: projectID)
 
-        switch SchemePlan.plan(current: located.document.project.statusScheme,
-                               proposed: StatusScheme(statuses: statuses),
-                               reassignments: reassignments, items: items) {
+        switch SchemePlan.plan(
+            current: located.document.project.statusScheme,
+            proposed: StatusScheme(statuses: statuses),
+            reassignments: reassignments, items: items)
+        {
         case .invalid(let message):
             return failure("update_status_scheme: \(message)")
         case .valid(let plan) where plan.changesNothing:
             // Say so plainly instead of committing an edit that edits nothing
             // and logging it as a scheme update.
-            return success("\(located.document.project.name)'s statuses already match "
-                           + "what you sent; nothing changed.")
+            return success(
+                "\(located.document.project.name)'s statuses already match "
+                    + "what you sent; nothing changed.")
         case .valid(let plan):
             do {
                 try store.applyScheme(plan, to: projectID, actor: .agent)
             } catch QuestError.schemeChangedUnderneath {
-                return failure("update_status_scheme: this project's statuses changed since you "
-                               + "read them. Call get_project again and re-submit the complete "
-                               + "status list based on what it returns.")
+                return failure(
+                    "update_status_scheme: this project's statuses changed since you "
+                        + "read them. Call get_project again and re-submit the complete "
+                        + "status list based on what it returns.")
             }
             return success("Updated \(located.document.project.name)'s statuses: \(plan.summary).")
         }
@@ -309,15 +328,18 @@ public final class QuestMCPOperations {
     /// has one definition.
     private func link(from json: [String: Any], operation: String) throws -> Link {
         guard let rawScheme = json["scheme"] as? String,
-              let scheme = LinkScheme(rawValue: rawScheme), scheme != .unknown else {
+            let scheme = LinkScheme(rawValue: rawScheme), scheme != .unknown
+        else {
             throw ArgumentError(message: "\(operation): missing or invalid argument 'scheme'")
         }
         guard let identifier = json["identifier"] as? String else {
             throw ArgumentError(message: "\(operation): missing or invalid argument 'identifier'")
         }
-        switch LinkValidation.normalize(scheme: scheme, identifier: identifier,
-                                        label: json["label"] as? String ?? "",
-                                        repo: json["repo"] as? String) {
+        switch LinkValidation.normalize(
+            scheme: scheme, identifier: identifier,
+            label: json["label"] as? String ?? "",
+            repo: json["repo"] as? String)
+        {
         case .valid(let link): return link
         case .invalid(let message): throw ValidationError(message: message)
         }
@@ -333,8 +355,9 @@ public final class QuestMCPOperations {
     /// — which makes it this boundary's job to notice.
     private func locateProject(_ id: UUID) throws -> LocatedProject {
         guard let document = store.openProject(id) else { throw QuestError.projectNotFound(id) }
-        return LocatedProject(document: document,
-                              isTrashed: store.trashedProjects.contains { $0.id == id })
+        return LocatedProject(
+            document: document,
+            isTrashed: store.trashedProjects.contains { $0.id == id })
     }
 
     /// Refuses a write aimed at a trashed project. Creating or editing inside
@@ -343,9 +366,10 @@ public final class QuestMCPOperations {
     private func locateProjectForMutation(_ id: UUID, operation: String) throws -> LocatedProject {
         let located = try locateProject(id)
         if located.isTrashed {
-            throw ArgumentError(message:
-                "\(operation): project \(located.document.project.name) is in the trash. "
-                + "Restore it from Quest's Trash before modifying it.")
+            throw ArgumentError(
+                message:
+                    "\(operation): project \(located.document.project.name) is in the trash. "
+                    + "Restore it from Quest's Trash before modifying it.")
         }
         return located
     }
@@ -371,11 +395,12 @@ public final class QuestMCPOperations {
     /// and therefore this boundary's job — not to treat a trashed item as live.
     private func locate(_ id: UUID) throws -> LocatedItem {
         guard let projectID = store.projectID(owning: id),
-              let document = store.openProject(projectID),
-              let item = document.items.first(where: { $0.id == id })
+            let document = store.openProject(projectID),
+            let item = document.items.first(where: { $0.id == id })
         else { throw QuestError.itemNotFound(id) }
-        return LocatedItem(projectID: projectID, item: item,
-                           projectIsTrashed: store.trashedProjects.contains { $0.id == projectID })
+        return LocatedItem(
+            projectID: projectID, item: item,
+            projectIsTrashed: store.trashedProjects.contains { $0.id == projectID })
     }
 
     /// Same lookup, but refuses anything in the trash. Mutating a soft-deleted
@@ -384,8 +409,9 @@ public final class QuestMCPOperations {
     private func locateForMutation(_ id: UUID, operation: String) throws -> LocatedItem {
         let located = try locate(id)
         if let reason = located.trashDescription {
-            throw ArgumentError(message:
-                "\(operation): \(reason). Restore it from Quest's Trash before modifying it.")
+            throw ArgumentError(
+                message:
+                    "\(operation): \(reason). Restore it from Quest's Trash before modifying it.")
         }
         return located
     }

@@ -1,4 +1,5 @@
 import Testing
+
 @testable import QuestFeature
 
 @Suite("KeyBindings")
@@ -24,7 +25,8 @@ struct KeyBindingsTests {
 
     @Test("chords render in the conventional modifier order")
     func chordRendering() {
-        #expect(KeyBinding(id: "x", key: "n", modifiers: [.command, .shift], label: "X").chord
+        #expect(
+            KeyBinding(id: "x", key: "n", modifiers: [.command, .shift], label: "X").chord
                 == "⇧⌘N")
         #expect(KeyBinding(id: "y", key: "k", modifiers: .command, label: "Y").chord == "⌘K")
     }

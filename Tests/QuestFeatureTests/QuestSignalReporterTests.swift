@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -18,15 +19,21 @@ struct QuestSignalReporterTests {
         }
         var calls: [Call] = []
 
-        func emit(kind: String, severity: SignalSeverity, title: String, body: String?,
-                  importance: SignalImportance, deepLink: SignalDeepLink?,
-                  actions: [SignalAction], dedupeKey: String?) {
-            calls.append(Call(kind: kind, severity: severity, title: title, body: body,
-                              importance: importance, deepLink: deepLink, dedupeKey: dedupeKey))
+        func emit(
+            kind: String, severity: SignalSeverity, title: String, body: String?,
+            importance: SignalImportance, deepLink: SignalDeepLink?,
+            actions: [SignalAction], dedupeKey: String?
+        ) {
+            calls.append(
+                Call(
+                    kind: kind, severity: severity, title: title, body: body,
+                    importance: importance, deepLink: deepLink, dedupeKey: dedupeKey))
         }
         func own(limit: Int) -> [SignalEvent] { [] }
-        func handleAction(_ actionID: String,
-                          _ handler: @escaping @MainActor () async -> Void) -> AgentActionToken {
+        func handleAction(
+            _ actionID: String,
+            _ handler: @escaping @MainActor () async -> Void
+        ) -> AgentActionToken {
             AgentActionToken()
         }
         func removeActionHandler(_ token: AgentActionToken) {}
@@ -41,8 +48,9 @@ struct QuestSignalReporterTests {
     func agentWork() {
         let (reporter, emitter) = self.reporter()
         let project = UUID()
-        reporter.agentFiledWork(projectName: "Ainkrad", projectID: project,
-                                summary: "Created 4 tasks under Signal M3", count: 4)
+        reporter.agentFiledWork(
+            projectName: "Ainkrad", projectID: project,
+            summary: "Created 4 tasks under Signal M3", count: 4)
         #expect(emitter.calls.count == 1)
         #expect(emitter.calls[0].kind == "work.filed-by-agent")
         #expect(emitter.calls[0].severity == .info)
@@ -54,8 +62,9 @@ struct QuestSignalReporterTests {
     @Test("a single agent change reads as singular")
     func singleAgentChange() {
         let (reporter, emitter) = self.reporter()
-        reporter.agentFiledWork(projectName: "Ainkrad", projectID: UUID(),
-                                summary: "Moved one item", count: 1)
+        reporter.agentFiledWork(
+            projectName: "Ainkrad", projectID: UUID(),
+            summary: "Moved one item", count: 1)
         #expect(emitter.calls[0].title == "Sage updated Ainkrad")
     }
 
@@ -70,8 +79,9 @@ struct QuestSignalReporterTests {
         #expect(emitter.calls[0].severity == .failure)
         #expect(emitter.calls[0].importance == .urgent)
         #expect(emitter.calls[0].body?.contains("not being saved") == true)
-        #expect(emitter.calls[0].body?.contains("left") == true,
-                "it must say the data on disk was not overwritten")
+        #expect(
+            emitter.calls[0].body?.contains("left") == true,
+            "it must say the data on disk was not overwritten")
     }
 
     @Test("a retryable write failure is NOT reported like data loss")
@@ -120,8 +130,9 @@ struct QuestAgentActivityRuleTests {
         // list_projects returning forty projects is the assistant doing its
         // job, not something that happened to the user's work.
         for read in ["listProjects", "getProject", "searchItems", "getItem"] {
-            #expect(!QuestAgentActivityReporter.mutatingOperations.contains(read),
-                    "\(read) must not be reported")
+            #expect(
+                !QuestAgentActivityReporter.mutatingOperations.contains(read),
+                "\(read) must not be reported")
         }
     }
 
@@ -130,11 +141,14 @@ struct QuestAgentActivityRuleTests {
         // The list is written out by hand, so it can fall behind the server's
         // tools. This is the tripwire: if a new mutating tool is added and not
         // listed, its changes arrive silently.
-        for mutation in ["createProject", "updateProject", "deleteProject",
-                         "createItem", "updateItem", "moveItem", "setStatus",
-                         "deleteItem", "addLink", "removeLink", "updateStatusScheme"] {
-            #expect(QuestAgentActivityReporter.mutatingOperations.contains(mutation),
-                    "\(mutation) mutates and must be reported")
+        for mutation in [
+            "createProject", "updateProject", "deleteProject",
+            "createItem", "updateItem", "moveItem", "setStatus",
+            "deleteItem", "addLink", "removeLink", "updateStatusScheme",
+        ] {
+            #expect(
+                QuestAgentActivityReporter.mutatingOperations.contains(mutation),
+                "\(mutation) mutates and must be reported")
         }
     }
 
@@ -148,10 +162,12 @@ struct QuestAgentActivityRuleTests {
             "listProjects", "getProject", "searchItems", "getItem",
         ]
         let all = Set(QuestMCPServer.tools.map(\.operation))
-        let unclassified = all
+        let unclassified =
+            all
             .subtracting(QuestAgentActivityReporter.mutatingOperations)
             .subtracting(known)
-        #expect(unclassified.isEmpty,
-                "these MCP operations are neither reported nor knowingly excluded")
+        #expect(
+            unclassified.isEmpty,
+            "these MCP operations are neither reported nor knowingly excluded")
     }
 }

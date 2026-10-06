@@ -14,10 +14,13 @@ public enum BoardGrouping {
     /// Epics are excluded: they are containers whose status is derived from
     /// their children, and putting them on the board invites moving a whole
     /// epic by dragging one card.
-    public static func columns(items: [WorkItem], scheme: StatusScheme,
-                               filter: ItemFilter) -> [BoardColumn] {
-        let visible = ItemQuery.apply(filter, sort: .manual,
-                                      to: items.filter { $0.type != .epic }, scheme: scheme)
+    public static func columns(
+        items: [WorkItem], scheme: StatusScheme,
+        filter: ItemFilter
+    ) -> [BoardColumn] {
+        let visible = ItemQuery.apply(
+            filter, sort: .manual,
+            to: items.filter { $0.type != .epic }, scheme: scheme)
         return scheme.statuses.map { status in
             BoardColumn(status: status, items: visible.filter { $0.statusID == status.id })
         }
@@ -60,8 +63,10 @@ extension BoardGrouping {
     /// before that guard existed, and for any future path that bypasses it:
     /// any live non-epic item not reachable from a live epic is surfaced in a
     /// trailing "No epic" group instead of silently vanishing.
-    public static func groupedByEpic(items: [WorkItem], scheme: StatusScheme,
-                                     filter: ItemFilter) -> [BoardGroup] {
+    public static func groupedByEpic(
+        items: [WorkItem], scheme: StatusScheme,
+        filter: ItemFilter
+    ) -> [BoardGroup] {
         let epics = items.filter { $0.type == .epic && !$0.isDeleted }
             .sorted { $0.orderIndex < $1.orderIndex }
 
@@ -69,9 +74,11 @@ extension BoardGrouping {
         let groups = epics.map { epic -> BoardGroup in
             let descendants = HierarchyRules.descendants(of: epic.id, in: items)
             covered.formUnion(descendants.map(\.id))
-            return BoardGroup(epic: epic,
-                              columns: columns(items: descendants, scheme: scheme,
-                                               filter: filter))
+            return BoardGroup(
+                epic: epic,
+                columns: columns(
+                    items: descendants, scheme: scheme,
+                    filter: filter))
         }
 
         let orphans = items.filter { !$0.isDeleted && $0.type != .epic && !covered.contains($0.id) }
@@ -79,13 +86,16 @@ extension BoardGrouping {
 
         // A placeholder, not a stored item — fixed id so its group keeps a
         // stable SwiftUI identity across recomputations.
-        let placeholder = WorkItem(id: Self.orphanGroupID, projectID: firstOrphan.projectID,
-                                   parentID: nil, type: .epic, title: "No epic",
-                                   statusID: firstOrphan.statusID)
-        let orphanGroup = BoardGroup(epic: placeholder,
-                                     columns: columns(items: orphans, scheme: scheme,
-                                                      filter: filter),
-                                     isOrphanGroup: true)
+        let placeholder = WorkItem(
+            id: Self.orphanGroupID, projectID: firstOrphan.projectID,
+            parentID: nil, type: .epic, title: "No epic",
+            statusID: firstOrphan.statusID)
+        let orphanGroup = BoardGroup(
+            epic: placeholder,
+            columns: columns(
+                items: orphans, scheme: scheme,
+                filter: filter),
+            isOrphanGroup: true)
         return groups + [orphanGroup]
     }
 

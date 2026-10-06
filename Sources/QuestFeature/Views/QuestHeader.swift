@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// The shell's top bar: which surface, search, and the three global actions.
 ///
@@ -28,14 +28,18 @@ struct QuestHeader: View {
             // Leading slot. On Today there is no per-project switcher, so this
             // is empty and the search field carries the row on its own.
             if showsSwitcher {
-                AinkradSegmentedPicker(items: SurfaceVisibility.offered(hasProject: true),
-                                       selection: $surface) { $0.title }
-                    .transition(.opacity)
+                AinkradSegmentedPicker(
+                    items: SurfaceVisibility.offered(hasProject: true),
+                    selection: $surface
+                ) { $0.title }
+                .transition(.opacity)
             }
             Spacer(minLength: AinkradSpacing.md)
-            AinkradSearchField(text: $searchText, placeholder: "Search items",
-                               focus: searchFocused)
-                .frame(maxWidth: 280)
+            AinkradSearchField(
+                text: $searchText, placeholder: "Search items",
+                focus: searchFocused
+            )
+            .frame(maxWidth: 280)
             // The no-`size` initializer, so the button frame comes from the
             // kit's own default rather than a literal here. That overload
             // takes no `tooltip:`, so the hover hint and its VoiceOver
@@ -58,8 +62,10 @@ struct QuestHeader: View {
         .animation(AinkradMotion.present, value: showsSettings)
     }
 
-    private func iconAction(_ systemName: String, _ label: String,
-                            _ action: @escaping () -> Void) -> some View {
+    private func iconAction(
+        _ systemName: String, _ label: String,
+        _ action: @escaping () -> Void
+    ) -> some View {
         AinkradIconButton(systemName: systemName, action: action)
             .help(label)
             .accessibilityLabel(label)

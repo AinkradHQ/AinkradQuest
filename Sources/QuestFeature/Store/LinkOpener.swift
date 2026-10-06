@@ -1,5 +1,5 @@
-import Foundation
 import AppKit
+import Foundation
 
 public enum LinkOpenError: Error, Equatable {
     case missingTarget(path: String)
@@ -78,7 +78,7 @@ public enum LinkOpenError: Error, Equatable {
         "prefpane", "qlgenerator", "saver", "service", "workflow", "pkg",
         "mpkg", "dmg", "xcodeproj", "xcworkspace", "playground", "rtfd",
         "scptd", "download", "photoslibrary", "musiclibrary", "tvlibrary",
-        "logicx", "band", "sparsebundle"
+        "logicx", "band", "sparsebundle",
     ]
 
     /// Separated from `openFolder` so the whole refusal decision is testable
@@ -91,8 +91,11 @@ public enum LinkOpenError: Error, Equatable {
     static func validateFolder(_ url: URL) throws {
         let resolved = url.standardizedFileURL.resolvingSymlinksInPath()
         var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: resolved.path,
-                                             isDirectory: &isDirectory) else {
+        guard
+            FileManager.default.fileExists(
+                atPath: resolved.path,
+                isDirectory: &isDirectory)
+        else {
             throw LinkOpenError.missingTarget(path: url.path)
         }
         guard isDirectory.boolValue else { throw LinkOpenError.notAFolder(path: url.path) }
@@ -119,9 +122,15 @@ public enum LinkOpenError: Error, Equatable {
     @discardableResult
     public static func open(_ link: Link, using opener: some LinkOpener) throws -> String? {
         switch LinkResolution.route(for: link) {
-        case .reveal(let url): try opener.reveal(url); return nil
-        case .openFolder(let url): try opener.openFolder(url); return nil
-        case .web(let url): try opener.openWeb(url); return nil
+        case .reveal(let url):
+            try opener.reveal(url)
+            return nil
+        case .openFolder(let url):
+            try opener.openFolder(url)
+            return nil
+        case .web(let url):
+            try opener.openWeb(url)
+            return nil
         case .inert(let reason): return reason
         }
     }

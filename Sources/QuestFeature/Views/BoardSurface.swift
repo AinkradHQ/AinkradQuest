@@ -1,6 +1,6 @@
+import AinkradAppKit
 import SwiftUI
 import UniformTypeIdentifiers
-import AinkradAppKit
 
 struct BoardSurface: View {
     @Bindable var store: ProjectStore
@@ -41,24 +41,27 @@ struct BoardSurface: View {
                     // ForEach — `groupedByEpic` keeps its orphan backstop: an
                     // item whose epic is gone lands in a trailing "No epic"
                     // group instead of vanishing off the board.
-                    let groups = BoardGrouping.groupedByEpic(items: document.items,
-                                                             scheme: document.project.statusScheme,
-                                                             filter: activeFilter)
+                    let groups = BoardGrouping.groupedByEpic(
+                        items: document.items,
+                        scheme: document.project.statusScheme,
+                        filter: activeFilter)
                     LazyVStack(alignment: .leading, spacing: AinkradSpacing.lg) {
                         ForEach(groups) { group in
                             VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-                                AinkradSectionHeader(title: group.epic.title,
-                                                     subtitle: group.isOrphanGroup
-                                                        ? "Items with no live epic" : nil)
+                                AinkradSectionHeader(
+                                    title: group.epic.title,
+                                    subtitle: group.isOrphanGroup
+                                        ? "Items with no live epic" : nil)
                                 columnStrip(group.columns)
                             }
                         }
                     }
                     .padding(AinkradSpacing.md)
                 } else {
-                    let columns = BoardGrouping.columns(items: document.items,
-                                                        scheme: document.project.statusScheme,
-                                                        filter: activeFilter)
+                    let columns = BoardGrouping.columns(
+                        items: document.items,
+                        scheme: document.project.statusScheme,
+                        filter: activeFilter)
                     columnStrip(columns)
                         .padding(AinkradSpacing.md)
                 }
@@ -70,16 +73,21 @@ struct BoardSurface: View {
         // closing it, via `onClose`. Keyed by `.id(item.id)` because the modal
         // content view is REUSED across a change of `editing`: without the id,
         // tapping a second row would keep the first item's `@State draft`.
-        .ainkradModal(isPresented: Binding(get: { editing != nil },
-                                           set: { if !$0 { editing = nil } })) {
+        .ainkradModal(
+            isPresented: Binding(
+                get: { editing != nil },
+                set: { if !$0 { editing = nil } })
+        ) {
             if let item = editing {
-                ItemEditor(store: store, document: document,
-                           // Re-resolved so an edit made elsewhere since the row
-                           // was tapped is not overwritten by a stale snapshot.
-                           item: document.items.first { $0.id == item.id } ?? item,
-                           report: report,
-                           onClose: { editing = nil })
-                    .id(item.id)
+                ItemEditor(
+                    store: store, document: document,
+                    // Re-resolved so an edit made elsewhere since the row
+                    // was tapped is not overwritten by a stale snapshot.
+                    item: document.items.first { $0.id == item.id } ?? item,
+                    report: report,
+                    onClose: { editing = nil }
+                )
+                .id(item.id)
             }
         }
         // The editor is an overlay scoped to this pane, so the header above it

@@ -48,9 +48,11 @@ public enum SchemePlan {
         public var message: String? { if case .invalid(let m) = self { m } else { nil } }
     }
 
-    public static func plan(current: StatusScheme, proposed: StatusScheme,
-                            reassignments: [String: String],
-                            items: [WorkItem]) -> Outcome {
+    public static func plan(
+        current: StatusScheme, proposed: StatusScheme,
+        reassignments: [String: String],
+        items: [WorkItem]
+    ) -> Outcome {
         guard !proposed.statuses.isEmpty else {
             return .invalid("A project needs at least one status.")
         }
@@ -59,17 +61,23 @@ public enum SchemePlan {
             return .invalid("Two statuses cannot share an id.")
         }
         guard proposed.statuses.contains(where: { $0.category == .done }) else {
-            return .invalid("A scheme needs at least one status in the done category, "
-                            + "or nothing could ever be finished.")
+            return .invalid(
+                "A scheme needs at least one status in the done category, "
+                    + "or nothing could ever be finished.")
         }
 
         let currentByID = Dictionary(uniqueKeysWithValues: current.statuses.map { ($0.id, $0) })
         let proposedByID = Dictionary(uniqueKeysWithValues: proposed.statuses.map { ($0.id, $0) })
 
-        var added: [Status] = [], renamed: [Status] = []
-        var recoloured: [Status] = [], recategorised: [Status] = []
+        var added: [Status] = []
+        var renamed: [Status] = []
+        var recoloured: [Status] = []
+        var recategorised: [Status] = []
         for status in proposed.statuses {
-            guard let existing = currentByID[status.id] else { added.append(status); continue }
+            guard let existing = currentByID[status.id] else {
+                added.append(status)
+                continue
+            }
             if existing.name != status.name { renamed.append(status) }
             if existing.colorToken != status.colorToken { recoloured.append(status) }
             if existing.category != status.category { recategorised.append(status) }
@@ -90,14 +98,16 @@ public enum SchemePlan {
         let removedIDs = Set(removed.map(\.id))
         for (key, destination) in reassignments.sorted(by: { $0.key < $1.key }) {
             guard removedIDs.contains(key) else {
-                return .invalid("'\(key)' is not being removed, so its items cannot be "
-                                + "reassigned. Reassignments only say where a REMOVED "
-                                + "status's items go; to move items between statuses that "
-                                + "both remain, change the items themselves.")
+                return .invalid(
+                    "'\(key)' is not being removed, so its items cannot be "
+                        + "reassigned. Reassignments only say where a REMOVED "
+                        + "status's items go; to move items between statuses that "
+                        + "both remain, change the items themselves.")
             }
             guard proposedByID[destination] != nil else {
-                return .invalid("Cannot move '\(key)'s items to '\(destination)' — "
-                                + "that status is not in the new scheme.")
+                return .invalid(
+                    "Cannot move '\(key)'s items to '\(destination)' — "
+                        + "that status is not in the new scheme.")
             }
         }
 
@@ -111,15 +121,17 @@ public enum SchemePlan {
             // The destination itself is already known to exist in `proposed`:
             // the loop above validates every entry in the map, occupied or not.
             guard reassignments[status.id] != nil else {
-                return .invalid("\(status.name) still holds \(holders.count) item(s). "
-                                + "Choose where they should go before removing it.")
+                return .invalid(
+                    "\(status.name) still holds \(holders.count) item(s). "
+                        + "Choose where they should go before removing it.")
             }
             itemsReassigned += holders.count
         }
 
         // A category change is retroactive: it decides whether existing items in
         // that status count as finished.
-        var closing: [UUID] = [], reopening: [UUID] = []
+        var closing: [UUID] = []
+        var reopening: [UUID] = []
         for status in recategorised {
             let was = currentByID[status.id]?.category
             let holders = items.filter { $0.statusID == status.id }
@@ -134,32 +146,38 @@ public enum SchemePlan {
         let previousOrder = current.statuses.map(\.id).filter { proposedByID[$0] != nil }
         let reordered = survivingOrder != previousOrder
 
-        return .valid(Plan(
-            current: current, proposed: proposed, added: added, renamed: renamed, recoloured: recoloured,
-            recategorised: recategorised, removed: removed, reassignments: reassignments,
-            closing: closing, reopening: reopening, reordered: reordered,
-            itemsReassigned: itemsReassigned,
-            summary: describe(added: added, renamed: renamed, recoloured: recoloured,
-                              recategorised: recategorised,
-                              removed: removed, reassignments: reassignments,
-                              proposedByID: proposedByID, currentByID: currentByID,
-                              items: items, closing: closing, reopening: reopening,
-                              reordered: reordered)))
+        return .valid(
+            Plan(
+                current: current, proposed: proposed, added: added, renamed: renamed, recoloured: recoloured,
+                recategorised: recategorised, removed: removed, reassignments: reassignments,
+                closing: closing, reopening: reopening, reordered: reordered,
+                itemsReassigned: itemsReassigned,
+                summary: describe(
+                    added: added, renamed: renamed, recoloured: recoloured,
+                    recategorised: recategorised,
+                    removed: removed, reassignments: reassignments,
+                    proposedByID: proposedByID, currentByID: currentByID,
+                    items: items, closing: closing, reopening: reopening,
+                    reordered: reordered)))
     }
 
-    private static func describe(added: [Status], renamed: [Status], recoloured: [Status],
-                                 recategorised: [Status], removed: [Status],
-                                 reassignments: [String: String],
-                                 proposedByID: [String: Status],
-                                 currentByID: [String: Status],
-                                 items: [WorkItem], closing: [UUID], reopening: [UUID],
-                                 reordered: Bool) -> String {
+    private static func describe(
+        added: [Status], renamed: [Status], recoloured: [Status],
+        recategorised: [Status], removed: [Status],
+        reassignments: [String: String],
+        proposedByID: [String: Status],
+        currentByID: [String: Status],
+        items: [WorkItem], closing: [UUID], reopening: [UUID],
+        reordered: Bool
+    ) -> String {
         var parts: [String] = []
         if !added.isEmpty { parts.append("added \(added.map(\.name).joined(separator: ", "))") }
         if !renamed.isEmpty {
-            parts.append("renamed " + renamed.map { status in
-                "\(currentByID[status.id]?.name ?? status.id) to \(status.name)"
-            }.joined(separator: ", "))
+            parts.append(
+                "renamed "
+                    + renamed.map { status in
+                        "\(currentByID[status.id]?.name ?? status.id) to \(status.name)"
+                    }.joined(separator: ", "))
         }
         if !recoloured.isEmpty {
             parts.append("recoloured " + recoloured.map(\.name).joined(separator: ", "))
@@ -167,8 +185,9 @@ public enum SchemePlan {
         for status in removed {
             let count = items.filter { $0.statusID == status.id }.count
             if count > 0, let destination = reassignments[status.id] {
-                parts.append("removed \(status.name), moved \(count) item(s) to "
-                             + "\(proposedByID[destination]?.name ?? destination)")
+                parts.append(
+                    "removed \(status.name), moved \(count) item(s) to "
+                        + "\(proposedByID[destination]?.name ?? destination)")
             } else {
                 parts.append("removed \(status.name)")
             }

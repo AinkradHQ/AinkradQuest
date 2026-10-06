@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -8,18 +9,19 @@ struct OverlayMigrationTests {
     /// A project document in the PRE-M2 shape: repos and binding inside `Project`.
     private func legacyDocument(projectID: UUID, connectionID: UUID) throws -> Data {
         let repoID = UUID()
-        let scheme = String(data: try JSONEncoder().encode(StatusScheme.softwareDefault),
-                            encoding: .utf8)!
+        let scheme = String(
+            data: try JSONEncoder().encode(StatusScheme.softwareDefault),
+            encoding: .utf8)!
         let json = """
-        {"project":{"id":"\(projectID.uuidString)","name":"Legacy","summaryText":"",
-          "icon":"folder","colorToken":"accent","kind":"software","state":"active",
-          "statusScheme":\(scheme),"links":[],
-          "createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z",
-          "connectionID":"\(connectionID.uuidString)","remoteProjectKey":"QST",
-          "repos":[{"id":"\(repoID.uuidString)","connectionID":"\(connectionID.uuidString)",
-                    "owner":"acme","name":"api"}]},
-         "items":[],"activity":[]}
-        """
+            {"project":{"id":"\(projectID.uuidString)","name":"Legacy","summaryText":"",
+              "icon":"folder","colorToken":"accent","kind":"software","state":"active",
+              "statusScheme":\(scheme),"links":[],
+              "createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z",
+              "connectionID":"\(connectionID.uuidString)","remoteProjectKey":"QST",
+              "repos":[{"id":"\(repoID.uuidString)","connectionID":"\(connectionID.uuidString)",
+                        "owner":"acme","name":"api"}]},
+             "items":[],"activity":[]}
+            """
         return Data(json.utf8)
     }
 
@@ -27,13 +29,16 @@ struct OverlayMigrationTests {
     func migratesLegacyDocument() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome == .moved)
         #expect(overlay.overlay(for: projectID).repos.map(\.slug) == ["acme/api"])
@@ -45,17 +50,23 @@ struct OverlayMigrationTests {
     func idempotent() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
 
-        #expect(OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                 repository: repository, overlay: overlay) == .moved)
+        #expect(
+            OverlayMigration.migrateIfNeeded(
+                projectID: projectID,
+                repository: repository, overlay: overlay) == .moved)
         // Second run must be a no-op, NOT a duplicate append: a crash between
         // the two halves of a migration means this runs again on next launch.
-        #expect(OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                 repository: repository, overlay: overlay) == .nothingToDo)
+        #expect(
+            OverlayMigration.migrateIfNeeded(
+                projectID: projectID,
+                repository: repository, overlay: overlay) == .nothingToDo)
         #expect(overlay.overlay(for: projectID).repos.count == 1)
     }
 
@@ -63,20 +74,26 @@ struct OverlayMigrationTests {
     func resumesPartialMigrationBindingPending() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
         // Simulate a crash after the repos half completed (data moved AND
         // marked) but before the binding half ran.
         overlay.update(projectID: projectID) { copy in
-            copy.repos = [AttachedRepo(id: UUID(), connectionID: connectionID,
-                                       owner: "acme", name: "api")]
+            copy.repos = [
+                AttachedRepo(
+                    id: UUID(), connectionID: connectionID,
+                    owner: "acme", name: "api")
+            ]
         }
         overlay.updateHubConfig { $0.markReposMigrated(projectID) }
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome == .moved)
         #expect(overlay.overlay(for: projectID).repos.count == 1)
@@ -90,9 +107,11 @@ struct OverlayMigrationTests {
     func resumesPartialMigrationReposPending() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
         // Simulate a crash after the binding half completed but before the
         // repos half ran — the less likely order (repos move first in the
@@ -102,8 +121,9 @@ struct OverlayMigrationTests {
             config.markBindingMigrated(projectID)
         }
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome == .moved)
         #expect(overlay.overlay(for: projectID).repos.map(\.slug) == ["acme/api"])
@@ -119,14 +139,18 @@ struct OverlayMigrationTests {
         try repository.saveProject(document)
         let overlay = OverlayStore(repository: repository)
 
-        #expect(OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                 repository: repository, overlay: overlay) == .nothingToDo)
+        #expect(
+            OverlayMigration.migrateIfNeeded(
+                projectID: projectID,
+                repository: repository, overlay: overlay) == .nothingToDo)
     }
 
     @Test("the legacy fields still decode, so a downgrade does not lose them")
     func legacyFieldsStillDecode() throws {
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
-        let projectID = UUID(), connectionID = UUID()
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let projectID = UUID()
+        let connectionID = UUID()
         let data = try legacyDocument(projectID: projectID, connectionID: connectionID)
         let document = try decoder.decode(ProjectDocument.self, from: data)
 
@@ -146,18 +170,23 @@ struct OverlayMigrationTests {
     func doesNotResurrectRemovedRepos() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
-        #expect(OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                 repository: repository, overlay: overlay) == .moved)
+        #expect(
+            OverlayMigration.migrateIfNeeded(
+                projectID: projectID,
+                repository: repository, overlay: overlay) == .moved)
 
         // The user detaches every repo — clearing the destination by hand.
         overlay.update(projectID: projectID) { $0.repos = [] }
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome != .moved)
         #expect(overlay.overlay(for: projectID).repos.isEmpty)
@@ -168,18 +197,23 @@ struct OverlayMigrationTests {
     func doesNotResurrectRemovedBinding() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
-        #expect(OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                 repository: repository, overlay: overlay) == .moved)
+        #expect(
+            OverlayMigration.migrateIfNeeded(
+                projectID: projectID,
+                repository: repository, overlay: overlay) == .moved)
 
         // The user unbinds the project — clearing the destination by hand.
         overlay.updateHubConfig { $0.unbind(projectID) }
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome != .moved)
         #expect(overlay.hubConfig().binding(for: projectID) == nil)
@@ -194,15 +228,18 @@ struct OverlayMigrationTests {
     func reportsBlockedWhenOverlayUnreadable() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         // Corrupt bytes at the overlay key.
         documents.setData(Data("not json".utf8), forKey: "overlay-project-\(projectID.uuidString)")
         let overlay = OverlayStore(repository: repository)
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome == .blocked)
         // The binding half is unaffected — it lives in a separate document.
@@ -230,7 +267,8 @@ struct OverlayMigrationTests {
     func overlayWriteFailureDoesNotMarkReposMigrated() throws {
         let repository = FailingSaveProjectRepository()
         repository.failSaves = false
-        let projectID = UUID(), connectionID = UUID()
+        let projectID = UUID()
+        let connectionID = UUID()
         var legacyProject = Project(id: projectID, name: "Legacy", kind: .software)
         legacyProject.legacyConnectionID = connectionID
         legacyProject.legacyRemoteProjectKey = "QST"
@@ -243,8 +281,9 @@ struct OverlayMigrationTests {
         // the repos-half marker if the bug were present) still succeeds.
         repository.failOverlaySaves = true
 
-        let outcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                       repository: repository, overlay: overlay)
+        let outcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
 
         #expect(outcome == .incomplete)
         // The marker must NOT be set — this is the bug this test guards
@@ -258,8 +297,9 @@ struct OverlayMigrationTests {
         // A later launch — overlay writes working again — must retry the
         // repos half rather than treating it as already done.
         repository.failOverlaySaves = false
-        let retryOutcome = OverlayMigration.migrateIfNeeded(projectID: projectID,
-                                                            repository: repository, overlay: overlay)
+        let retryOutcome = OverlayMigration.migrateIfNeeded(
+            projectID: projectID,
+            repository: repository, overlay: overlay)
         #expect(retryOutcome == .moved)
         #expect(overlay.overlay(for: projectID).repos.map(\.slug) == ["acme/api"])
         #expect(overlay.hubConfig().hasMigratedRepos(projectID))
@@ -269,15 +309,18 @@ struct OverlayMigrationTests {
     func blockedMigrationSurfacesToProjectStore() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         documents.setData(Data("not json".utf8), forKey: "overlay-project-\(projectID.uuidString)")
         // `ProjectStore.init` reads the INDEX to know which projects exist —
         // a project document alone is not enough to be picked up.
-        let summary = ProjectSummary(id: projectID, name: "Legacy", icon: "folder",
-                                     colorToken: "accent", kind: .software, state: .active,
-                                     updatedAt: Date())
+        let summary = ProjectSummary(
+            id: projectID, name: "Legacy", icon: "folder",
+            colorToken: "accent", kind: .software, state: .active,
+            updatedAt: Date())
         try repository.saveIndex([summary])
         let overlay = OverlayStore(repository: repository)
 
@@ -300,13 +343,16 @@ struct OverlayMigrationTests {
     func blockedProjectKeepsScanOpenAndRetriesLater() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let projectID = UUID(), connectionID = UUID()
-        documents.setData(try legacyDocument(projectID: projectID, connectionID: connectionID),
-                          forKey: "project-\(projectID.uuidString)")
+        let projectID = UUID()
+        let connectionID = UUID()
+        documents.setData(
+            try legacyDocument(projectID: projectID, connectionID: connectionID),
+            forKey: "project-\(projectID.uuidString)")
         documents.setData(Data("not json".utf8), forKey: "overlay-project-\(projectID.uuidString)")
-        let summary = ProjectSummary(id: projectID, name: "Legacy", icon: "folder",
-                                     colorToken: "accent", kind: .software, state: .active,
-                                     updatedAt: Date())
+        let summary = ProjectSummary(
+            id: projectID, name: "Legacy", icon: "folder",
+            colorToken: "accent", kind: .software, state: .active,
+            updatedAt: Date())
         try repository.saveIndex([summary])
         let overlay = OverlayStore(repository: repository)
 

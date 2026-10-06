@@ -37,10 +37,10 @@ enum ViewSource {
     /// test runner's cwd is not the repo, and a wrong path here would silently
     /// scan nothing and pass every invariant.
     static var viewsDirectory: URL {
-        URL(fileURLWithPath: #filePath)          // …/Tests/QuestFeatureTests/ThisFile.swift
-            .deletingLastPathComponent()         // …/Tests/QuestFeatureTests
-            .deletingLastPathComponent()         // …/Tests
-            .deletingLastPathComponent()         // repo root
+        URL(fileURLWithPath: #filePath)  // …/Tests/QuestFeatureTests/ThisFile.swift
+            .deletingLastPathComponent()  // …/Tests/QuestFeatureTests
+            .deletingLastPathComponent()  // …/Tests
+            .deletingLastPathComponent()  // repo root
             .appendingPathComponent("Sources/QuestFeature/Views")
     }
 
@@ -50,8 +50,9 @@ enum ViewSource {
             .filter { $0.hasSuffix(".swift") }
             .sorted()
         return try names.map { name in
-            let text = try String(contentsOf: viewsDirectory.appendingPathComponent(name),
-                                  encoding: .utf8)
+            let text = try String(
+                contentsOf: viewsDirectory.appendingPathComponent(name),
+                encoding: .utf8)
             let lines = text.components(separatedBy: .newlines).enumerated().map {
                 (number: $0.offset + 1, code: stripComment(from: $0.element))
             }
@@ -70,7 +71,8 @@ enum ViewSource {
             let character = line[index]
             if character == "\"", previous != "\\" { inString.toggle() }
             if !inString, character == "/", line.index(after: index) < line.endIndex,
-               line[line.index(after: index)] == "/" {
+                line[line.index(after: index)] == "/"
+            {
                 break
             }
             result.append(character)

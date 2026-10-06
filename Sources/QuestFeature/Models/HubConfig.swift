@@ -124,10 +124,14 @@ public struct HubConfig: Codable, Sendable {
         // read leniently, defaulting to "nothing migrated yet under the
         // marker scheme", not to a decode failure.
         bindings = try container.decodeIfPresent([String: ProjectBinding].self, forKey: .bindings) ?? [:]
-        migratedRepoProjects = try container.decodeIfPresent(Set<String>.self,
-                                                              forKey: .migratedRepoProjects) ?? []
-        migratedBindingProjects = try container.decodeIfPresent(Set<String>.self,
-                                                                forKey: .migratedBindingProjects) ?? []
+        migratedRepoProjects =
+            try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .migratedRepoProjects) ?? []
+        migratedBindingProjects =
+            try container.decodeIfPresent(
+                Set<String>.self,
+                forKey: .migratedBindingProjects) ?? []
         // A document written before the gate existed still loads and — since
         // this defaults to 0 — correctly reports that it needs a scan.
         scanCompleteThrough = try container.decodeIfPresent(Int.self, forKey: .scanCompleteThrough) ?? 0

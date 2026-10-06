@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// Security-scoped folder bookmarks for Quest's two root grants, stored in the
 /// app's own document store.
@@ -42,8 +42,9 @@ enum FolderBookmark {
     }
 
     static func save(_ url: URL, forKey key: String, in documents: PluginDocumentStore) throws {
-        let data = try url.bookmarkData(options: .withSecurityScope,
-                                        includingResourceValuesForKeys: nil, relativeTo: nil)
+        let data = try url.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil, relativeTo: nil)
         documents.setData(data, forKey: key)
         documents.setData(Data(url.path.utf8), forKey: displayPathKey(forKey: key))
     }
@@ -56,8 +57,9 @@ enum FolderBookmark {
         let lastKnown = savedPath(forKey: key, in: documents)
         var stale = false
         do {
-            let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope,
-                              relativeTo: nil, bookmarkDataIsStale: &stale)
+            let url = try URL(
+                resolvingBookmarkData: data, options: .withSecurityScope,
+                relativeTo: nil, bookmarkDataIsStale: &stale)
             return .granted(path: url.path)
         } catch {
             return .unresolvable(path: lastKnown)
@@ -76,14 +78,17 @@ enum FolderBookmark {
     ///
     /// A stale-but-resolvable bookmark is re-saved here, so a moved or renamed
     /// root is repaired on first use instead of decaying silently.
-    static func withAccess<T>(forKey key: String, in documents: PluginDocumentStore,
-                              _ body: (URL) throws -> T) rethrows -> T? {
+    static func withAccess<T>(
+        forKey key: String, in documents: PluginDocumentStore,
+        _ body: (URL) throws -> T
+    ) rethrows -> T? {
         guard let data = documents.data(forKey: key) else { return nil }
         var stale = false
         let url: URL
         do {
-            url = try URL(resolvingBookmarkData: data, options: .withSecurityScope,
-                          relativeTo: nil, bookmarkDataIsStale: &stale)
+            url = try URL(
+                resolvingBookmarkData: data, options: .withSecurityScope,
+                relativeTo: nil, bookmarkDataIsStale: &stale)
         } catch {
             // A bookmark that no longer resolves is not an error the caller can
             // act on — it is the same "no root available" situation as no
@@ -116,8 +121,10 @@ enum FolderBookmark {
         documents.setData(nil, forKey: displayPathKey(forKey: key))
     }
 
-    private static func savedPath(forKey key: String,
-                                  in documents: PluginDocumentStore) -> String? {
+    private static func savedPath(
+        forKey key: String,
+        in documents: PluginDocumentStore
+    ) -> String? {
         guard let data = documents.data(forKey: displayPathKey(forKey: key)) else { return nil }
         return String(decoding: data, as: UTF8.self)
     }

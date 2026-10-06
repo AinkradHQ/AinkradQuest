@@ -24,8 +24,10 @@ public struct ActivityEvent: Codable, Sendable, Identifiable, Hashable {
     public let summary: String
     public let at: Date
 
-    public init(id: UUID = UUID(), projectID: UUID, itemID: UUID? = nil,
-                actor: ActivityActor, kind: ActivityKind, summary: String, at: Date = Date()) {
+    public init(
+        id: UUID = UUID(), projectID: UUID, itemID: UUID? = nil,
+        actor: ActivityActor, kind: ActivityKind, summary: String, at: Date = Date()
+    ) {
         self.id = id
         self.projectID = projectID
         self.itemID = itemID

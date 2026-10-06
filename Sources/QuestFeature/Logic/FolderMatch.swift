@@ -8,10 +8,13 @@ enum FolderMatch {
     static func candidates(for projectName: String, in root: URL) -> [URL] {
         let needle = projectName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !needle.isEmpty else { return [] }
-        guard let entries = try? FileManager.default.contentsOfDirectory(
-            at: root, includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]) else { return [] }
-        return entries
+        guard
+            let entries = try? FileManager.default.contentsOfDirectory(
+                at: root, includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles])
+        else { return [] }
+        return
+            entries
             .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
             .filter { $0.lastPathComponent.lowercased().contains(needle) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }

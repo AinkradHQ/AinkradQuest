@@ -1,6 +1,6 @@
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
 
 /// One snapshot on disk, as the restore list needs to show it.
 public struct SnapshotFile: Identifiable, Sendable, Equatable {
@@ -137,8 +137,10 @@ public final class SnapshotStore {
     /// have elapsed, then `tick()` decides whether to actually write.
     private func armQuietPeriodTimer() {
         pollTimer?.invalidate()
-        let timer = Timer.scheduledTimer(withTimeInterval: SnapshotCadence.quietPeriod,
-                                         repeats: false) { [weak self] _ in
+        let timer = Timer.scheduledTimer(
+            withTimeInterval: SnapshotCadence.quietPeriod,
+            repeats: false
+        ) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
         timer.tolerance = Self.pollTolerance
@@ -162,9 +164,12 @@ public final class SnapshotStore {
             observedRevision = overlay.revision
             lastChangeAt = now
         }
-        guard SnapshotCadence.shouldSnapshot(currentRevision: overlay.revision,
-                                             lastSnapshotRevision: lastSnapshotRevision,
-                                             lastChangeAt: lastChangeAt, now: now) else { return }
+        guard
+            SnapshotCadence.shouldSnapshot(
+                currentRevision: overlay.revision,
+                lastSnapshotRevision: lastSnapshotRevision,
+                lastChangeAt: lastChangeAt, now: now)
+        else { return }
         _ = snapshotNow(at: now)
     }
 
@@ -175,14 +180,18 @@ public final class SnapshotStore {
     /// closes inside the five-minute quiet window is not silently lost.
     public func flushOnTeardown(now: Date = Date()) {
         stopAutoBackup()
-        guard SnapshotCadence.shouldSnapshotOnTeardown(currentRevision: overlay.revision,
-                                                       lastSnapshotRevision: lastSnapshotRevision)
+        guard
+            SnapshotCadence.shouldSnapshotOnTeardown(
+                currentRevision: overlay.revision,
+                lastSnapshotRevision: lastSnapshotRevision)
         else { return }
         _ = snapshotNow(at: now)
     }
 
-    public init(overlay: OverlayStore, documents: any PluginDocumentStore,
-                projectIDs: @escaping () -> [UUID]) {
+    public init(
+        overlay: OverlayStore, documents: any PluginDocumentStore,
+        projectIDs: @escaping () -> [UUID]
+    ) {
         self.overlay = overlay
         self.documents = documents
         self.projectIDs = projectIDs
@@ -193,8 +202,9 @@ public final class SnapshotStore {
     /// overlay/documents/projectIDs. Internal — every caller is a test in
     /// this module.
     static func makeForTesting() -> SnapshotStore {
-        SnapshotStore(overlay: OverlayStore(repository: InMemoryProjectRepository()),
-                      documents: InMemoryDocumentStoreForSnapshotTesting(), projectIDs: { [] })
+        SnapshotStore(
+            overlay: OverlayStore(repository: InMemoryProjectRepository()),
+            documents: InMemoryDocumentStoreForSnapshotTesting(), projectIDs: { [] })
     }
 
     /// Testing seam mirroring `observedRevision`, which is otherwise private.
@@ -221,9 +231,10 @@ public final class SnapshotStore {
         let overlays = projectIDs()
             .map { overlay.overlay(for: $0) }
             .filter { !$0.isEmpty }
-        return OverlaySnapshot(takenAt: date, overlays: overlays, linkMap: overlay.linkMap(),
-                               migratedRepoProjects: config.migratedRepoProjects,
-                               migratedBindingProjects: config.migratedBindingProjects)
+        return OverlaySnapshot(
+            takenAt: date, overlays: overlays, linkMap: overlay.linkMap(),
+            migratedRepoProjects: config.migratedRepoProjects,
+            migratedBindingProjects: config.migratedBindingProjects)
     }
 
     /// Writes one snapshot now. Returns whether it was written.
@@ -247,14 +258,18 @@ public final class SnapshotStore {
         // unconditionally — apart from "the closure ran and already set a
         // more specific `lastError` itself."
         var accessAttempted = false
-        let written = FolderBookmark.withAccess(forKey: FolderBookmark.vaultRootKey,
-                                                in: documents) { root -> Bool in
+        let written = FolderBookmark.withAccess(
+            forKey: FolderBookmark.vaultRootKey,
+            in: documents
+        ) { root -> Bool in
             accessAttempted = true
             do {
-                let directory = root.appendingPathComponent(SnapshotWriter.directoryName,
-                                                            isDirectory: true)
-                try FileManager.default.createDirectory(at: directory,
-                                                        withIntermediateDirectories: true)
+                let directory = root.appendingPathComponent(
+                    SnapshotWriter.directoryName,
+                    isDirectory: true)
+                try FileManager.default.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true)
                 let writtenURL = try SnapshotWriter.write(snapshot, into: directory)
                 // Rotation runs only AFTER a successful write, so a failed
                 // write never costs the user an existing backup.
@@ -299,29 +314,36 @@ public final class SnapshotStore {
     }
 
     public func listSnapshots() -> [SnapshotEntry] {
-        FolderBookmark.withAccess(forKey: FolderBookmark.vaultRootKey,
-                                  in: documents) { root -> [SnapshotEntry] in
-            let directory = root.appendingPathComponent(SnapshotWriter.directoryName,
-                                                        isDirectory: true)
-            let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        FolderBookmark.withAccess(
+            forKey: FolderBookmark.vaultRootKey,
+            in: documents
+        ) { root -> [SnapshotEntry] in
+            let directory = root.appendingPathComponent(
+                SnapshotWriter.directoryName,
+                isDirectory: true)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
             let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
-            let entries: [(entry: SnapshotEntry, sortKey: Date)] = names
+            let entries: [(entry: SnapshotEntry, sortKey: Date)] =
+                names
                 .filter { $0.hasPrefix("quest-overlay-") && $0.hasSuffix(".json") }
                 .map { name -> (SnapshotEntry, Date) in
                     let url = directory.appendingPathComponent(name)
                     guard let data = try? Data(contentsOf: url),
-                          let snapshot = try? decoder.decode(OverlaySnapshot.self, from: data)
+                        let snapshot = try? decoder.decode(OverlaySnapshot.self, from: data)
                     else {
                         // No `takenAt` to sort by — a damaged file's mtime is
                         // the best available proxy, so it still lands roughly
                         // in place rather than always sorting to one end.
-                        let modified = ((try? FileManager.default
-                            .attributesOfItem(atPath: url.path))?[.modificationDate] as? Date)
+                        let modified =
+                            ((try? FileManager.default
+                                .attributesOfItem(atPath: url.path))?[.modificationDate] as? Date)
                             ?? Date.distantPast
                         return (.damaged(url: url, filename: name), modified)
                     }
-                    let file = SnapshotFile(url: url, takenAt: snapshot.takenAt,
-                                            projectCount: snapshot.overlays.count)
+                    let file = SnapshotFile(
+                        url: url, takenAt: snapshot.takenAt,
+                        projectCount: snapshot.overlays.count)
                     return (.readable(file), snapshot.takenAt)
                 }
             return entries.sorted { $0.sortKey > $1.sortKey }.map(\.entry)
@@ -329,9 +351,12 @@ public final class SnapshotStore {
     }
 
     public func restore(from file: SnapshotFile) throws {
-        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
-        let snapshot: OverlaySnapshot? = FolderBookmark.withAccess(
-            forKey: FolderBookmark.vaultRootKey, in: documents) { _ in
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let snapshot: OverlaySnapshot? =
+            FolderBookmark.withAccess(
+                forKey: FolderBookmark.vaultRootKey, in: documents
+            ) { _ in
                 guard let data = try? Data(contentsOf: file.url) else { return nil }
                 return try? decoder.decode(OverlaySnapshot.self, from: data)
             } ?? nil

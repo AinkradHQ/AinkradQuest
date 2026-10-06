@@ -21,9 +21,11 @@ public struct OverlaySnapshot: Codable, Sendable {
 
     public static let currentVersion = 1
 
-    public init(version: Int = OverlaySnapshot.currentVersion, takenAt: Date,
-                overlays: [ProjectOverlay], linkMap: LinkMap,
-                migratedRepoProjects: Set<String>, migratedBindingProjects: Set<String>) {
+    public init(
+        version: Int = OverlaySnapshot.currentVersion, takenAt: Date,
+        overlays: [ProjectOverlay], linkMap: LinkMap,
+        migratedRepoProjects: Set<String>, migratedBindingProjects: Set<String>
+    ) {
         self.version = version
         self.takenAt = takenAt
         self.overlays = overlays
@@ -45,9 +47,11 @@ public struct OverlaySnapshot: Codable, Sendable {
         takenAt = try container.decode(Date.self, forKey: .takenAt)
         overlays = try container.decodeIfPresent([ProjectOverlay].self, forKey: .overlays) ?? []
         linkMap = try container.decodeIfPresent(LinkMap.self, forKey: .linkMap) ?? LinkMap()
-        migratedRepoProjects = try container
+        migratedRepoProjects =
+            try container
             .decodeIfPresent(Set<String>.self, forKey: .migratedRepoProjects) ?? []
-        migratedBindingProjects = try container
+        migratedBindingProjects =
+            try container
             .decodeIfPresent(Set<String>.self, forKey: .migratedBindingProjects) ?? []
     }
 }

@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Quest — declared settings")
@@ -10,11 +11,12 @@ struct QuestSettingsCatalogTests {
         let repository = InMemoryProjectRepository()
         let overlay = OverlayStore(repository: repository)
         let documents = MemoryDocumentStore()
-        return .init(documents: documents,
-                     store: ProjectStore(repository: repository, overlay: overlay),
-                     registry: ConnectionRegistry(repository: repository, credentials: InMemoryCredentialStore()),
-                     snapshots: SnapshotStore(overlay: overlay, documents: documents, projectIDs: { [] }),
-                     state: QuestSettingsState())
+        return .init(
+            documents: documents,
+            store: ProjectStore(repository: repository, overlay: overlay),
+            registry: ConnectionRegistry(repository: repository, credentials: InMemoryCredentialStore()),
+            snapshots: SnapshotStore(overlay: overlay, documents: documents, projectIDs: { [] }),
+            state: QuestSettingsState())
     }
 
     @Test("three declared tabs, and not one custom row")
@@ -32,12 +34,19 @@ struct QuestSettingsCatalogTests {
             try #require(QuestSettingsCatalog.page(c).groups[0].fields.first { $0.label == label })
         }
         guard case .text(let name) = try field("Name").kind,
-              case .text(let account) = try field("Account").kind,
-              case .secure(let token) = try field("Token").kind else { Issue.record("wrong kinds"); return }
+            case .text(let account) = try field("Account").kind,
+            case .secure(let token) = try field("Token").kind
+        else {
+            Issue.record("wrong kinds")
+            return
+        }
         name.wrappedValue = "Work"
         account.wrappedValue = "me@example.com"
         token.wrappedValue = "secret"
-        guard case .action(_, let add) = try field("Add connection").kind else { Issue.record("no Add"); return }
+        guard case .action(_, let add) = try field("Add connection").kind else {
+            Issue.record("no Add")
+            return
+        }
         add()
         #expect(c.registry.connections.map(\.accountLabel) == ["Work"])
         #expect(c.state.draft.accountLabel.isEmpty, "the form did not reset after adding")

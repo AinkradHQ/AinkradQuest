@@ -1,6 +1,6 @@
-import SwiftUI
-import Foundation
 import AinkradAppKit
+import Foundation
+import SwiftUI
 
 /// Describes how stale the last backup is, in words a person reads at a
 /// glance rather than a raw timestamp. A backup that stopped weeks ago is the
@@ -85,7 +85,9 @@ struct BackupSettings: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
             AinkradSectionFrame(title: "Backups") {
                 VStack(alignment: .leading, spacing: AinkradSpacing.md) {
-                    caption("Your notes, personal priority and time entries — the things a re-sync can never rebuild — are backed up to your vault folder.")
+                    caption(
+                        "Your notes, personal priority and time entries — the things a re-sync can never rebuild — are backed up to your vault folder."
+                    )
 
                     grantRow
 
@@ -162,9 +164,11 @@ struct BackupSettings: View {
                     // granted a folder and backups have silently stopped,
                     // which is a very different problem from never having
                     // set one up.
-                    Text("This folder can no longer be found — it was moved, renamed, or deleted. Backups have STOPPED. Fix it under Folder grants → Vault folder below.")
-                        .font(.caption)
-                        .foregroundStyle(statusColors.warning)
+                    Text(
+                        "This folder can no longer be found — it was moved, renamed, or deleted. Backups have STOPPED. Fix it under Folder grants → Vault folder below."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(statusColors.warning)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -199,17 +203,23 @@ struct BackupSettings: View {
     private func restoreRow(_ entry: SnapshotEntry) -> some View {
         switch entry {
         case .readable(let file):
-            return AnyView(AinkradFormRow(title: SnapshotAge.describe(file.takenAt),
-                                          help: "\(file.projectCount) project\(file.projectCount == 1 ? "" : "s")") {
-                AinkradButton(title: "Restore…", style: .secondary) { pendingRestore = file }
-            })
+            return AnyView(
+                AinkradFormRow(
+                    title: SnapshotAge.describe(file.takenAt),
+                    help: "\(file.projectCount) project\(file.projectCount == 1 ? "" : "s")"
+                ) {
+                    AinkradButton(title: "Restore…", style: .secondary) { pendingRestore = file }
+                })
         case .damaged(_, let filename):
-            return AnyView(AinkradFormRow(title: filename,
-                                          help: "This backup is damaged and cannot be restored.") {
-                Text("Damaged")
-                    .font(.caption)
-                    .foregroundStyle(statusColors.danger)
-            })
+            return AnyView(
+                AinkradFormRow(
+                    title: filename,
+                    help: "This backup is damaged and cannot be restored."
+                ) {
+                    Text("Damaged")
+                        .font(.caption)
+                        .foregroundStyle(statusColors.danger)
+                })
         }
     }
 

@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// A trashed item to show, with a label that already accounts for whether its
 /// parent project is itself trashed — an item's reachability must not depend
@@ -14,11 +14,14 @@ struct TrashedItemEntry: Identifiable {
 /// project is also trashed, or a doubly-deleted item becomes unreachable
 /// until its project is restored first.
 enum TrashListing {
-    static func itemEntries(projects: [ProjectSummary], trashedProjects: [ProjectSummary],
-                            allItems: (UUID) -> [WorkItem]) -> [TrashedItemEntry] {
+    static func itemEntries(
+        projects: [ProjectSummary], trashedProjects: [ProjectSummary],
+        allItems: (UUID) -> [WorkItem]
+    ) -> [TrashedItemEntry] {
         (projects + trashedProjects).flatMap { project in
             allItems(project.id).filter(\.isDeleted).map { item in
-                let label = project.isTrashed
+                let label =
+                    project.isTrashed
                     ? "\(project.name) (trashed): \(item.title)"
                     : "\(project.name): \(item.title)"
                 return TrashedItemEntry(id: item.id, label: label)
@@ -60,9 +63,11 @@ struct TrashView: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
             header
             if store.trashedProjects.isEmpty && itemEntries.isEmpty {
-                AinkradEmptyState(icon: "trash", title: "Trash is empty",
-                                  message: "Deleted projects and items appear here until you restore or purge them.")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AinkradEmptyState(
+                    icon: "trash", title: "Trash is empty",
+                    message: "Deleted projects and items appear here until you restore or purge them."
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: AinkradSpacing.md) {
@@ -100,15 +105,18 @@ struct TrashView: View {
         // Attached at THIS view's root, not inside a row or the scroll view:
         // the kit dims and centres the dialog within the view it modifies, so
         // an inner attachment would scope the scrim to that inner box.
-        .ainkradConfirmDialog(isPresented: Binding(get: { pendingPurge != nil },
-                                                   set: { if !$0 { pendingPurge = nil } }),
-                              title: "Delete permanently?",
-                              // Names the project: this is the one irreversible
-                              // action in the app, and "this project" does not
-                              // tell you WHICH row's Delete you pressed.
-                              message: purgeMessage,
-                              confirmTitle: confirmTitle,
-                              isDestructive: true) {
+        .ainkradConfirmDialog(
+            isPresented: Binding(
+                get: { pendingPurge != nil },
+                set: { if !$0 { pendingPurge = nil } }),
+            title: "Delete permanently?",
+            // Names the project: this is the one irreversible
+            // action in the app, and "this project" does not
+            // tell you WHICH row's Delete you pressed.
+            message: purgeMessage,
+            confirmTitle: confirmTitle,
+            isDestructive: true
+        ) {
             switch pendingPurge {
             case .project(let id): purgeProject(id)
             case .item(let id): purgeItem(id)
@@ -151,16 +159,19 @@ struct TrashView: View {
     /// re-plan from, so the counts the user agrees to are the counts that get
     /// destroyed.
     private var purgeEverythingPlan: TrashPurgePlan {
-        TrashPurge.plan(liveProjectIDs: store.projects.map(\.id),
-                        trashedProjectIDs: store.trashedProjects.map(\.id),
-                        trashedItemIDs: { store.allItems(in: $0).filter(\.isDeleted).map(\.id) })
+        TrashPurge.plan(
+            liveProjectIDs: store.projects.map(\.id),
+            trashedProjectIDs: store.trashedProjects.map(\.id),
+            trashedItemIDs: { store.allItems(in: $0).filter(\.isDeleted).map(\.id) })
     }
 
     private var header: some View {
         HStack(alignment: .top, spacing: AinkradSpacing.md) {
-            AinkradSectionHeader(title: "Trash",
-                                 subtitle: "Restore an item, or delete it permanently.")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            AinkradSectionHeader(
+                title: "Trash",
+                subtitle: "Restore an item, or delete it permanently."
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
             // `.danger`, not `.primary`, and so deliberately WITHOUT a
             // `.defaultAction`: nothing here should be reachable by pressing
             // Return. Hidden entirely when there is nothing to empty, rather
@@ -177,73 +188,88 @@ struct TrashView: View {
     }
 
     private func projectRow(_ project: ProjectSummary) -> some View {
-        AinkradListRow(leading: { AinkradIconGlyph(systemName: project.icon) },
-                       title: project.name,
-                       subtitle: "Project",
-                       trailing: {
-                           HStack(spacing: AinkradSpacing.xs) {
-                               AinkradButton(title: "Restore", style: .secondary) {
-                                   restoreProject(project.id)
-                               }
-                               // Opens the confirm dialog rather than purging:
-                               // the destructive half never fires from one tap.
-                               AinkradButton(title: "Delete", style: .danger) {
-                                   pendingPurge = .project(project.id)
-                               }
-                           }
-                       })
+        AinkradListRow(
+            leading: { AinkradIconGlyph(systemName: project.icon) },
+            title: project.name,
+            subtitle: "Project",
+            trailing: {
+                HStack(spacing: AinkradSpacing.xs) {
+                    AinkradButton(title: "Restore", style: .secondary) {
+                        restoreProject(project.id)
+                    }
+                    // Opens the confirm dialog rather than purging:
+                    // the destructive half never fires from one tap.
+                    AinkradButton(title: "Delete", style: .danger) {
+                        pendingPurge = .project(project.id)
+                    }
+                }
+            })
     }
 
     private func itemRow(_ entry: TrashedItemEntry) -> some View {
-        AinkradListRow(leading: { AinkradIconGlyph(systemName: "checklist") },
-                       title: entry.label,
-                       subtitle: "Work item",
-                       trailing: {
-                           HStack(spacing: AinkradSpacing.xs) {
-                               AinkradButton(title: "Restore", style: .secondary) {
-                                   restoreItem(entry.id)
-                               }
-                               // Matches the project row exactly: the confirm
-                               // dialog is the only route to the destructive
-                               // half, never a single tap.
-                               AinkradButton(title: "Delete", style: .danger) {
-                                   pendingPurge = .item(entry.id)
-                               }
-                           }
-                       })
+        AinkradListRow(
+            leading: { AinkradIconGlyph(systemName: "checklist") },
+            title: entry.label,
+            subtitle: "Work item",
+            trailing: {
+                HStack(spacing: AinkradSpacing.xs) {
+                    AinkradButton(title: "Restore", style: .secondary) {
+                        restoreItem(entry.id)
+                    }
+                    // Matches the project row exactly: the confirm
+                    // dialog is the only route to the destructive
+                    // half, never a single tap.
+                    AinkradButton(title: "Delete", style: .danger) {
+                        pendingPurge = .item(entry.id)
+                    }
+                }
+            })
     }
 
     /// Items whose project is live AND items whose project is itself trashed
     /// — both must be reachable here, or restoring an item can require first
     /// restoring its project.
     private var itemEntries: [TrashedItemEntry] {
-        TrashListing.itemEntries(projects: store.projects, trashedProjects: store.trashedProjects,
-                                 allItems: store.allItems(in:))
+        TrashListing.itemEntries(
+            projects: store.projects, trashedProjects: store.trashedProjects,
+            allItems: store.allItems(in:))
     }
 
     /// Restore is the reversible half, so it confirms with a `.success` toast
     /// rather than a dialog.
     private func restoreProject(_ id: UUID) {
         let name = store.trashedProjects.first { $0.id == id }?.name
-        run { try store.restoreProject(id, actor: .user) }
-            ok: { report(name.map { "Restored \($0)." } ?? "Restored the project.", .success) }
+        run {
+            try store.restoreProject(id, actor: .user)
+        } ok: {
+            report(name.map { "Restored \($0)." } ?? "Restored the project.", .success)
+        }
     }
 
     private func restoreItem(_ id: UUID) {
-        run { try store.restoreItem(id, actor: .user) }
-            ok: { report("Restored the item.", .success) }
+        run {
+            try store.restoreItem(id, actor: .user)
+        } ok: {
+            report("Restored the item.", .success)
+        }
     }
 
     /// Irreversible, and only ever reached from the confirm dialog above.
     private func purgeProject(_ id: UUID) {
         let name = store.trashedProjects.first { $0.id == id }?.name
-        run { try store.purgeProject(id) }
-            ok: { report(name.map { "Deleted \($0) permanently." } ?? "Deleted permanently.", .neutral) }
+        run {
+            try store.purgeProject(id)
+        } ok: {
+            report(name.map { "Deleted \($0) permanently." } ?? "Deleted permanently.", .neutral)
+        }
     }
 
     private func purgeItem(_ id: UUID) {
-        run { try store.purgeItem(id, actor: .user) }
-            ok: { report("Deleted permanently.", .neutral) }
+        run {
+            try store.purgeItem(id, actor: .user)
+        } ok: {
+            report("Deleted permanently.", .neutral)
+        }
     }
 
     /// Reports through the same toast path whether it fully succeeded or not:

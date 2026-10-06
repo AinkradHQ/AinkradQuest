@@ -60,11 +60,11 @@ public enum QuestError: Error, Equatable, Sendable {
         case .unknownStatus(let id): "Status '\(id)' is not in this project's status scheme."
         case .schemeWouldOrphanItems(let id):
             "Items still hold status '\(id)', which the new scheme does not contain — "
-            + "the project changed since this scheme edit was worked out. "
-            + "Nothing was changed; review the scheme again."
+                + "the project changed since this scheme edit was worked out. "
+                + "Nothing was changed; review the scheme again."
         case .schemeChangedUnderneath:
             "This project's statuses changed since these edits were planned. "
-            + "Review the current statuses and apply again."
+                + "Review the current statuses and apply again."
         case .cyclicParent: "An item cannot be moved under its own descendant."
         case .linkNotFound(let id): "No link \(id) on that project or item."
         case .linkAlreadyExists(let id):

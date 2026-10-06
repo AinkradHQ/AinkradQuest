@@ -28,8 +28,10 @@ public enum SnapshotCadence {
     /// firing here unconditionally would rotate five identical backups and
     /// destroy the user's real history, which is exactly the failure this
     /// cadence exists to avoid introducing.
-    public static func shouldSnapshot(currentRevision: Int, lastSnapshotRevision: Int?,
-                                      lastChangeAt: Date, now: Date) -> Bool {
+    public static func shouldSnapshot(
+        currentRevision: Int, lastSnapshotRevision: Int?,
+        lastChangeAt: Date, now: Date
+    ) -> Bool {
         guard currentRevision != lastSnapshotRevision else { return false }
         return now.timeIntervalSince(lastChangeAt) >= quietPeriod
     }
@@ -38,8 +40,10 @@ public enum SnapshotCadence {
     /// since the last snapshot, regardless of how recently. Unlike
     /// `shouldSnapshot`, there is no quiet period to wait out — the app is
     /// going away, so this is the last chance.
-    public static func shouldSnapshotOnTeardown(currentRevision: Int,
-                                                lastSnapshotRevision: Int?) -> Bool {
+    public static func shouldSnapshotOnTeardown(
+        currentRevision: Int,
+        lastSnapshotRevision: Int?
+    ) -> Bool {
         currentRevision != lastSnapshotRevision
     }
 }

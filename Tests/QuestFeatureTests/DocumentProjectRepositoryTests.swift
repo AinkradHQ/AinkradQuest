@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("DocumentProjectRepository")
@@ -10,8 +11,9 @@ struct DocumentProjectRepositoryTests {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
         let project = Project(id: UUID(), name: "Quest", kind: .software)
-        let item = WorkItem(id: UUID(), projectID: project.id, parentID: nil,
-                            type: .epic, title: "M1", statusID: "todo")
+        let item = WorkItem(
+            id: UUID(), projectID: project.id, parentID: nil,
+            type: .epic, title: "M1", statusID: "todo")
 
         try repository.saveProject(ProjectDocument(project: project, items: [item]))
 
@@ -63,9 +65,11 @@ struct DocumentProjectRepositoryTests {
         #expect(repository.loadProject(project.id) == nil)
     }
 
-    @Test("a corrupt document is set aside, not overwritten", arguments: [
-        "project-index", "connection-index", "link-map", "hub-config",
-    ])
+    @Test(
+        "a corrupt document is set aside, not overwritten",
+        arguments: [
+            "project-index", "connection-index", "link-map", "hub-config",
+        ])
     func corruptDocumentIsSetAsideNotOverwritten(key: String) throws {
         let seed = Data("{not json".utf8)
         let documents = MemoryDocumentStore()
@@ -96,9 +100,11 @@ struct DocumentProjectRepositoryTests {
         #expect(documents.data(forKey: backups.first ?? "") == seed, "backup does not hold the seed bytes")
     }
 
-    @Test("an unverifiable set-aside blocks the save and keeps the original", arguments: [
-        "project-index", "connection-index", "link-map", "hub-config",
-    ])
+    @Test(
+        "an unverifiable set-aside blocks the save and keeps the original",
+        arguments: [
+            "project-index", "connection-index", "link-map", "hub-config",
+        ])
     func unverifiableSetAsideKeepsOriginalAndStopsSaving(key: String) {
         let seed = Data("{not json".utf8)
         let documents = RejectingCorruptDocs()
