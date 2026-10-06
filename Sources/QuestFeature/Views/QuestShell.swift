@@ -64,6 +64,7 @@ extension EnvironmentValues {
 /// Carries no `HostTheme`: every view below resolves colour from
 /// `\.ainkradTheme`/`\.ainkradStatusColors`, which the host injects.
 struct QuestShellContent: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let registry: ConnectionRegistry
     let documents: PluginDocumentStore
@@ -142,7 +143,7 @@ struct QuestShellContent: View {
                     settingsProject: $settingsProject,
                     report: { report($0, status: $1) }
                 )
-                .frame(width: 232)
+                .frame(width: skin.size.s232)
                 Divider()
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

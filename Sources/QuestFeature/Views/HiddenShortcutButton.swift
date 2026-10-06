@@ -14,7 +14,7 @@ struct HiddenShortcutButton: View {
     }
 
     var body: some View {
-        Button("", action: action)
+        Button("", action: action)  // design-lint: allow raw-control kit gap: shortcut carrier
             .keyboardShortcut(shortcut)
             .opacity(0)
             .frame(width: 0, height: 0)

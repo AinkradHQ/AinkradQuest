@@ -3,6 +3,7 @@ import SwiftUI
 
 /// ⌘K. Rows come from `CommandCatalog`; this view only filters and dispatches.
 struct QuestCommandMenu: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let hasProject: Bool
     let statuses: [Status]
@@ -35,7 +36,7 @@ struct QuestCommandMenu: View {
         // Presented through `.ainkradModal`, which pads its content with
         // `AinkradSpacing.lg` and only THEN caps it at 480pt — so the content
         // budget is 448, and this view adds no padding of its own.
-        .frame(width: 440)
+        .frame(width: skin.size.s440)
         .onChange(of: selection) { _, new in
             guard let new else { return }
             selection = nil

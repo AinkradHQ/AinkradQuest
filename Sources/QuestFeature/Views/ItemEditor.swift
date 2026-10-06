@@ -9,6 +9,7 @@ import SwiftUI
 /// still compiling — so closing is the presenter's job, requested via
 /// `onClose`.
 struct ItemEditor: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let document: ProjectDocument
     /// The shell's single reporting path, replacing this view's `error` string.
@@ -51,7 +52,7 @@ struct ItemEditor: View {
             }
             // A deliberate cap so a long body or a long link list scrolls
             // inside the modal instead of pushing its buttons off-screen.
-            .frame(maxHeight: 420)
+            .frame(maxHeight: skin.size.s420)
 
             HStack {
                 AinkradButton(title: "Cancel", style: .secondary, action: onClose)
@@ -60,7 +61,7 @@ struct ItemEditor: View {
             }
         }
         // A deliberate fixed editor width, inside `.ainkradModal`'s 480pt cap.
-        .frame(width: 440)
+        .frame(width: skin.size.s440)
         .foregroundStyle(theme.foreground)
         .onSubmit(save)
         // `AinkradButton` carries no keyboard shortcut, so the `.defaultAction`

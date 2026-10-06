@@ -2,6 +2,7 @@ import AinkradAppKit
 import SwiftUI
 
 struct OverviewSurface: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let document: ProjectDocument
     /// The shell's single reporting path, forwarded to the link views below.
@@ -81,8 +82,8 @@ struct OverviewSurface: View {
                                 title: event.summary,
                                 trailing: {
                                     Text(event.at, style: .relative)
-                                        .font(.caption)
-                                        .foregroundStyle(ainkradTheme.foreground.opacity(0.55))
+                                        .font(skin.font(AinkradFontToken(sizeKey: "t10")))
+                                        .foregroundStyle(skin.color(skin.text.muted))
                                 }
                             )
                         }
@@ -96,11 +97,11 @@ struct OverviewSurface: View {
     @ViewBuilder
     private var header: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
-            Text(document.project.name).font(.title2)
+            Text(document.project.name).font(skin.font(AinkradFontToken(sizeKey: "t17")))
                 .foregroundStyle(ainkradTheme.foreground)
             if !document.project.summaryText.isEmpty {
                 Text(document.project.summaryText)
-                    .foregroundStyle(ainkradTheme.foreground.opacity(0.7))
+                    .foregroundStyle(ainkradTheme.foreground.opacity(skin.opacity.o70))
             }
         }
     }

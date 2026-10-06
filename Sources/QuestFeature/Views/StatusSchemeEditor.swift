@@ -7,6 +7,7 @@ import SwiftUI
 /// applies that SAME plan value, so the preview the user confirms can never
 /// drift from what actually executes.
 struct StatusSchemeEditor: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let project: Project
     /// The shell's reporting path, replacing this view's old `error` string.
@@ -58,7 +59,8 @@ struct StatusSchemeEditor: View {
                             swatch: {
                                 $0.color(
                                     tokens: theme,
-                                    statusColors: statusColors)
+                                    statusColors: statusColors,
+                                    skin: skin)
                             })
                         AinkradIconButton(systemName: "minus.circle") {
                             drafts.removeAll { $0.id == draft.id }
@@ -71,7 +73,7 @@ struct StatusSchemeEditor: View {
             }
             // A deliberate fixed list height: the rows scroll inside the sheet
             // rather than growing it past the modal.
-            .frame(height: 180)
+            .frame(height: skin.size.s180)
             .scrollContentBackground(.hidden)
             // While a plan is pending, the visible rows must stay in lockstep
             // with what the user confirmed — otherwise a post-review edit to
@@ -109,7 +111,7 @@ struct StatusSchemeEditor: View {
 
             if let pendingPlan {
                 VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
-                    Text("This will: \(pendingPlan.summary)").font(.caption)
+                    Text("This will: \(pendingPlan.summary)").font(skin.font(AinkradFontToken(sizeKey: "t10")))
                     HStack {
                         AinkradButton(title: "Cancel", style: .secondary) {
                             self.pendingPlan = nil

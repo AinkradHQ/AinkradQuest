@@ -5,6 +5,7 @@ import SwiftUI
 /// with no interface behind it — and the MCP deletes are classified on the
 /// promise that a person can undo them.
 struct TrashView: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     /// Every failure goes to the shell's single toast path; this view owns no
     /// error string of its own.
@@ -72,7 +73,7 @@ struct TrashView: View {
         // behind it. The modifier pads BEFORE it caps (`.padding(.lg)` then
         // `.frame(maxWidth: 480)`), so the content budget is 480 - 2*16 = 448
         // and anything wider has its panel border drawn over the content.
-        .frame(width: 440, height: 440)
+        .frame(width: skin.size.s440, height: skin.size.s440)
         // Attached at THIS view's root, not inside a row or the scroll view:
         // the kit dims and centres the dialog within the view it modifies, so
         // an inner attachment would scope the scrim to that inner box.

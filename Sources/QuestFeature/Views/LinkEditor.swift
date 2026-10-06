@@ -82,6 +82,7 @@ struct LinkListView: View {
     var opener: any LinkOpener = WorkspaceLinkOpener()
 
     @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
@@ -95,13 +96,13 @@ struct LinkListView: View {
                             AinkradIconGlyph(systemName: LinkSymbol.name(for: link.scheme))
                             Text(link.label)
                             if let repo = link.repo {
-                                Text(repo).font(.caption)
-                                    .foregroundStyle(theme.foreground.opacity(0.6))
+                                Text(repo).font(skin.font(AinkradFontToken(sizeKey: "t10")))
+                                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
                             }
                         }
                         .foregroundStyle(
                             inert
-                                ? theme.foreground.opacity(0.5)
+                                ? theme.foreground.opacity(skin.opacity.o50)
                                 : theme.foreground)
                     }
                     .buttonStyle(.plain)
