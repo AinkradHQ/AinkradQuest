@@ -3,8 +3,7 @@ import AppKit
 import SwiftUI
 
 /// Quest's settings as DECLARED fields, so the host draws them in the shared
-/// settings style, with its Appearance tab first. Wording follows
-/// `QuestSettingsView`, which stays as the page for hosts that predate this.
+/// settings style, with its Appearance tab first.
 ///
 /// Destructive actions (remove a connection, restore or discard notes, turn
 /// off backups) confirm through `QuestConfirm` — a declared action row has no

@@ -60,8 +60,8 @@ public struct ConnectionDraft: Equatable {
     /// token pulled from `gh` that the user then types over is no longer a
     /// `gh` token, and a future refresh path must not try to re-pull it from
     /// the CLI. Extracted so this rule is unit-testable on its own, since
-    /// `ConnectionEditor.secretBinding` (the only call site today) needs a
-    /// view host to exercise directly.
+    /// the settings catalog's token field (the only call site today) needs a
+    /// host to exercise directly.
     public mutating func setManualSecret(_ value: String) {
         secret = value
         tokenProvenance = .manual

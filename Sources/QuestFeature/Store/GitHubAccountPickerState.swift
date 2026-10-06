@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// Backs the "pick a `gh` account" alternative to typing a token, for the
-/// GitHub Projects provider only. Split out of `ConnectionEditor` so the
+/// GitHub Projects provider only. Kept out of the settings page so the
 /// logic — mapping an account pick or a `GitHubCLIError` to draft fields and
 /// display text — is testable without a view host, the same split
 /// `ConnectionDraft` gets.

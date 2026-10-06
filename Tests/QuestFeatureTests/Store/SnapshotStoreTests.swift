@@ -151,7 +151,7 @@ struct SnapshotStoreTests {
             overlays: [restored], linkMap: LinkMap(),
             migratedRepoProjects: [], migratedBindingProjects: [])
 
-        overlay.removeOverlay(for: corrupt)  // the discard action wired in QuestSettingsView
+        overlay.removeOverlay(for: corrupt)  // the discard action wired in QuestSettingsCatalog
         try store.apply(snapshot)
 
         #expect(overlay.overlay(for: corrupt).notes == "from the backup")

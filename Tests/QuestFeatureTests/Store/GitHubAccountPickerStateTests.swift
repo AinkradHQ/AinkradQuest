@@ -93,7 +93,7 @@ struct GitHubAccountPickerStateTests {
         draft.apply(login: "ahmed-work", token: "gho_abc123")
         #expect(draft.tokenProvenance == .githubCLI)
 
-        // `ConnectionEditor.secretBinding` calls `setManualSecret(_:)` on
+        // The settings catalog's token field calls `setManualSecret(_:)` on
         // every keystroke — this is the actual rule under test, not a stand-in
         // for it, since the method is the real call site the view uses.
         draft.setManualSecret("typed-over")

@@ -144,3 +144,16 @@ extension QuestSettingsCatalog {
         }
     }
 }
+
+extension ProviderKind {
+    /// The label the settings page shows. Local to the settings catalog
+    /// because it is a UI string, not part of the persisted vocabulary.
+    var settingsTitle: String {
+        switch self {
+        case .local: "Local"
+        case .jira: "Jira"
+        case .linear: "Linear"
+        case .githubProjects: "GitHub Projects"
+        }
+    }
+}
