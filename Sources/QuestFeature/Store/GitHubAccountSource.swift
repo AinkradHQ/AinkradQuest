@@ -52,19 +52,19 @@ public enum GitHubCLIError: Error, Equatable, Sendable, LocalizedError {
         switch self {
         case .cliNotInstalled:
             "GitHub CLI (`gh`) is not installed. Install it from https://cli.github.com "
-            + "or `brew install gh`, then try again."
+                + "or `brew install gh`, then try again."
         case .notLoggedIn:
             "GitHub CLI is installed but not signed in to any account. "
-            + "Run `gh auth login` in a terminal, then try again."
+                + "Run `gh auth login` in a terminal, then try again."
         case .commandFailed(let stderr):
             "GitHub CLI command failed: \(stderr.isEmpty ? "no error output." : stderr)"
         case .unparsableOutput(let excerpt):
             "Could not understand GitHub CLI's output (expected JSON): \(excerpt). "
-            + "This may mean an incompatible `gh` version — try updating it."
+                + "This may mean an incompatible `gh` version — try updating it."
         case .timedOut:
             "GitHub CLI stopped responding. Try running the same `gh auth` command "
-            + "yourself in a terminal to see what it's waiting on (a locked Keychain "
-            + "or an interactive sign-in prompt are common causes)."
+                + "yourself in a terminal to see what it's waiting on (a locked Keychain "
+                + "or an interactive sign-in prompt are common causes)."
         }
     }
 

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// Quest's notification vocabulary, in one place so the kinds stay consistent
 /// and every emission decision is visible together.
@@ -39,9 +39,10 @@ public struct QuestSignalReporter {
             // arriving is information, not a demand. The user reads it when
             // they next look at the feed.
             importance: .normal,
-            deepLink: SignalDeepLink(appID: "quest",
-                                     payload: Data(projectID.uuidString.utf8),
-                                     locator: projectID.uuidString),
+            deepLink: SignalDeepLink(
+                appID: "quest",
+                payload: Data(projectID.uuidString.utf8),
+                locator: projectID.uuidString),
             dedupeKey: "quest.agent-work:\(projectID.uuidString)")
     }
 
@@ -64,9 +65,10 @@ public struct QuestSignalReporter {
                 + "to it are not being saved. Its data on disk has been left "
                 + "untouched rather than overwritten.",
             importance: .urgent,
-            deepLink: SignalDeepLink(appID: "quest",
-                                     payload: Data(projectID.uuidString.utf8),
-                                     locator: projectID.uuidString),
+            deepLink: SignalDeepLink(
+                appID: "quest",
+                payload: Data(projectID.uuidString.utf8),
+                locator: projectID.uuidString),
             dedupeKey: "quest.overlay-unreadable:\(projectID.uuidString)")
     }
 

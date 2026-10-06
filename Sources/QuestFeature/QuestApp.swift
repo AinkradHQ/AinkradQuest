@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 public struct QuestApp: AinkradApp {
     public static let id = "quest"
@@ -51,7 +51,8 @@ public struct QuestApp: AinkradApp {
                     // Looked up inside the closure rather than captured: this
                     // runs long after construction, and `store(for:)` builds
                     // the overlay store, so capturing it here would recurse.
-                    let name = Self.store(for: host).projects
+                    let name =
+                        Self.store(for: host).projects
                         .first { $0.id == projectID }?.name ?? "A project"
                     reporter.overlayUnreadable(projectName: name, projectID: projectID)
                 }
@@ -65,8 +66,9 @@ public struct QuestApp: AinkradApp {
 
     @MainActor private static func store(for host: HostServices) -> ProjectStore {
         stores.value(for: instance(of: host)) {
-            ProjectStore(repository: DocumentProjectRepository(documents: host.documents),
-                         overlay: overlay(for: host))
+            ProjectStore(
+                repository: DocumentProjectRepository(documents: host.documents),
+                overlay: overlay(for: host))
         }
     }
 
@@ -78,8 +80,9 @@ public struct QuestApp: AinkradApp {
 
     @MainActor private static func registry(for host: HostServices) -> ConnectionRegistry {
         registries.value(for: instance(of: host)) {
-            ConnectionRegistry(repository: DocumentProjectRepository(documents: host.documents),
-                              credentials: KeychainCredentialStore())
+            ConnectionRegistry(
+                repository: DocumentProjectRepository(documents: host.documents),
+                credentials: KeychainCredentialStore())
         }
     }
 
@@ -92,11 +95,12 @@ public struct QuestApp: AinkradApp {
     @MainActor private static func snapshotStore(for host: HostServices) -> SnapshotStore {
         snapshotStores.value(for: instance(of: host)) {
             let projectStore = store(for: host)
-            let snapshots = SnapshotStore(overlay: overlay(for: host), documents: host.documents,
-                                          projectIDs: { [weak projectStore] in
-                                              guard let projectStore else { return [] }
-                                              return (projectStore.projects + projectStore.trashedProjects).map(\.id)
-                                          })
+            let snapshots = SnapshotStore(
+                overlay: overlay(for: host), documents: host.documents,
+                projectIDs: { [weak projectStore] in
+                    guard let projectStore else { return [] }
+                    return (projectStore.projects + projectStore.trashedProjects).map(\.id)
+                })
             // BLOCKER 1: the design's cadence — debounced on overlay change,
             // roughly five minutes of quiet, plus one final write on
             // teardown if anything changed — was never implemented. Started
@@ -114,17 +118,20 @@ public struct QuestApp: AinkradApp {
     @MainActor private static let settingsStates = PluginInstanceStorage<QuestSettingsState>()
 
     public static func settingsCatalog(host: HostServices) -> SettingsPage? {
-        QuestSettingsCatalog.page(.init(
-            documents: host.documents, store: store(for: host), registry: registry(for: host),
-            snapshots: snapshotStore(for: host),
-            state: settingsStates.value(for: instance(of: host)) { QuestSettingsState() }))
+        QuestSettingsCatalog.page(
+            .init(
+                documents: host.documents, store: store(for: host), registry: registry(for: host),
+                snapshots: snapshotStore(for: host),
+                state: settingsStates.value(for: instance(of: host)) { QuestSettingsState() }))
     }
 
     public static func makeSettingsView(host: HostServices) -> AnyView {
-        AnyView(QuestSettingsView(presentation: host.presentation, modeControl: host.mode,
-                                  documents: host.documents,
-                                  store: store(for: host), registry: registry(for: host),
-                                  snapshots: snapshotStore(for: host)))
+        AnyView(
+            QuestSettingsView(
+                presentation: host.presentation, modeControl: host.mode,
+                documents: host.documents,
+                store: store(for: host), registry: registry(for: host),
+                snapshots: snapshotStore(for: host)))
     }
 
     public static func chromeFill(host: HostServices) -> Color? {
@@ -148,10 +155,11 @@ public struct QuestApp: AinkradApp {
             let reporter = QuestSignalReporter(signals: host.signals)
             let (server, failures) = QuestMCPServer.make(appID: id) { operation, arguments in
                 let result = await operations.run(operation: operation, arguments: arguments)
-                QuestAgentActivityReporter.report(operation: operation,
-                                                  result: result,
-                                                  store: store(for: host),
-                                                  reporter: reporter)
+                QuestAgentActivityReporter.report(
+                    operation: operation,
+                    result: result,
+                    store: store(for: host),
+                    reporter: reporter)
                 return result
             }
             // A dropped tool is a silently missing capability — say so rather
@@ -205,13 +213,17 @@ extension QuestApp: AinkradAppModes {
             // a successful one.
             return AnyView(QuestBasicView(store: store(for: host)).ainkradToastHost())
         case .advanced:
-            return AnyView(QuestShell(store: store(for: host), registry: registry(for: host),
-                                      theme: host.theme, documents: host.documents))
+            return AnyView(
+                QuestShell(
+                    store: store(for: host), registry: registry(for: host),
+                    theme: host.theme, documents: host.documents))
         // Resilient enum: fall back to advanced, never to a stripped view for a
         // mode this build does not understand.
         @unknown default:
-            return AnyView(QuestShell(store: store(for: host), registry: registry(for: host),
-                                      theme: host.theme, documents: host.documents))
+            return AnyView(
+                QuestShell(
+                    store: store(for: host), registry: registry(for: host),
+                    theme: host.theme, documents: host.documents))
         }
     }
 }

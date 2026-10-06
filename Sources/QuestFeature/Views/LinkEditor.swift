@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// Input validation at the boundary where links enter the system.
 public enum LinkValidation {
@@ -14,8 +14,10 @@ public enum LinkValidation {
     /// Repo-scoped schemes must name their repo: a project with eleven repos
     /// cannot resolve a bare branch name, and storing one would produce a link
     /// that looks fine and goes nowhere.
-    public static func normalize(scheme: LinkScheme, identifier: String,
-                                 label: String, repo: String?) -> Outcome {
+    public static func normalize(
+        scheme: LinkScheme, identifier: String,
+        label: String, repo: String?
+    ) -> Outcome {
         let trimmedIdentifier = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedIdentifier.isEmpty else { return .invalid("A link needs an identifier.") }
 
@@ -26,9 +28,11 @@ public enum LinkValidation {
         }
 
         let trimmedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .valid(Link(scheme: scheme, identifier: trimmedIdentifier,
-                           label: trimmedLabel.isEmpty ? trimmedIdentifier : trimmedLabel,
-                           repo: repoScoped.contains(scheme) ? trimmedRepo : nil))
+        return .valid(
+            Link(
+                scheme: scheme, identifier: trimmedIdentifier,
+                label: trimmedLabel.isEmpty ? trimmedIdentifier : trimmedLabel,
+                repo: repoScoped.contains(scheme) ? trimmedRepo : nil))
     }
 }
 
@@ -83,14 +87,18 @@ struct LinkEditor: View {
     }
 
     private func add() {
-        switch LinkValidation.normalize(scheme: scheme, identifier: identifier,
-                                        label: label, repo: repo) {
+        switch LinkValidation.normalize(
+            scheme: scheme, identifier: identifier,
+            label: label, repo: repo)
+        {
         case .invalid(let message):
             report(message, .danger)
         case .valid(let link):
             do {
                 try store.addLink(to: target, link: link, actor: .user)
-                identifier = ""; label = ""; repo = ""
+                identifier = ""
+                label = ""
+                repo = ""
             } catch let failure as QuestError {
                 report(failure.message, .danger)
             } catch {
@@ -128,8 +136,10 @@ struct LinkListView: View {
                                     .foregroundStyle(theme.foreground.opacity(0.6))
                             }
                         }
-                        .foregroundStyle(inert ? theme.foreground.opacity(0.5)
-                                               : theme.foreground)
+                        .foregroundStyle(
+                            inert
+                                ? theme.foreground.opacity(0.5)
+                                : theme.foreground)
                     }
                     .buttonStyle(.plain)
                     // Both label and identifier are agent-writable, and the row

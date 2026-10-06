@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 /// Covers `GitHubAccountPickerState` and `ConnectionDraft.apply(login:token:)`
@@ -9,10 +10,12 @@ import Foundation
 @MainActor
 @Suite("GitHub account picker state")
 struct GitHubAccountPickerStateTests {
-    private let workAccount = GitHubAccount(login: "ahmed-work", host: "github.com",
-                                            isActive: true, scopes: ["repo", "gist"], isHealthy: true)
-    private let noRepoScopeAccount = GitHubAccount(login: "ahmed-limited", host: "github.com",
-                                                   isActive: false, scopes: ["gist"], isHealthy: true)
+    private let workAccount = GitHubAccount(
+        login: "ahmed-work", host: "github.com",
+        isActive: true, scopes: ["repo", "gist"], isHealthy: true)
+    private let noRepoScopeAccount = GitHubAccount(
+        login: "ahmed-limited", host: "github.com",
+        isActive: false, scopes: ["gist"], isHealthy: true)
 
     @Test("loading surfaces the accounts the source reports")
     func loadsAccounts() async {
@@ -32,8 +35,9 @@ struct GitHubAccountPickerStateTests {
 
     @Test("picking an account fills the draft's identifier and secret and marks it CLI-backed")
     func pickFillsDraft() async {
-        let source = InMemoryGitHubAccountSource(accounts: [workAccount],
-                                                  tokens: [workAccount.id: "gho_abc123"])
+        let source = InMemoryGitHubAccountSource(
+            accounts: [workAccount],
+            tokens: [workAccount.id: "gho_abc123"])
         let picker = GitHubAccountPickerState(source: source)
         var draft = ConnectionDraft(provider: .githubProjects)
 
@@ -67,8 +71,9 @@ struct GitHubAccountPickerStateTests {
 
     @Test("a failed token fetch leaves the draft untouched and surfaces the message")
     func tokenFetchFailureLeavesDraftUntouched() async {
-        let source = InMemoryGitHubAccountSource(accounts: [workAccount],
-                                                  tokenError: GitHubCLIError.timedOut)
+        let source = InMemoryGitHubAccountSource(
+            accounts: [workAccount],
+            tokenError: GitHubCLIError.timedOut)
         let picker = GitHubAccountPickerState(source: source)
         var draft = ConnectionDraft(provider: .githubProjects)
         draft.accountIdentifier = "typed-already"

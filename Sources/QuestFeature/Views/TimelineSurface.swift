@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 struct TimelineSurface: View {
     let document: ProjectDocument
@@ -23,8 +23,9 @@ struct TimelineSurface: View {
                 AinkradSectionHeader(title: "Timeline")
 
                 if result.bars.isEmpty {
-                    AinkradEmptyState(icon: "calendar", title: "Nothing scheduled",
-                                      message: "Items with due dates appear on the timeline.")
+                    AinkradEmptyState(
+                        icon: "calendar", title: "Nothing scheduled",
+                        message: "Items with due dates appear on the timeline.")
                 } else {
                     GeometryReader { geometry in
                         let span = timeSpan(result.bars)

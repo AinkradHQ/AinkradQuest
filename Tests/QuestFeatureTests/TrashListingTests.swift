@@ -1,17 +1,20 @@
 import Foundation
 import Testing
+
 @testable import QuestFeature
 
 @Suite("TrashListing")
 struct TrashListingTests {
     private func project(_ name: String, isTrashed: Bool) -> ProjectSummary {
-        ProjectSummary(id: UUID(), name: name, icon: "folder", colorToken: "blue",
-                       kind: .software, state: .active, updatedAt: Date(), isTrashed: isTrashed)
+        ProjectSummary(
+            id: UUID(), name: name, icon: "folder", colorToken: "blue",
+            kind: .software, state: .active, updatedAt: Date(), isTrashed: isTrashed)
     }
 
     private func item(projectID: UUID, title: String, deleted: Bool) -> WorkItem {
-        WorkItem(id: UUID(), projectID: projectID, parentID: nil, type: .task,
-                title: title, statusID: "todo", deletedAt: deleted ? Date() : nil)
+        WorkItem(
+            id: UUID(), projectID: projectID, parentID: nil, type: .task,
+            title: title, statusID: "todo", deletedAt: deleted ? Date() : nil)
     }
 
     @Test("a trashed item whose project is still live is listed, unmarked")
@@ -68,8 +71,9 @@ struct TrashListingTests {
     func realStoreStampsTrashedProjectSummary() throws {
         let store = makeProjectStore(InMemoryProjectRepository())
         let project = store.createProject(name: "Legacy", kind: .general, actor: .user)
-        let item = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "Old bug", statusID: "todo", actor: .user)
+        let item = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Old bug", statusID: "todo", actor: .user)
 
         try store.deleteItem(item.id, actor: .user)
         try store.deleteProject(project.id, actor: .user)
@@ -77,9 +81,10 @@ struct TrashListingTests {
         let trashed = try #require(store.trashedProjects.first { $0.id == project.id })
         #expect(trashed.isTrashed == true)
 
-        let entries = TrashListing.itemEntries(projects: store.projects,
-                                               trashedProjects: store.trashedProjects,
-                                               allItems: store.allItems(in:))
+        let entries = TrashListing.itemEntries(
+            projects: store.projects,
+            trashedProjects: store.trashedProjects,
+            allItems: store.allItems(in:))
         let entry = try #require(entries.first { $0.id == item.id })
         #expect(entry.label == "Legacy (trashed): Old bug")
     }

@@ -17,8 +17,10 @@ public enum GlobalActionGate {
     ///     scoped modal (the item editors in List and Board).
     ///   - shellModalOpen: the shell itself is presenting one (new project,
     ///     attachment picker, command menu, trash, project settings).
-    public static func globalActionsEnabled(surfaceModalOpen: Bool,
-                                            shellModalOpen: Bool) -> Bool {
+    public static func globalActionsEnabled(
+        surfaceModalOpen: Bool,
+        shellModalOpen: Bool
+    ) -> Bool {
         !surfaceModalOpen && !shellModalOpen
     }
 }

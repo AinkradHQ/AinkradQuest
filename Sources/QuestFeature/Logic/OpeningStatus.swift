@@ -1,6 +1,6 @@
 import Foundation
 
-public extension StatusScheme {
+extension StatusScheme {
     /// The status a newly created item opens in, derived from THIS scheme —
     /// never a hardcoded `"todo"`, which a general-kind scheme need not contain
     /// and which `StatusSchemeEditor` lets the user remove or rename outright.
@@ -11,7 +11,7 @@ public extension StatusScheme {
     /// nonsense; falling back to the first status only if every status is a
     /// done status. `nil` when the scheme is empty, which the callers treat as
     /// "withhold the action" rather than "guess".
-    var openingStatusID: String? {
+    public var openingStatusID: String? {
         statuses.first { !isDone($0.id) }?.id ?? statuses.first?.id
     }
 }

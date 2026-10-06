@@ -1,6 +1,6 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
+import AppKit
+import SwiftUI
 
 /// A folder found under a granted root whose name matches the new project's
 /// name. Never authoritative — the sheet that shows these starts every
@@ -23,8 +23,10 @@ enum AttachmentSuggestions {
 
     /// Matches under ONE root. Must be called with that root's security scope
     /// held (see `FolderBookmark.withAccess`) — it reads the directory.
-    static func candidates(projectName: String, root: URL,
-                           kind: RootKind) -> [AttachmentSuggestion] {
+    static func candidates(
+        projectName: String, root: URL,
+        kind: RootKind
+    ) -> [AttachmentSuggestion] {
         FolderMatch.candidates(for: projectName, in: root).map { url in
             switch kind {
             case .projects: AttachmentSuggestion(url: url, scheme: FolderMatch.linkKind(for: url))
@@ -37,8 +39,10 @@ enum AttachmentSuggestions {
     /// that is the normal state, not an error. The per-folder picker
     /// (`FolderAttachButton`, on Overview) does not depend on this and is
     /// reachable regardless of whether any suggestion ever fired.
-    static func build(projectName: String, projectsRoot: URL?,
-                      vaultRoot: URL?) -> [AttachmentSuggestion] {
+    static func build(
+        projectName: String, projectsRoot: URL?,
+        vaultRoot: URL?
+    ) -> [AttachmentSuggestion] {
         var found: [AttachmentSuggestion] = []
         if let projectsRoot {
             found += candidates(projectName: projectName, root: projectsRoot, kind: .projects)
@@ -54,17 +58,25 @@ enum AttachmentSuggestions {
     /// needed it. The resulting `AttachmentSuggestion` URLs carry no access —
     /// they only ever become a `Link`'s path string (`FolderAttachment`), which
     /// touches no filesystem.
-    static func build(projectName: String,
-                     in documents: PluginDocumentStore) -> [AttachmentSuggestion] {
+    static func build(
+        projectName: String,
+        in documents: PluginDocumentStore
+    ) -> [AttachmentSuggestion] {
         var found: [AttachmentSuggestion] = []
-        found += FolderBookmark.withAccess(forKey: FolderBookmark.projectsRootKey,
-                                          in: documents) { root in
-            candidates(projectName: projectName, root: root, kind: .projects)
-        } ?? []
-        found += FolderBookmark.withAccess(forKey: FolderBookmark.vaultRootKey,
-                                         in: documents) { root in
-            candidates(projectName: projectName, root: root, kind: .vault)
-        } ?? []
+        found +=
+            FolderBookmark.withAccess(
+                forKey: FolderBookmark.projectsRootKey,
+                in: documents
+            ) { root in
+                candidates(projectName: projectName, root: root, kind: .projects)
+            } ?? []
+        found +=
+            FolderBookmark.withAccess(
+                forKey: FolderBookmark.vaultRootKey,
+                in: documents
+            ) { root in
+                candidates(projectName: projectName, root: root, kind: .vault)
+            } ?? []
         return found
     }
 }
@@ -89,10 +101,14 @@ enum AttachmentSuggestions {
 /// stores.
 @MainActor
 enum FolderAttachment {
-    static func attach(url: URL, scheme: LinkScheme, to projectID: UUID,
-                       store: ProjectStore) -> String? {
-        switch LinkValidation.normalize(scheme: scheme, identifier: url.path,
-                                        label: url.lastPathComponent, repo: nil) {
+    static func attach(
+        url: URL, scheme: LinkScheme, to projectID: UUID,
+        store: ProjectStore
+    ) -> String? {
+        switch LinkValidation.normalize(
+            scheme: scheme, identifier: url.path,
+            label: url.lastPathComponent, repo: nil)
+        {
         case .invalid(let message):
             return message
         case .valid(let link):
@@ -196,8 +212,10 @@ struct AttachmentPicker: View {
         let toAttach = suggestions.filter { checked.contains($0.id) }
         var failures: [String] = []
         for suggestion in toAttach {
-            if let message = FolderAttachment.attach(url: suggestion.url, scheme: suggestion.scheme,
-                                                      to: projectID, store: store) {
+            if let message = FolderAttachment.attach(
+                url: suggestion.url, scheme: suggestion.scheme,
+                to: projectID, store: store)
+            {
                 failures.append("\(suggestion.label): \(message)")
             }
         }
@@ -219,9 +237,11 @@ struct AttachmentPicker: View {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        if let message = FolderAttachment.attach(url: url,
-                                                 scheme: FolderMatch.linkKind(for: url),
-                                                 to: projectID, store: store) {
+        if let message = FolderAttachment.attach(
+            url: url,
+            scheme: FolderMatch.linkKind(for: url),
+            to: projectID, store: store)
+        {
             report(message, .danger)
         }
     }
@@ -251,9 +271,11 @@ struct FolderAttachButton: View {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        if let message = FolderAttachment.attach(url: url,
-                                                 scheme: FolderMatch.linkKind(for: url),
-                                                 to: projectID, store: store) {
+        if let message = FolderAttachment.attach(
+            url: url,
+            scheme: FolderMatch.linkKind(for: url),
+            to: projectID, store: store)
+        {
             report(message, .danger)
         }
     }

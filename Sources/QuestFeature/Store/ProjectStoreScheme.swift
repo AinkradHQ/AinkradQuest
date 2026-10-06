@@ -8,8 +8,10 @@ extension ProjectStore {
     /// Validation is NOT repeated here — `SchemePlan.plan` owns it, and the
     /// plan's own contents are what execute, which is what keeps the confirm
     /// step honest.
-    public func applyScheme(_ plan: SchemePlan.Plan, to projectID: UUID,
-                            actor: ActivityActor) throws {
+    public func applyScheme(
+        _ plan: SchemePlan.Plan, to projectID: UUID,
+        actor: ActivityActor
+    ) throws {
         guard !isTrashed(projectID), var document = openProject(projectID) else {
             throw QuestError.projectNotFound(projectID)
         }
@@ -40,8 +42,9 @@ extension ProjectStore {
             for position in document.items.indices {
                 let from = document.items[position].statusID
                 guard plan.proposed.status(id: from) == nil,
-                      let destination = plan.reassignments[from],
-                      let target = plan.proposed.status(id: destination) else { continue }
+                    let destination = plan.reassignments[from],
+                    let target = plan.proposed.status(id: destination)
+                else { continue }
                 document.items[position].statusID = destination
                 // Same rule `setStatus` applies on every status change: closedAt
                 // follows the DESTINATION's category. Without this, removing
@@ -49,7 +52,8 @@ extension ProjectStore {
                 // closedAt, and removing "Done" into "Todo" left reopened items
                 // still stamped closed. An existing stamp is kept when the
                 // destination is also done, so a genuine close time survives.
-                document.items[position].closedAt = target.category == .done
+                document.items[position].closedAt =
+                    target.category == .done
                     ? (document.items[position].closedAt ?? stamp)
                     : nil
                 document.items[position].updatedAt = stamp
@@ -62,7 +66,8 @@ extension ProjectStore {
         // that held a RECATEGORISED (therefore surviving) status at plan time,
         // so they never name a reassigned item — skipping them is belt-and-
         // braces against handling one item twice with two different rules.
-        let closing = Set(plan.closing), reopening = Set(plan.reopening)
+        let closing = Set(plan.closing)
+        let reopening = Set(plan.reopening)
         for position in document.items.indices where !reassigned.contains(document.items[position].id) {
             let id = document.items[position].id
             if closing.contains(id) {
@@ -95,9 +100,11 @@ extension ProjectStore {
         }
 
         document.project.updatedAt = stamp
-        document.activity.append(ActivityEvent(projectID: projectID, actor: actor,
-                                               kind: .schemeUpdated,
-                                               summary: plan.summary))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, actor: actor,
+                kind: .schemeUpdated,
+                summary: plan.summary))
         commit(document)
     }
 }

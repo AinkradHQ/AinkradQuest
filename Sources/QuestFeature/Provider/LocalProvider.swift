@@ -23,7 +23,8 @@ public final class LocalProvider: WorkProvider {
     }
 
     public func changes(forProjectKey key: String, since cursor: String?) async throws
-        -> (changes: [ProviderChange], cursor: String?) {
+        -> (changes: [ProviderChange], cursor: String?)
+    {
         // The local store mutates in-process and publishes through
         // `ProjectStore.revision`; nothing polls it. Conforming with an empty
         // result is honest, and keeps every caller provider-agnostic.

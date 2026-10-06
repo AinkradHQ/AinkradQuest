@@ -43,8 +43,10 @@ public struct SessionAttachment: Codable, Sendable, Hashable, Identifiable {
     public var label: String
     public var attachedAt: Date
 
-    public init(id: UUID, sessionID: String, pathSlug: String,
-                resolvedPath: String? = nil, label: String = "", attachedAt: Date = Date()) {
+    public init(
+        id: UUID, sessionID: String, pathSlug: String,
+        resolvedPath: String? = nil, label: String = "", attachedAt: Date = Date()
+    ) {
         self.id = id
         self.sessionID = sessionID
         self.pathSlug = pathSlug
@@ -78,8 +80,10 @@ public struct ItemOverlay: Codable, Sendable, Hashable {
     public var timeEntries: [TimeEntry]
     public var sessions: [SessionAttachment]
 
-    public init(notes: String = "", personalOrder: Int? = nil,
-                timeEntries: [TimeEntry] = [], sessions: [SessionAttachment] = []) {
+    public init(
+        notes: String = "", personalOrder: Int? = nil,
+        timeEntries: [TimeEntry] = [], sessions: [SessionAttachment] = []
+    ) {
         self.notes = notes
         self.personalOrder = personalOrder
         self.timeEntries = timeEntries

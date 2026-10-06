@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -9,8 +10,9 @@ struct ProjectStorePurgeTests {
 
     private func projectWithEpic(_ store: ProjectStore) throws -> (project: Project, epic: WorkItem) {
         let project = store.createProject(name: "Quest", kind: .software, actor: .user)
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "Shell", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Shell", statusID: "todo", actor: .user)
         return (project, epic)
     }
 
@@ -45,8 +47,9 @@ struct ProjectStorePurgeTests {
     func cascades() throws {
         let store = makeStore()
         let (project, epic) = try projectWithEpic(store)
-        let child = try store.createItem(projectID: project.id, parentID: epic.id, type: .task,
-                                         title: "Header", statusID: "todo", actor: .user)
+        let child = try store.createItem(
+            projectID: project.id, parentID: epic.id, type: .task,
+            title: "Header", statusID: "todo", actor: .user)
         try store.deleteItem(epic.id, actor: .user)
 
         try store.purgeItem(epic.id, actor: .user)
@@ -73,8 +76,9 @@ struct ProjectStorePurgeTests {
     func emptyTrashSpares() throws {
         let store = makeStore()
         let (project, epic) = try projectWithEpic(store)
-        let keep = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "Keep", statusID: "todo", actor: .user)
+        let keep = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Keep", statusID: "todo", actor: .user)
         try store.deleteItem(epic.id, actor: .user)
 
         let outcome = store.emptyTrash(actor: .user)
@@ -104,9 +108,10 @@ struct ProjectStorePurgeTests {
     func cascadeIsNotAFailure() throws {
         let store = makeStore()
         let (project, epic) = try projectWithEpic(store)
-        _ = try store.createItem(projectID: project.id, parentID: epic.id, type: .task,
-                                 title: "Header", statusID: "todo", actor: .user)
-        try store.deleteItem(epic.id, actor: .user)   // cascades onto the child
+        _ = try store.createItem(
+            projectID: project.id, parentID: epic.id, type: .task,
+            title: "Header", statusID: "todo", actor: .user)
+        try store.deleteItem(epic.id, actor: .user)  // cascades onto the child
 
         let outcome = store.emptyTrash(actor: .user)
 
@@ -148,8 +153,9 @@ struct ProjectStorePurgeTests {
         let repository = InMemoryProjectRepository()
         let store = makeProjectStore(repository)
         let project = store.createProject(name: "Doomed", kind: .software, actor: .user)
-        let item = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "Epic", statusID: "todo", actor: .user)
+        let item = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Epic", statusID: "todo", actor: .user)
         let connectionID = UUID()
 
         _ = store.overlay.update(projectID: project.id) { $0.notes = "private" }

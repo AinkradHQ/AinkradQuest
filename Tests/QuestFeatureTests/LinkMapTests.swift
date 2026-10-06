@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Link map and hub config")
@@ -20,7 +21,8 @@ struct LinkMapTests {
         var map = LinkMap()
         let a = RemoteRef(connectionID: UUID(), remoteKey: "QST-1")
         let b = RemoteRef(connectionID: UUID(), remoteKey: "QST-1")
-        let localA = UUID(), localB = UUID()
+        let localA = UUID()
+        let localB = UUID()
         map.link(a, to: localA)
         map.link(b, to: localB)
 
@@ -35,7 +37,8 @@ struct LinkMapTests {
         var map = LinkMap()
         let keep = RemoteRef(connectionID: UUID(), remoteKey: "KEEP")
         let drop = RemoteRef(connectionID: UUID(), remoteKey: "DROP")
-        let keepID = UUID(), dropID = UUID()
+        let keepID = UUID()
+        let dropID = UUID()
         map.link(keep, to: keepID)
         map.link(drop, to: dropID)
 
@@ -49,7 +52,8 @@ struct LinkMapTests {
     @Test("unlinking a whole connection clears only its rows")
     func unlinkConnection() {
         var map = LinkMap()
-        let gone = UUID(), stays = UUID()
+        let gone = UUID()
+        let stays = UUID()
         map.link(RemoteRef(connectionID: gone, remoteKey: "A"), to: UUID())
         map.link(RemoteRef(connectionID: gone, remoteKey: "B"), to: UUID())
         let keptID = UUID()
@@ -94,7 +98,8 @@ struct LinkMapTests {
     @Test("hub config binds and unbinds a project")
     func binding() {
         var config = HubConfig()
-        let project = UUID(), connection = UUID()
+        let project = UUID()
+        let connection = UUID()
         config.bind(project, to: ProjectBinding(connectionID: connection, remoteProjectKey: "QST"))
 
         #expect(config.binding(for: project)?.remoteProjectKey == "QST")
@@ -109,7 +114,8 @@ struct LinkMapTests {
     func boundProjects() {
         var config = HubConfig()
         let connection = UUID()
-        let a = UUID(), b = UUID()
+        let a = UUID()
+        let b = UUID()
         config.bind(a, to: ProjectBinding(connectionID: connection, remoteProjectKey: "A"))
         config.bind(b, to: ProjectBinding(connectionID: connection, remoteProjectKey: "B"))
         config.bind(UUID(), to: ProjectBinding(connectionID: UUID(), remoteProjectKey: "C"))
@@ -122,7 +128,8 @@ struct LinkMapTests {
     @Test("hub config persists bindings keyed by uuidString, not raw UUID")
     func bindingsKeyedByUUIDString() throws {
         var config = HubConfig()
-        let project = UUID(), connection = UUID()
+        let project = UUID()
+        let connection = UUID()
         config.bind(project, to: ProjectBinding(connectionID: connection, remoteProjectKey: "QST"))
 
         let data = try JSONEncoder().encode(config)

@@ -10,8 +10,10 @@ public enum TodayInbox {
         public let recent: [WorkItem]
     }
 
-    public static func build(items: [WorkItem], scheme: StatusScheme,
-                             now: Date, calendar: Calendar = .current) -> Result {
+    public static func build(
+        items: [WorkItem], scheme: StatusScheme,
+        now: Date, calendar: Calendar = .current
+    ) -> Result {
         let open = items.filter { !$0.isDeleted && !scheme.isDone($0.statusID) }
 
         let overdue = open.filter { item in

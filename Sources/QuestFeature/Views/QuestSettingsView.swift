@@ -1,6 +1,6 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
+import AppKit
+import SwiftUI
 
 /// Quest's settings surface — a "Presentation" (pane/overlay) control on the
 /// Cardinal HUD kit, mirroring `LeylineSettingsView`. Backed by
@@ -69,10 +69,12 @@ struct QuestSettingsView: View {
     /// from `rootRow` itself, for the identical clipping reason.
     @State private var pendingClearVaultGrant = false
 
-    init(presentation: any PluginPresentationControl,
-         modeControl: any PluginModeControl,
-         documents: PluginDocumentStore,
-         store: ProjectStore, registry: ConnectionRegistry, snapshots: SnapshotStore) {
+    init(
+        presentation: any PluginPresentationControl,
+        modeControl: any PluginModeControl,
+        documents: PluginDocumentStore,
+        store: ProjectStore, registry: ConnectionRegistry, snapshots: SnapshotStore
+    ) {
         self.presentation = presentation
         self.modeControl = modeControl
         self.documents = documents
@@ -89,9 +91,10 @@ struct QuestSettingsView: View {
 
                     // Shared rows, not a local copy: "Open as" and "Open in"
                     // must read the same and sit in the same place everywhere.
-                    AinkradSurfaceSettings(appName: "Quest",
-                                           presentation: presentation,
-                                           mode: modeControl)
+                    AinkradSurfaceSettings(
+                        appName: "Quest",
+                        presentation: presentation,
+                        mode: modeControl)
                 }
             }
 
@@ -99,17 +102,21 @@ struct QuestSettingsView: View {
             // mounted by the HOST's settings surface, outside `QuestShell`'s
             // `.ainkradToastHost()`, so errors go to this standing banner
             // rather than a toast.
-            ConnectionsSettings(registry: registry, store: store,
-                               report: { message, _ in error = message },
-                               draft: $connectionDraft, draftToken: $connectionDraftToken)
+            ConnectionsSettings(
+                registry: registry, store: store,
+                report: { message, _ in error = message },
+                draft: $connectionDraft, draftToken: $connectionDraftToken)
 
-            BackupSettings(snapshots: snapshots, pendingRestore: $pendingRestore,
-                           restoreError: $restoreError)
+            BackupSettings(
+                snapshots: snapshots, pendingRestore: $pendingRestore,
+                restoreError: $restoreError)
 
             if !store.overlay.health.affectedProjects.isEmpty {
                 AinkradSectionFrame(title: "Corrupt overlays") {
                     VStack(alignment: .leading, spacing: AinkradSpacing.md) {
-                        caption("These projects' saved notes could not be read. Restore from a backup above, or discard to start fresh with an empty overlay.")
+                        caption(
+                            "These projects' saved notes could not be read. Restore from a backup above, or discard to start fresh with an empty overlay."
+                        )
                         ForEach(Array(store.overlay.health.affectedProjects), id: \.self) { projectID in
                             AinkradFormRow(title: projectName(projectID), help: "Overlay could not be read.") {
                                 AinkradButton(title: "Discard…", style: .danger) {
@@ -123,15 +130,21 @@ struct QuestSettingsView: View {
 
             AinkradSectionFrame(title: "Folder grants") {
                 VStack(alignment: .leading, spacing: AinkradSpacing.md) {
-                    caption("Every project's Overview also has its own Attach folder… button, which works whether or not you set anything here.")
+                    caption(
+                        "Every project's Overview also has its own Attach folder… button, which works whether or not you set anything here."
+                    )
 
-                    rootRow(title: "Projects folder",
-                           help: "Used only to suggest a matching repo or folder by name when you create a project — nothing else reads or writes it.",
-                           key: FolderBookmark.projectsRootKey)
+                    rootRow(
+                        title: "Projects folder",
+                        help:
+                            "Used only to suggest a matching repo or folder by name when you create a project — nothing else reads or writes it.",
+                        key: FolderBookmark.projectsRootKey)
 
-                    rootRow(title: "Vault folder",
-                           help: "Two uses: suggests a matching vault folder by name when you create a project, and is where Quest backs up and restores your notes, personal priority and time entries — see Backups above.",
-                           key: FolderBookmark.vaultRootKey)
+                    rootRow(
+                        title: "Vault folder",
+                        help:
+                            "Two uses: suggests a matching vault folder by name when you create a project, and is where Quest backs up and restores your notes, personal priority and time entries — see Backups above.",
+                        key: FolderBookmark.vaultRootKey)
 
                     // A banner, not a toast: this view is mounted by the HOST's
                     // settings surface, outside `QuestShell`'s
@@ -151,13 +164,18 @@ struct QuestSettingsView: View {
         // gives the overlay the full settings surface as its bounds instead
         // of one section's narrow box, so the editor is centered and
         // contained rather than clipped off the left edge.
-        .ainkradModal(isPresented: Binding(get: { connectionDraft != nil },
-                                           set: { if !$0 { connectionDraft = nil } })) {
+        .ainkradModal(
+            isPresented: Binding(
+                get: { connectionDraft != nil },
+                set: { if !$0 { connectionDraft = nil } })
+        ) {
             if let current = connectionDraft {
-                ConnectionEditor(draft: current, registry: registry,
-                                 report: { message, _ in error = message },
-                                 onClose: { connectionDraft = nil })
-                    .id(connectionDraftToken)
+                ConnectionEditor(
+                    draft: current, registry: registry,
+                    report: { message, _ in error = message },
+                    onClose: { connectionDraft = nil }
+                )
+                .id(connectionDraftToken)
             }
         }
         // Restore is the most destructive action Quest offers — it replaces
@@ -166,16 +184,19 @@ struct QuestSettingsView: View {
         // is: `.ainkradConfirmDialog`/`.ainkradModal` render in the MODIFIED
         // view's own bounds, and `BackupSettings`' two `AinkradSectionFrame`
         // boxes are narrow, offset boxes, not this window.
-        .ainkradConfirmDialog(isPresented: Binding(get: { pendingRestore != nil },
-                                                   set: { if !$0 { pendingRestore = nil } }),
-                              title: "Restore this backup?",
-                              message: pendingRestore.map {
-                                  "This replaces your current notes, personal priority and time entries "
-                                      + "with the backup from \(SnapshotAge.describe($0.takenAt)). "
-                                      + "Anything changed since then will be lost. This cannot be undone."
-                              } ?? "",
-                              confirmTitle: "Restore",
-                              isDestructive: true) {
+        .ainkradConfirmDialog(
+            isPresented: Binding(
+                get: { pendingRestore != nil },
+                set: { if !$0 { pendingRestore = nil } }),
+            title: "Restore this backup?",
+            message: pendingRestore.map {
+                "This replaces your current notes, personal priority and time entries "
+                    + "with the backup from \(SnapshotAge.describe($0.takenAt)). "
+                    + "Anything changed since then will be lost. This cannot be undone."
+            } ?? "",
+            confirmTitle: "Restore",
+            isDestructive: true
+        ) {
             if let file = pendingRestore {
                 performRestore(file)
             }
@@ -185,16 +206,19 @@ struct QuestSettingsView: View {
         // by definition, since the whole reason it is offered is that the
         // bytes could not be read in the first place. Same hoisting reasoning
         // as `pendingRestore`.
-        .ainkradConfirmDialog(isPresented: Binding(get: { pendingDiscard != nil },
-                                                   set: { if !$0 { pendingDiscard = nil } }),
-                              title: "Discard this project's notes?",
-                              message: pendingDiscard.map {
-                                  "\(projectName($0))'s saved notes could not be read and cannot be recovered from here. "
-                                      + "Discarding replaces them with an empty overlay so you can start fresh, "
-                                      + "or restore from a backup above instead. This cannot be undone."
-                              } ?? "",
-                              confirmTitle: "Discard",
-                              isDestructive: true) {
+        .ainkradConfirmDialog(
+            isPresented: Binding(
+                get: { pendingDiscard != nil },
+                set: { if !$0 { pendingDiscard = nil } }),
+            title: "Discard this project's notes?",
+            message: pendingDiscard.map {
+                "\(projectName($0))'s saved notes could not be read and cannot be recovered from here. "
+                    + "Discarding replaces them with an empty overlay so you can start fresh, "
+                    + "or restore from a backup above instead. This cannot be undone."
+            } ?? "",
+            confirmTitle: "Discard",
+            isDestructive: true
+        ) {
             if let projectID = pendingDiscard {
                 store.overlay.removeOverlay(for: projectID)
             }
@@ -206,14 +230,16 @@ struct QuestSettingsView: View {
         // milestone exists to prevent. Confirmed here, at the root, for the
         // same clipping reason as the two dialogs above. The PROJECTS grant
         // deliberately gets no such confirm — see `clearRoot`.
-        .ainkradConfirmDialog(isPresented: $pendingClearVaultGrant,
-                              title: "Turn off backups?",
-                              message: "Clearing the vault folder stops Quest from backing up your "
-                                  + "notes, personal priority and time entries. Existing backups in "
-                                  + "that folder are not deleted, but no new ones will be written "
-                                  + "until you grant a vault folder again.",
-                              confirmTitle: "Clear",
-                              isDestructive: true) {
+        .ainkradConfirmDialog(
+            isPresented: $pendingClearVaultGrant,
+            title: "Turn off backups?",
+            message: "Clearing the vault folder stops Quest from backing up your "
+                + "notes, personal priority and time entries. Existing backups in "
+                + "that folder are not deleted, but no new ones will be written "
+                + "until you grant a vault folder again.",
+            confirmTitle: "Clear",
+            isDestructive: true
+        ) {
             FolderBookmark.clear(forKey: FolderBookmark.vaultRootKey, in: documents)
             grantRevision += 1
         }
@@ -263,9 +289,11 @@ struct QuestSettingsView: View {
                     // why suggestions stopped, and (previously) had no Clear
                     // button to fix it.
                     if case .unresolvable = grant {
-                        Text("This folder can no longer be found — it was moved, renamed, or deleted. Choose it again, or clear it.")
-                            .font(.caption)
-                            .foregroundStyle(statusColors.warning)
+                        Text(
+                            "This folder can no longer be found — it was moved, renamed, or deleted. Choose it again, or clear it."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(statusColors.warning)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

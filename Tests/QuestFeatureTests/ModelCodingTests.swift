@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Model coding")
@@ -11,15 +12,23 @@ struct ModelCodingTests {
         let document = ProjectDocument(
             project: Project(id: projectID, name: "Optimus", kind: .software),
             items: [
-                WorkItem(id: epicID, projectID: projectID, parentID: nil,
-                         type: .epic, title: "Backend v2", statusID: "todo"),
-                WorkItem(id: UUID(), projectID: projectID, parentID: epicID,
-                         type: .bug, title: "Fix auth refresh", statusID: "in_progress",
-                         links: [Link(scheme: .repo, identifier: "~/Projects/optimus-api",
-                                      label: "optimus-api")]),
+                WorkItem(
+                    id: epicID, projectID: projectID, parentID: nil,
+                    type: .epic, title: "Backend v2", statusID: "todo"),
+                WorkItem(
+                    id: UUID(), projectID: projectID, parentID: epicID,
+                    type: .bug, title: "Fix auth refresh", statusID: "in_progress",
+                    links: [
+                        Link(
+                            scheme: .repo, identifier: "~/Projects/optimus-api",
+                            label: "optimus-api")
+                    ]),
             ],
-            activity: [ActivityEvent(projectID: projectID, actor: .agent,
-                                     kind: .itemCreated, summary: "created Fix auth refresh")])
+            activity: [
+                ActivityEvent(
+                    projectID: projectID, actor: .agent,
+                    kind: .itemCreated, summary: "created Fix auth refresh")
+            ])
 
         let data = try JSONEncoder().encode(document)
         let decoded = try JSONDecoder().decode(ProjectDocument.self, from: data)
@@ -42,8 +51,9 @@ struct ModelCodingTests {
     @Test("a link's id is computed, so it is never persisted")
     func linkIDIsNotPersisted() throws {
         let link = Link(scheme: .branch, identifier: "main", label: "main", repo: "alpha")
-        let json = try JSONSerialization.jsonObject(
-            with: try JSONEncoder().encode(link)) as? [String: Any]
+        let json =
+            try JSONSerialization.jsonObject(
+                with: try JSONEncoder().encode(link)) as? [String: Any]
 
         #expect(json?["id"] == nil)
         #expect(Set(json?.keys ?? [:].keys) == ["scheme", "identifier", "label", "repo"])

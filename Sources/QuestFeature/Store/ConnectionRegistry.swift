@@ -35,9 +35,11 @@ public final class ConnectionRegistry {
     }
 
     @discardableResult
-    public func addConnection(provider: ProviderKind, accountLabel: String,
-                              accountIdentifier: String, baseURL: URL?,
-                              secret: String, tokenProvenance: TokenProvenance = .manual) throws -> Connection {
+    public func addConnection(
+        provider: ProviderKind, accountLabel: String,
+        accountIdentifier: String, baseURL: URL?,
+        secret: String, tokenProvenance: TokenProvenance = .manual
+    ) throws -> Connection {
         // Same account, same provider is a duplicate. The SAME identifier at a
         // DIFFERENT provider is not — one person's email is their login
         // everywhere.
@@ -46,11 +48,12 @@ public final class ConnectionRegistry {
         }
         guard !clash else { throw QuestError.duplicateConnection(accountIdentifier) }
 
-        let connection = Connection(id: UUID(), provider: provider,
-                                    accountLabel: accountLabel,
-                                    accountIdentifier: accountIdentifier,
-                                    baseURL: baseURL,
-                                    tokenProvenance: tokenProvenance)
+        let connection = Connection(
+            id: UUID(), provider: provider,
+            accountLabel: accountLabel,
+            accountIdentifier: accountIdentifier,
+            baseURL: baseURL,
+            tokenProvenance: tokenProvenance)
         // The secret is written FIRST: a connection whose credential write
         // failed must not be registered, or the UI shows an account that can
         // never authenticate.
@@ -92,7 +95,8 @@ public final class ConnectionRegistry {
             try credentials.setSecret(nil, forRef: connection.credentialRef)
         } catch {
             let message = (error as? CredentialError)?.message ?? error.localizedDescription
-            secretDeletionFailure = "\(connection.accountLabel) was removed, but its saved token "
+            secretDeletionFailure =
+                "\(connection.accountLabel) was removed, but its saved token "
                 + "could not be deleted from the Keychain: \(message)"
         }
         persist()
@@ -109,7 +113,8 @@ public final class ConnectionRegistry {
             try repository.saveConnections(connections)
             persistenceFailure = nil
         } catch {
-            let message = (error as? QuestError)?.message
+            let message =
+                (error as? QuestError)?.message
                 ?? (error as? CredentialError)?.message
                 ?? error.localizedDescription
             persistenceFailure = "Connections could not be saved: \(message)"

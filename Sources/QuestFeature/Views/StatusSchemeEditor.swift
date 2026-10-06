@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// One editable row. Separate from `Status` because a row in flight may be
 /// half-typed, and because a NEW row needs an id minted from its name while an
@@ -12,16 +12,19 @@ struct StatusDraft: Identifiable, Equatable {
 
     static func drafts(from scheme: StatusScheme) -> [StatusDraft] {
         scheme.statuses.map {
-            StatusDraft(id: $0.id, name: $0.name, category: $0.category,
-                        color: ProjectColorToken.resolve($0.colorToken))
+            StatusDraft(
+                id: $0.id, name: $0.name, category: $0.category,
+                color: ProjectColorToken.resolve($0.colorToken))
         }
     }
 
     static func scheme(from drafts: [StatusDraft]) -> StatusScheme {
-        StatusScheme(statuses: drafts.map {
-            Status(id: $0.id, name: $0.name, category: $0.category,
-                   colorToken: $0.color.rawValue)
-        })
+        StatusScheme(
+            statuses: drafts.map {
+                Status(
+                    id: $0.id, name: $0.name, category: $0.category,
+                    colorToken: $0.color.rawValue)
+            })
     }
 
     /// Mints a stable id from a name, unique among `existing`. Ids are permanent
@@ -37,8 +40,9 @@ struct StatusDraft: Identifiable, Equatable {
             candidate = "\(seed)_\(suffix)"
             suffix += 1
         }
-        return StatusDraft(id: candidate, name: name.isEmpty ? "New status" : name,
-                           category: .todo, color: .accentPrimary)
+        return StatusDraft(
+            id: candidate, name: name.isEmpty ? "New status" : name,
+            category: .todo, color: .accentPrimary)
     }
 }
 
@@ -50,11 +54,14 @@ enum SchemeEditorState {
     /// scheme. Forwards straight to `SchemePlan.plan`; the only reason this
     /// exists is to make `current` a parameter instead of something read off
     /// `self.project` inside a View.
-    static func plan(current: StatusScheme, drafts: [StatusDraft],
-                     reassignments: [String: String], items: [WorkItem]) -> SchemePlan.Outcome {
-        SchemePlan.plan(current: current, proposed: StatusDraft.scheme(from: drafts),
-                        reassignments: prune(reassignments, current: current, drafts: drafts),
-                        items: items)
+    static func plan(
+        current: StatusScheme, drafts: [StatusDraft],
+        reassignments: [String: String], items: [WorkItem]
+    ) -> SchemePlan.Outcome {
+        SchemePlan.plan(
+            current: current, proposed: StatusDraft.scheme(from: drafts),
+            reassignments: prune(reassignments, current: current, drafts: drafts),
+            items: items)
     }
 
     /// Drops reassignment entries that no longer describe a removal.
@@ -66,8 +73,10 @@ enum SchemeEditorState {
     /// its picker disappears from the sheet, while the stale entry survives
     /// invisibly and would still move every one of that status's items.
     /// Pruning here rather than in the view means the view cannot forget.
-    static func prune(_ reassignments: [String: String], current: StatusScheme,
-                      drafts: [StatusDraft]) -> [String: String] {
+    static func prune(
+        _ reassignments: [String: String], current: StatusScheme,
+        drafts: [StatusDraft]
+    ) -> [String: String] {
         let surviving = Set(drafts.map(\.id))
         let removed = Set(current.statuses.map(\.id)).subtracting(surviving)
         return reassignments.filter { removed.contains($0.key) }
@@ -75,8 +84,10 @@ enum SchemeEditorState {
 
     /// Given a just-applied plan, the next drafts (re-seeded from
     /// `plan.proposed`) and cleared reassignments.
-    static func afterApply(_ plan: SchemePlan.Plan) -> (drafts: [StatusDraft],
-                                                         reassignments: [String: String]) {
+    static func afterApply(_ plan: SchemePlan.Plan) -> (
+        drafts: [StatusDraft],
+        reassignments: [String: String]
+    ) {
         (StatusDraft.drafts(from: plan.proposed), [:])
     }
 
@@ -84,7 +95,8 @@ enum SchemeEditorState {
     /// re-seeded from the scheme as it now stands, and reassignments dropped
     /// because they referred to removals computed against the old scheme.
     static func afterStaleRefusal(currentScheme: StatusScheme)
-        -> (drafts: [StatusDraft], reassignments: [String: String]) {
+        -> (drafts: [StatusDraft], reassignments: [String: String])
+    {
         (StatusDraft.drafts(from: currentScheme), [:])
     }
 }
@@ -115,9 +127,11 @@ struct StatusSchemeEditor: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradStatusColors) private var statusColors
 
-    init(store: ProjectStore, project: Project,
-         report: @escaping (String, AinkradStatus) -> Void,
-         pendingPlan: Binding<SchemePlan.Plan?>) {
+    init(
+        store: ProjectStore, project: Project,
+        report: @escaping (String, AinkradStatus) -> Void,
+        pendingPlan: Binding<SchemePlan.Plan?>
+    ) {
         self.store = store
         self.project = project
         self.report = report
@@ -133,13 +147,19 @@ struct StatusSchemeEditor: View {
                 ForEach($drafts) { $draft in
                     HStack(spacing: AinkradSpacing.xs) {
                         AinkradTextField(text: $draft.name, placeholder: "Name")
-                        AinkradSelect(items: StatusCategory.allCases,
-                                      selection: $draft.category) { $0.rawValue }
-                        AinkradSelect(items: ProjectColorToken.allCases,
-                                      selection: $draft.color,
-                                      label: { $0.title },
-                                      swatch: { $0.color(tokens: theme,
-                                                         statusColors: statusColors) })
+                        AinkradSelect(
+                            items: StatusCategory.allCases,
+                            selection: $draft.category
+                        ) { $0.rawValue }
+                        AinkradSelect(
+                            items: ProjectColorToken.allCases,
+                            selection: $draft.color,
+                            label: { $0.title },
+                            swatch: {
+                                $0.color(
+                                    tokens: theme,
+                                    statusColors: statusColors)
+                            })
                         AinkradIconButton(systemName: "minus.circle") {
                             drafts.removeAll { $0.id == draft.id }
                         }
@@ -171,8 +191,9 @@ struct StatusSchemeEditor: View {
                     drafts.append(StatusDraft.make(name: newName, existing: drafts))
                     newName = ""
                 }
-                .disabled(pendingPlan != nil
-                          || newName.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(
+                    pendingPlan != nil
+                        || newName.trimmingCharacters(in: .whitespaces).isEmpty)
             }
 
             // Any removed status that still holds items needs a destination
@@ -256,15 +277,18 @@ struct StatusSchemeEditor: View {
     }
 
     private func binding(for statusID: String) -> Binding<String> {
-        Binding(get: { reassignments[statusID] ?? "" },
-                set: { reassignments[statusID] = $0.isEmpty ? nil : $0 })
+        Binding(
+            get: { reassignments[statusID] ?? "" },
+            set: { reassignments[statusID] = $0.isEmpty ? nil : $0 })
     }
 
     /// Plans first and shows the result. The user confirms the SAME plan value
     /// that will execute, so the preview cannot disagree with the outcome.
     private func review() {
-        switch SchemeEditorState.plan(current: currentScheme, drafts: drafts,
-                                      reassignments: reassignments, items: items) {
+        switch SchemeEditorState.plan(
+            current: currentScheme, drafts: drafts,
+            reassignments: reassignments, items: items)
+        {
         case .invalid(let message):
             report(message, .danger)
             pendingPlan = nil

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Overlay persistence")
@@ -21,7 +22,8 @@ struct OverlayRepositoryTests {
     func perProjectDocuments() throws {
         let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
-        let a = UUID(), b = UUID()
+        let a = UUID()
+        let b = UUID()
         try repository.saveOverlay(ProjectOverlay(projectID: a))
         try repository.saveOverlay(ProjectOverlay(projectID: b))
 

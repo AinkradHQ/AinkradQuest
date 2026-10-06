@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 struct OverviewSurface: View {
     @Bindable var store: ProjectStore
@@ -31,31 +31,37 @@ struct OverviewSurface: View {
 
                 AinkradSectionFrame(title: "Links") {
                     VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-                        LinkListView(store: store, target: .project(document.project.id),
-                                    links: document.project.links, report: report)
-                        LinkEditor(store: store, target: .project(document.project.id),
-                                   report: report)
+                        LinkListView(
+                            store: store, target: .project(document.project.id),
+                            links: document.project.links, report: report)
+                        LinkEditor(
+                            store: store, target: .project(document.project.id),
+                            report: report)
                         // Always reachable, independent of any root grant and of
                         // whether a suggestion sheet ever fired for this project —
                         // see `FolderAttachButton`'s doc comment.
-                        FolderAttachButton(store: store, projectID: document.project.id,
-                                           report: report)
+                        FolderAttachButton(
+                            store: store, projectID: document.project.id,
+                            report: report)
                     }
                 }
 
                 AinkradSectionFrame(title: "Epics") {
                     if epics.isEmpty {
-                        AinkradEmptyState(icon: "flag", title: "No epics",
-                                          message: "Group work under an epic to track progress here.")
+                        AinkradEmptyState(
+                            icon: "flag", title: "No epics",
+                            message: "Group work under an epic to track progress here.")
                     } else {
                         LazyVStack(alignment: .leading, spacing: AinkradSpacing.md) {
                             ForEach(epics) { epic in
-                                let progress = EpicProgress.rollup(epicID: epic.id, in: document.items,
-                                                                   scheme: document.project.statusScheme)
+                                let progress = EpicProgress.rollup(
+                                    epicID: epic.id, in: document.items,
+                                    scheme: document.project.statusScheme)
                                 AinkradCard {
                                     HStack(spacing: AinkradSpacing.md) {
-                                        AinkradMeter(value: Double(progress.done), total: Double(progress.total),
-                                                    label: epic.title, size: 64)
+                                        AinkradMeter(
+                                            value: Double(progress.done), total: Double(progress.total),
+                                            label: epic.title, size: 64)
                                         Spacer()
                                         AinkradBadge(text: "\(progress.done)/\(progress.total)")
                                     }
@@ -69,7 +75,9 @@ struct OverviewSurface: View {
                     VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
                         ForEach(document.activity.suffix(20).reversed()) { event in
                             AinkradListRow(
-                                leading: { AinkradIconGlyph(systemName: event.actor == .agent ? "sparkles" : "person") },
+                                leading: {
+                                    AinkradIconGlyph(systemName: event.actor == .agent ? "sparkles" : "person")
+                                },
                                 title: event.summary,
                                 trailing: {
                                     Text(event.at, style: .relative)

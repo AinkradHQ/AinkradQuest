@@ -85,7 +85,8 @@ public final class OverlayStore {
             return loaded
         } catch {
             unreadableProjects.insert(projectID)
-            persistenceFailure = "Your notes and priorities could not be read: "
+            persistenceFailure =
+                "Your notes and priorities could not be read: "
                 + ((error as? QuestError)?.message ?? String(describing: error))
             health = .unreadable(unreadableProjects)
             let empty = ProjectOverlay(projectID: projectID)
@@ -122,8 +123,10 @@ public final class OverlayStore {
         return commit(overlay)
     }
 
-    public func updateItem(_ itemID: UUID, in projectID: UUID,
-                           _ mutate: (inout ItemOverlay) -> Void) {
+    public func updateItem(
+        _ itemID: UUID, in projectID: UUID,
+        _ mutate: (inout ItemOverlay) -> Void
+    ) {
         var overlay = overlay(for: projectID)
         var item = overlay.item(itemID) ?? ItemOverlay()
         mutate(&item)
@@ -173,7 +176,8 @@ public final class OverlayStore {
     private func commit(_ overlay: ProjectOverlay) -> Bool {
         guard !unreadableProjects.contains(overlay.projectID) else {
             revision += 1
-            persistenceFailure = "This project's overlay could not be read, so the change "
+            persistenceFailure =
+                "This project's overlay could not be read, so the change "
                 + "was not saved. Restore or remove the corrupt overlay before editing it again."
             writeBlockedProjects.insert(overlay.projectID)
             health = .writeBlocked(writeBlockedProjects)
@@ -197,7 +201,8 @@ public final class OverlayStore {
             }
             return true
         } catch {
-            persistenceFailure = "Your notes and priorities could not be saved: "
+            persistenceFailure =
+                "Your notes and priorities could not be saved: "
                 + ((error as? QuestError)?.message ?? error.localizedDescription)
             health = .writeFailed((error as? QuestError)?.message ?? error.localizedDescription)
             return false

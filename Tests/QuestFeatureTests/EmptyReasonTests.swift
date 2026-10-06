@@ -1,13 +1,16 @@
 import Testing
+
 @testable import QuestFeature
 
 @Suite("EmptyReason")
 struct EmptyReasonTests {
     @Test("no project selected outranks every other reason")
     func noProject() {
-        #expect(EmptyReason.classify(totalCount: 0, visibleCount: 0, hasProject: false)
+        #expect(
+            EmptyReason.classify(totalCount: 0, visibleCount: 0, hasProject: false)
                 == .noProjectSelected)
-        #expect(EmptyReason.classify(totalCount: 9, visibleCount: 0, hasProject: false)
+        #expect(
+            EmptyReason.classify(totalCount: 9, visibleCount: 0, hasProject: false)
                 == .noProjectSelected)
     }
 
@@ -18,7 +21,8 @@ struct EmptyReasonTests {
 
     @Test("items exist but the filter hid them all")
     func filtered() {
-        #expect(EmptyReason.classify(totalCount: 5, visibleCount: 0, hasProject: true)
+        #expect(
+            EmptyReason.classify(totalCount: 5, visibleCount: 0, hasProject: true)
                 == .filteredOut)
     }
 

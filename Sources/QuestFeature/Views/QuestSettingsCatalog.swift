@@ -1,6 +1,6 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
+import AppKit
+import SwiftUI
 
 /// Quest's settings as DECLARED fields, so the host draws them in the shared
 /// settings style, with its Appearance tab first. Wording follows
@@ -34,61 +34,75 @@ enum QuestSettingsCatalog {
         let group = root.appending("backups")
         _ = c.state.revision
         let grant = c.snapshots.vaultGrant()
-        var fields = [folderRow(c, path: group.appending("vault"), label: "Vault folder",
-                                help: vaultHelp(grant), key: FolderBookmark.vaultRootKey)]
+        var fields = [
+            folderRow(
+                c, path: group.appending("vault"), label: "Vault folder",
+                help: vaultHelp(grant), key: FolderBookmark.vaultRootKey)
+        ]
         if grant != .notGranted {
-            fields.append(SettingsField(
-                path: group.appending("vault-clear"), label: "Turn off backups",
-                help: "Clears the vault folder. Existing backups there are kept.",
-                kind: .action(title: "Clear…") {
-                    guard QuestConfirm.ask(
-                        "Turn off backups?",
-                        "Clearing the vault folder stops Quest from backing up your notes, personal "
-                        + "priority and time entries. Existing backups in that folder are not deleted, "
-                        + "but no new ones will be written until you grant a vault folder again.",
-                        confirm: "Clear") else { return }
-                    FolderBookmark.clear(forKey: FolderBookmark.vaultRootKey, in: c.documents)
+            fields.append(
+                SettingsField(
+                    path: group.appending("vault-clear"), label: "Turn off backups",
+                    help: "Clears the vault folder. Existing backups there are kept.",
+                    kind: .action(title: "Clear…") {
+                        guard
+                            QuestConfirm.ask(
+                                "Turn off backups?",
+                                "Clearing the vault folder stops Quest from backing up your notes, personal "
+                                    + "priority and time entries. Existing backups in that folder are not deleted, "
+                                    + "but no new ones will be written until you grant a vault folder again.",
+                                confirm: "Clear")
+                        else { return }
+                        FolderBookmark.clear(forKey: FolderBookmark.vaultRootKey, in: c.documents)
+                        c.state.changed(c.snapshots)
+                    }))
+        }
+        fields.append(
+            SettingsField(
+                path: group.appending("now"), label: "Last backup",
+                help: [SnapshotAge.describe(c.state.age), c.snapshots.lastError].compactMap { $0 }.joined(
+                    separator: " — "),
+                keywords: ["backup", "snapshot"],
+                kind: .action(title: "Back up now") {
+                    _ = c.snapshots.snapshotNow()
                     c.state.changed(c.snapshots)
                 }))
-        }
-        fields.append(SettingsField(
-            path: group.appending("now"), label: "Last backup",
-            help: [SnapshotAge.describe(c.state.age), c.snapshots.lastError].compactMap { $0 }.joined(separator: " — "),
-            keywords: ["backup", "snapshot"],
-            kind: .action(title: "Back up now") {
-                _ = c.snapshots.snapshotNow()
-                c.state.changed(c.snapshots)
-            }))
         for entry in c.state.entries ?? [] {
             switch entry {
             case .readable(let file):
-                fields.append(SettingsField(
-                    path: group.appending("restore-\(file.url.lastPathComponent)"),
-                    label: SnapshotAge.describe(file.takenAt),
-                    help: "Backup · \(file.projectCount) project\(file.projectCount == 1 ? "" : "s")",
-                    keywords: ["restore", "backup"],
-                    kind: .action(title: "Restore…") { restore(file, c) }))
+                fields.append(
+                    SettingsField(
+                        path: group.appending("restore-\(file.url.lastPathComponent)"),
+                        label: SnapshotAge.describe(file.takenAt),
+                        help: "Backup · \(file.projectCount) project\(file.projectCount == 1 ? "" : "s")",
+                        keywords: ["restore", "backup"],
+                        kind: .action(title: "Restore…") { restore(file, c) }))
             case .damaged(let url, let filename):
-                fields.append(SettingsField(
-                    path: group.appending("damaged-\(url.lastPathComponent)"), label: filename,
-                    help: "This backup is damaged and cannot be restored.",
-                    kind: .shortcut(.constant("Damaged"))))
+                fields.append(
+                    SettingsField(
+                        path: group.appending("damaged-\(url.lastPathComponent)"), label: filename,
+                        help: "This backup is damaged and cannot be restored.",
+                        kind: .shortcut(.constant("Damaged"))))
             }
         }
         for projectID in c.store.overlay.health.affectedProjects.sorted(by: { $0.uuidString < $1.uuidString }) {
             let name = projectName(projectID, c.store)
-            fields.append(SettingsField(
-                path: group.appending("corrupt-\(projectID.uuidString)"), label: name,
-                help: "This project's saved notes could not be read. Restore a backup above, or discard to start fresh.",
-                kind: .action(title: "Discard…") {
-                    guard QuestConfirm.ask(
-                        "Discard this project's notes?",
-                        "\(name)'s saved notes could not be read and cannot be recovered from here. "
-                        + "Discarding replaces them with an empty overlay so you can start fresh, or "
-                        + "restore from a backup instead. This cannot be undone.",
-                        confirm: "Discard") else { return }
-                    c.store.overlay.removeOverlay(for: projectID)
-                }))
+            fields.append(
+                SettingsField(
+                    path: group.appending("corrupt-\(projectID.uuidString)"), label: name,
+                    help:
+                        "This project's saved notes could not be read. Restore a backup above, or discard to start fresh.",
+                    kind: .action(title: "Discard…") {
+                        guard
+                            QuestConfirm.ask(
+                                "Discard this project's notes?",
+                                "\(name)'s saved notes could not be read and cannot be recovered from here. "
+                                    + "Discarding replaces them with an empty overlay so you can start fresh, or "
+                                    + "restore from a backup instead. This cannot be undone.",
+                                confirm: "Discard")
+                        else { return }
+                        c.store.overlay.removeOverlay(for: projectID)
+                    }))
         }
         return SettingsGroup(
             path: group, title: "Backups",
@@ -99,12 +113,14 @@ enum QuestSettingsCatalog {
     }
 
     private static func restore(_ file: SnapshotFile, _ c: Context) {
-        guard QuestConfirm.ask(
-            "Restore this backup?",
-            "This replaces your current notes, personal priority and time entries with the backup "
-            + "from \(SnapshotAge.describe(file.takenAt)). Anything changed since then will be lost. "
-            + "This cannot be undone.",
-            confirm: "Restore") else { return }
+        guard
+            QuestConfirm.ask(
+                "Restore this backup?",
+                "This replaces your current notes, personal priority and time entries with the backup "
+                    + "from \(SnapshotAge.describe(file.takenAt)). Anything changed since then will be lost. "
+                    + "This cannot be undone.",
+                confirm: "Restore")
+        else { return }
         do {
             try c.snapshots.restore(from: file)
             c.state.backupMessage = nil
@@ -120,12 +136,12 @@ enum QuestSettingsCatalog {
         switch grant {
         case .notGranted:
             "Not set — backups are off. Choose a vault folder to back up your notes and priorities; "
-            + "it is also where Quest looks for a matching folder when you create a project."
+                + "it is also where Quest looks for a matching folder when you create a project."
         case .granted(let path):
             "\(path) — backups are written here, keeping the last \(SnapshotWriter.keep)."
         case .unresolvable(let path):
             "\(path ?? "The granted folder") can no longer be found — it was moved, renamed or "
-            + "deleted. Backups have STOPPED. Choose it again, or turn backups off."
+                + "deleted. Backups have STOPPED. Choose it again, or turn backups off."
         }
     }
 
@@ -136,19 +152,22 @@ enum QuestSettingsCatalog {
         _ = c.state.revision
         let key = FolderBookmark.projectsRootKey
         let grant = FolderBookmark.grant(forKey: key, in: c.documents)
-        var fields = [folderRow(
-            c, path: group.appending("projects"), label: "Projects folder",
-            help: "\(pathText(grant)). Used only to suggest a matching repo or folder by name when "
-                + "you create a project — nothing else reads or writes it.",
-            key: key)]
+        var fields = [
+            folderRow(
+                c, path: group.appending("projects"), label: "Projects folder",
+                help: "\(pathText(grant)). Used only to suggest a matching repo or folder by name when "
+                    + "you create a project — nothing else reads or writes it.",
+                key: key)
+        ]
         if grant != .notGranted {
-            fields.append(SettingsField(
-                path: group.appending("projects-clear"), label: "Clear projects folder",
-                help: "Stops name suggestions. Nothing attached to a project changes.",
-                kind: .action(title: "Clear") {
-                    FolderBookmark.clear(forKey: key, in: c.documents)
-                    c.state.changed(c.snapshots)
-                }))
+            fields.append(
+                SettingsField(
+                    path: group.appending("projects-clear"), label: "Clear projects folder",
+                    help: "Stops name suggestions. Nothing attached to a project changes.",
+                    kind: .action(title: "Clear") {
+                        FolderBookmark.clear(forKey: key, in: c.documents)
+                        c.state.changed(c.snapshots)
+                    }))
         }
         return SettingsGroup(
             path: group, title: "Folders",
@@ -158,24 +177,27 @@ enum QuestSettingsCatalog {
             fields: fields)
     }
 
-    private static func folderRow(_ c: Context, path: SettingsPath, label: String,
-                                  help: String, key: String) -> SettingsField {
-        SettingsField(path: path, label: label, help: help,
-                      keywords: ["folder", "grant", label.lowercased()],
-                      kind: .action(title: "Choose…") {
-                          let panel = NSOpenPanel()
-                          panel.canChooseDirectories = true
-                          panel.canChooseFiles = false
-                          panel.allowsMultipleSelection = false
-                          guard panel.runModal() == .OK, let url = panel.url else { return }
-                          do {
-                              try FolderBookmark.save(url, forKey: key, in: c.documents)
-                              c.state.folderMessage = nil
-                          } catch {
-                              c.state.folderMessage = "Could not save that folder: \(error.localizedDescription)"
-                          }
-                          c.state.changed(c.snapshots)
-                      })
+    private static func folderRow(
+        _ c: Context, path: SettingsPath, label: String,
+        help: String, key: String
+    ) -> SettingsField {
+        SettingsField(
+            path: path, label: label, help: help,
+            keywords: ["folder", "grant", label.lowercased()],
+            kind: .action(title: "Choose…") {
+                let panel = NSOpenPanel()
+                panel.canChooseDirectories = true
+                panel.canChooseFiles = false
+                panel.allowsMultipleSelection = false
+                guard panel.runModal() == .OK, let url = panel.url else { return }
+                do {
+                    try FolderBookmark.save(url, forKey: key, in: c.documents)
+                    c.state.folderMessage = nil
+                } catch {
+                    c.state.folderMessage = "Could not save that folder: \(error.localizedDescription)"
+                }
+                c.state.changed(c.snapshots)
+            })
     }
 
     static func pathText(_ grant: FolderBookmark.Grant) -> String {

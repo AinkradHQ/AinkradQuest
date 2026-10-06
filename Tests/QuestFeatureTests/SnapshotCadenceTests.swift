@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 /// BLOCKER 1: the debounce decision as pure logic — no timers, no sleeping
@@ -12,23 +13,29 @@ struct SnapshotCadenceTests {
 
     @Test("nothing changed since the last snapshot: never fires, no matter how much time passed")
     func noChangeNeverFires() {
-        #expect(SnapshotCadence.shouldSnapshot(currentRevision: 3, lastSnapshotRevision: 3,
-                                               lastChangeAt: start,
-                                               now: start.addingTimeInterval(60 * 60)) == false)
+        #expect(
+            SnapshotCadence.shouldSnapshot(
+                currentRevision: 3, lastSnapshotRevision: 3,
+                lastChangeAt: start,
+                now: start.addingTimeInterval(60 * 60)) == false)
     }
 
     @Test("a change inside the quiet period does not yet fire")
     func withinQuietPeriodDoesNotFire() {
-        #expect(SnapshotCadence.shouldSnapshot(currentRevision: 4, lastSnapshotRevision: 3,
-                                               lastChangeAt: start,
-                                               now: start.addingTimeInterval(60)) == false)
+        #expect(
+            SnapshotCadence.shouldSnapshot(
+                currentRevision: 4, lastSnapshotRevision: 3,
+                lastChangeAt: start,
+                now: start.addingTimeInterval(60)) == false)
     }
 
     @Test("a change that has sat quiet for the full period fires")
     func afterQuietPeriodFires() {
-        #expect(SnapshotCadence.shouldSnapshot(currentRevision: 4, lastSnapshotRevision: 3,
-                                               lastChangeAt: start,
-                                               now: start.addingTimeInterval(SnapshotCadence.quietPeriod)))
+        #expect(
+            SnapshotCadence.shouldSnapshot(
+                currentRevision: 4, lastSnapshotRevision: 3,
+                lastChangeAt: start,
+                now: start.addingTimeInterval(SnapshotCadence.quietPeriod)))
     }
 
     @Test("a burst of edits keeps pushing the debounce out — one snapshot, not one per keystroke")
@@ -38,9 +45,11 @@ struct SnapshotCadenceTests {
         var lastChangeAt = start
         for offset in stride(from: 0.0, to: SnapshotCadence.quietPeriod, by: 30) {
             let now = start.addingTimeInterval(offset)
-            #expect(SnapshotCadence.shouldSnapshot(currentRevision: 10, lastSnapshotRevision: 3,
-                                                   lastChangeAt: lastChangeAt, now: now) == false)
-            lastChangeAt = now // simulates another edit landing, resetting the clock
+            #expect(
+                SnapshotCadence.shouldSnapshot(
+                    currentRevision: 10, lastSnapshotRevision: 3,
+                    lastChangeAt: lastChangeAt, now: now) == false)
+            lastChangeAt = now  // simulates another edit landing, resetting the clock
         }
     }
 

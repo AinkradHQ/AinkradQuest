@@ -1,12 +1,14 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("ProjectStateFilter")
 struct ProjectFilterTests {
     private func summary(_ name: String, _ state: ProjectState) -> ProjectSummary {
-        ProjectSummary(id: UUID(), name: name, icon: "folder", colorToken: "accentPrimary",
-                       kind: .software, state: state, updatedAt: Date())
+        ProjectSummary(
+            id: UUID(), name: name, icon: "folder", colorToken: "accentPrimary",
+            kind: .software, state: state, updatedAt: Date())
     }
 
     private var all: [ProjectSummary] {

@@ -5,7 +5,11 @@ public enum WorkItemType: String, Codable, Sendable, CaseIterable {
 }
 
 public enum Priority: Int, Codable, Sendable, CaseIterable, Comparable {
-    case none = 0, low = 1, medium = 2, high = 3, urgent = 4
+    case none = 0
+    case low = 1
+    case medium = 2
+    case high = 3
+    case urgent = 4
     public static func < (a: Priority, b: Priority) -> Bool { a.rawValue < b.rawValue }
 }
 
@@ -51,13 +55,15 @@ public struct WorkItem: Codable, Sendable, Identifiable, Hashable {
     /// absent, which is exactly the migration story wanted here.
     public var role: WorkItemRole?
 
-    public init(id: UUID, projectID: UUID, parentID: UUID?, type: WorkItemType,
-                title: String, statusID: String, body: String = "",
-                priority: Priority = .none, labels: [String] = [],
-                startDate: Date? = nil, dueDate: Date? = nil, orderIndex: Int = 0,
-                links: [Link] = [], createdAt: Date = Date(), updatedAt: Date = Date(),
-                closedAt: Date? = nil, deletedAt: Date? = nil,
-                role: WorkItemRole? = nil) {
+    public init(
+        id: UUID, projectID: UUID, parentID: UUID?, type: WorkItemType,
+        title: String, statusID: String, body: String = "",
+        priority: Priority = .none, labels: [String] = [],
+        startDate: Date? = nil, dueDate: Date? = nil, orderIndex: Int = 0,
+        links: [Link] = [], createdAt: Date = Date(), updatedAt: Date = Date(),
+        closedAt: Date? = nil, deletedAt: Date? = nil,
+        role: WorkItemRole? = nil
+    ) {
         self.id = id
         self.projectID = projectID
         self.parentID = parentID

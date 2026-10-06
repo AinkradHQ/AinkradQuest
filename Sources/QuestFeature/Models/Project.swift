@@ -23,11 +23,13 @@ public struct Project: Codable, Sendable, Identifiable, Hashable {
     public var legacyConnectionID: UUID?
     public var legacyRemoteProjectKey: String?
 
-    public init(id: UUID, name: String, kind: ProjectKind,
-                summaryText: String = "", icon: String = "folder",
-                colorToken: String = "accent", state: ProjectState = .active,
-                statusScheme: StatusScheme? = nil, links: [Link] = [],
-                createdAt: Date = Date(), updatedAt: Date = Date(), archivedAt: Date? = nil) {
+    public init(
+        id: UUID, name: String, kind: ProjectKind,
+        summaryText: String = "", icon: String = "folder",
+        colorToken: String = "accent", state: ProjectState = .active,
+        statusScheme: StatusScheme? = nil, links: [Link] = [],
+        createdAt: Date = Date(), updatedAt: Date = Date(), archivedAt: Date? = nil
+    ) {
         self.id = id
         self.name = name
         self.kind = kind
@@ -46,16 +48,20 @@ public struct Project: Codable, Sendable, Identifiable, Hashable {
     }
 
     public var summary: ProjectSummary {
-        ProjectSummary(id: id, name: name, icon: icon, colorToken: colorToken,
-                       kind: kind, state: state, updatedAt: updatedAt)
+        ProjectSummary(
+            id: id, name: name, icon: icon, colorToken: colorToken,
+            kind: kind, state: state, updatedAt: updatedAt)
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, summaryText, icon, colorToken, kind, state, statusScheme,
-             links, createdAt, updatedAt, archivedAt,
-             legacyConnectionID = "connectionID",
-             legacyRemoteProjectKey = "remoteProjectKey",
-             legacyRepos = "repos"
+            links, createdAt, updatedAt, archivedAt
+        case
+            legacyConnectionID = "connectionID"
+        case
+            legacyRemoteProjectKey = "remoteProjectKey"
+        case
+            legacyRepos = "repos"
     }
 
     public init(from decoder: any Decoder) throws {
@@ -94,8 +100,10 @@ public struct ProjectSummary: Codable, Sendable, Identifiable, Hashable {
     /// written before this field existed still loads.
     public var isTrashed: Bool
 
-    public init(id: UUID, name: String, icon: String, colorToken: String,
-                kind: ProjectKind, state: ProjectState, updatedAt: Date, isTrashed: Bool = false) {
+    public init(
+        id: UUID, name: String, icon: String, colorToken: String,
+        kind: ProjectKind, state: ProjectState, updatedAt: Date, isTrashed: Bool = false
+    ) {
         self.id = id
         self.name = name
         self.icon = icon

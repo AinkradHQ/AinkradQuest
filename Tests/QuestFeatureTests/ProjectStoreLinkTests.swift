@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -24,10 +25,12 @@ struct ProjectStoreLinkTests {
     @Test("a link added to an item is stored on that item and logged against it")
     func addToItem() throws {
         let (store, project) = makeStore()
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "M1.1", statusID: "todo", actor: .user)
-        let branch = Link(scheme: .branch, identifier: "feature/links",
-                          label: "feature/links", repo: "quest")
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "M1.1", statusID: "todo", actor: .user)
+        let branch = Link(
+            scheme: .branch, identifier: "feature/links",
+            label: "feature/links", repo: "quest")
 
         try store.addLink(to: .item(epic.id), link: branch, actor: .agent)
 
@@ -61,8 +64,9 @@ struct ProjectStoreLinkTests {
     @Test("adding a link to a soft-deleted item is refused")
     func refusesTrashedItem() throws {
         let (store, project) = makeStore()
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "Gone", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "Gone", statusID: "todo", actor: .user)
         try store.deleteItem(epic.id, actor: .user)
 
         #expect(throws: QuestError.itemNotFound(epic.id)) {
@@ -88,10 +92,12 @@ struct ProjectStoreLinkTests {
     @Test("the same branch name in two repos is two distinct links")
     func branchIdentityIncludesRepo() throws {
         let (store, project) = makeStore()
-        try store.addLink(to: .project(project.id), link: branch("main", repo: "alpha"),
-                          actor: .user)
-        try store.addLink(to: .project(project.id), link: branch("main", repo: "beta"),
-                          actor: .user)
+        try store.addLink(
+            to: .project(project.id), link: branch("main", repo: "alpha"),
+            actor: .user)
+        try store.addLink(
+            to: .project(project.id), link: branch("main", repo: "beta"),
+            actor: .user)
 
         let links = store.openProject(project.id)?.project.links ?? []
         #expect(links.count == 2)
@@ -101,13 +107,16 @@ struct ProjectStoreLinkTests {
     @Test("removing one repo's branch leaves the other repo's branch intact")
     func removeDiscriminatesByRepo() throws {
         let (store, project) = makeStore()
-        try store.addLink(to: .project(project.id), link: branch("main", repo: "alpha"),
-                          actor: .user)
-        try store.addLink(to: .project(project.id), link: branch("main", repo: "beta"),
-                          actor: .user)
+        try store.addLink(
+            to: .project(project.id), link: branch("main", repo: "alpha"),
+            actor: .user)
+        try store.addLink(
+            to: .project(project.id), link: branch("main", repo: "beta"),
+            actor: .user)
 
-        try store.removeLink(from: .project(project.id), link: branch("main", repo: "beta"),
-                             actor: .user)
+        try store.removeLink(
+            from: .project(project.id), link: branch("main", repo: "beta"),
+            actor: .user)
 
         let links = store.openProject(project.id)?.project.links ?? []
         #expect(links.map(\.repo) == ["alpha"])
@@ -116,8 +125,9 @@ struct ProjectStoreLinkTests {
     @Test("removing a link that differs only by repo throws linkNotFound")
     func removeWrongRepoThrows() throws {
         let (store, project) = makeStore()
-        try store.addLink(to: .project(project.id), link: branch("main", repo: "alpha"),
-                          actor: .user)
+        try store.addLink(
+            to: .project(project.id), link: branch("main", repo: "alpha"),
+            actor: .user)
 
         let other = branch("main", repo: "beta")
         #expect(throws: QuestError.linkNotFound(other.id)) {
@@ -140,8 +150,9 @@ struct ProjectStoreLinkTests {
     @Test("a duplicate on an item is refused too")
     func duplicateRefusedOnItem() throws {
         let (store, project) = makeStore()
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "M1.1", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "M1.1", statusID: "todo", actor: .user)
         try store.addLink(to: .item(epic.id), link: repoLink, actor: .user)
 
         #expect(throws: QuestError.linkAlreadyExists(repoLink.id)) {
@@ -175,8 +186,9 @@ struct ProjectStoreLinkTests {
     @Test("adding a link to a live item inside a trashed project is refused")
     func refusesItemInTrashedProject() throws {
         let (store, project) = makeStore()
-        let epic = try store.createItem(projectID: project.id, parentID: nil, type: .epic,
-                                        title: "M1.1", statusID: "todo", actor: .user)
+        let epic = try store.createItem(
+            projectID: project.id, parentID: nil, type: .epic,
+            title: "M1.1", statusID: "todo", actor: .user)
         try store.deleteProject(project.id, actor: .user)
 
         #expect(throws: QuestError.itemNotFound(epic.id)) {

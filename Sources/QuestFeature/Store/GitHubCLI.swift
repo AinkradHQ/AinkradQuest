@@ -38,7 +38,8 @@ public final class GitHubCLI: GitHubAccountSource, Sendable {
         // manager). `/usr/bin/which` is itself a fixed, always-present path,
         // so this does not reintroduce the "assume a path" problem.
         if let found = try? runProcess(executable: "/usr/bin/which", arguments: ["gh"]),
-           found.exitCode == 0 {
+            found.exitCode == 0
+        {
             let path = found.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
             if !path.isEmpty, fileManager.isExecutableFile(atPath: path) {
                 return path

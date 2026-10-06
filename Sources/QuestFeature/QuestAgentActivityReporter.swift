@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// Decides whether one agent tool call is worth a notification, and files it.
 ///
@@ -28,10 +28,12 @@ enum QuestAgentActivityReporter {
     /// returned to the assistant, which tells the user in the conversation
     /// they are already reading. A feed row would duplicate it — the same
     /// reasoning that kept Leyline out of Signal entirely.
-    static func report(operation: String,
-                       result: AgentActionResult,
-                       store: ProjectStore,
-                       reporter: QuestSignalReporter) {
+    static func report(
+        operation: String,
+        result: AgentActionResult,
+        store: ProjectStore,
+        reporter: QuestSignalReporter
+    ) {
         guard mutatingOperations.contains(operation), !result.isError else { return }
 
         // The most recent agent-authored activity is what this call produced.
@@ -56,9 +58,10 @@ enum QuestAgentActivityReporter {
             .filter { $0.actor == .agent && $0.at >= window }
             .count
 
-        reporter.agentFiledWork(projectName: project.name,
-                                projectID: project.id,
-                                summary: latest.summary,
-                                count: max(count, 1))
+        reporter.agentFiledWork(
+            projectName: project.name,
+            projectID: project.id,
+            summary: latest.summary,
+            count: max(count, 1))
     }
 }

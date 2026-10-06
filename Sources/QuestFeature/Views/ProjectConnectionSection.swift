@@ -1,6 +1,6 @@
-import SwiftUI
-import Foundation
 import AinkradAppKit
+import Foundation
+import SwiftUI
 
 /// The attach-repo form's state, split out of the view for the same reason as
 /// `ConnectionDraft`.
@@ -39,8 +39,9 @@ public struct RepoDraft: Equatable {
     public func repo(id: UUID) -> AttachedRepo? {
         guard let connectionID, let owner, let name else { return nil }
         let path = localPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        return AttachedRepo(id: id, connectionID: connectionID, owner: owner,
-                            name: name, localPath: path.isEmpty ? nil : path)
+        return AttachedRepo(
+            id: id, connectionID: connectionID, owner: owner,
+            name: name, localPath: path.isEmpty ? nil : path)
     }
 }
 
@@ -89,8 +90,9 @@ struct ProjectConnectionSection: View {
     }
 
     private var repoConnectionBinding: Binding<UUID> {
-        Binding(get: { repoDraft.connectionID ?? Self.noConnection },
-               set: { repoDraft.connectionID = $0 == Self.noConnection ? nil : $0 })
+        Binding(
+            get: { repoDraft.connectionID ?? Self.noConnection },
+            set: { repoDraft.connectionID = $0 == Self.noConnection ? nil : $0 })
     }
 
     var body: some View {
@@ -132,9 +134,12 @@ struct ProjectConnectionSection: View {
                 .font(.caption)
                 .foregroundStyle(theme.foreground.opacity(0.7))
         } else if let connectionID = boundConnectionID,
-                  let connection = registry.connection(connectionID) {
-            AinkradFormRow(title: "Bound to",
-                          help: "\(connection.provider.rawValue) · \(connection.accountLabel)") {
+            let connection = registry.connection(connectionID)
+        {
+            AinkradFormRow(
+                title: "Bound to",
+                help: "\(connection.provider.rawValue) · \(connection.accountLabel)"
+            ) {
                 AinkradButton(title: "Unbind", style: .secondary, action: unbind)
             }
         } else {
@@ -144,17 +149,21 @@ struct ProjectConnectionSection: View {
                 .font(.caption)
                 .foregroundStyle(theme.foreground.opacity(0.7))
             AinkradFormRow(title: "Account") {
-                AinkradSelect(items: [Self.noConnection] + registry.connections.map(\.id),
-                             selection: $pendingConnectionSelection,
-                             label: connectionLabel)
+                AinkradSelect(
+                    items: [Self.noConnection] + registry.connections.map(\.id),
+                    selection: $pendingConnectionSelection,
+                    label: connectionLabel)
             }
-            AinkradFormRow(title: "Remote project key",
-                          help: "The provider's own key for this project (e.g. \"QST\").") {
+            AinkradFormRow(
+                title: "Remote project key",
+                help: "The provider's own key for this project (e.g. \"QST\")."
+            ) {
                 AinkradTextField(text: $remoteProjectKeyText, placeholder: "QST")
             }
             AinkradButton(title: "Bind", style: .primary, action: bind)
-                .disabled(pendingConnectionID == nil
-                          || remoteProjectKeyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(
+                    pendingConnectionID == nil
+                        || remoteProjectKeyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 
@@ -169,9 +178,10 @@ struct ProjectConnectionSection: View {
 
     @ViewBuilder private var attachForm: some View {
         AinkradFormRow(title: "Account") {
-            AinkradSelect(items: [Self.noConnection] + registry.connections.map(\.id),
-                         selection: repoConnectionBinding,
-                         label: connectionLabel)
+            AinkradSelect(
+                items: [Self.noConnection] + registry.connections.map(\.id),
+                selection: repoConnectionBinding,
+                label: connectionLabel)
         }
         AinkradFormRow(title: "Repo", help: "owner/name") {
             AinkradTextField(text: $repoDraft.slugText, placeholder: "owner/name")

@@ -38,9 +38,9 @@ public enum TimelineLayout {
 
         for item in live {
             switch (item.startDate, item.dueDate) {
-            case let (start?, due?): dated.append((item, min(start, due), max(start, due), false))
-            case let (start?, nil): dated.append((item, start, start, false))
-            case let (nil, due?): dated.append((item, due, due, false))
+            case (let start?, let due?): dated.append((item, min(start, due), max(start, due), false))
+            case (let start?, nil): dated.append((item, start, start, false))
+            case (nil, let due?): dated.append((item, due, due, false))
             case (nil, nil): unscheduled.append(item)
             }
         }
@@ -49,20 +49,23 @@ public enum TimelineLayout {
         // The spec promised this shape; without it a perfectly well-planned
         // epic drops to the unscheduled rail purely because nobody typed dates
         // on the container.
-        for epic in live where epic.type == .epic
-            && epic.startDate == nil && epic.dueDate == nil {
+        for epic in live
+        where epic.type == .epic
+            && epic.startDate == nil && epic.dueDate == nil
+        {
             let scheduled = HierarchyRules.descendants(of: epic.id, in: live)
                 .filter { !$0.isDeleted }
                 .compactMap { child -> (start: Date, end: Date)? in
                     switch (child.startDate, child.dueDate) {
-                    case let (start?, due?): return (min(start, due), max(start, due))
-                    case let (start?, nil): return (start, start)
-                    case let (nil, due?): return (due, due)
+                    case (let start?, let due?): return (min(start, due), max(start, due))
+                    case (let start?, nil): return (start, start)
+                    case (nil, let due?): return (due, due)
                     case (nil, nil): return nil
                     }
                 }
             guard let earliest = scheduled.map(\.start).min(),
-                  let latest = scheduled.map(\.end).max() else { continue }
+                let latest = scheduled.map(\.end).max()
+            else { continue }
             dated.append((epic, earliest, latest, true))
             unscheduled.removeAll { $0.id == epic.id }
         }
@@ -75,9 +78,11 @@ public enum TimelineLayout {
         for entry in dated {
             let lane = laneEnds.firstIndex { $0 < entry.start } ?? laneEnds.count
             if lane == laneEnds.count { laneEnds.append(entry.end) } else { laneEnds[lane] = entry.end }
-            bars.append(TimelineBar(itemID: entry.item.id, title: entry.item.title,
-                                    start: entry.start, end: entry.end, lane: lane,
-                                    isDerived: entry.isDerived))
+            bars.append(
+                TimelineBar(
+                    itemID: entry.item.id, title: entry.item.title,
+                    start: entry.start, end: entry.end, lane: lane,
+                    isDerived: entry.isDerived))
         }
         return Result(bars: bars, unscheduled: unscheduled)
     }

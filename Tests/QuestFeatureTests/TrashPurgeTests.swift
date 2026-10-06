@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("TrashPurge")
@@ -41,8 +42,9 @@ struct TrashPurgeTests {
 
     @Test("a plan with nothing in it says so rather than threatening")
     func emptyWording() {
-        #expect(TrashPurge.confirmMessage(TrashPurgePlan(itemIDs: [], projectIDs: []))
-            == "The trash is already empty.")
+        #expect(
+            TrashPurge.confirmMessage(TrashPurgePlan(itemIDs: [], projectIDs: []))
+                == "The trash is already empty.")
     }
 
     @Test("a partial run leads with what was destroyed, then what survived")

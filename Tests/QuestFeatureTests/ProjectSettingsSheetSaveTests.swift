@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 /// Drives `ProjectSettingsSheetWrite.apply` — the exact function
@@ -41,16 +42,18 @@ struct ProjectSettingsSheetSaveTests {
         // `add_link` path, or the project being paused from another
         // surface — WHILE the sheet is still open holding `staleDraft`.
         try store.setState(project.id, state: .paused, actor: .user)
-        try store.addLink(to: .project(project.id),
-                          link: Link(scheme: .url, identifier: "https://example.com", label: "Example"),
-                          actor: .user)
+        try store.addLink(
+            to: .project(project.id),
+            link: Link(scheme: .url, identifier: "https://example.com", label: "Example"),
+            actor: .user)
 
         // The user edits the name in the sheet, then hits Save.
         var edited = staleDraft
         edited.name = "Quest Renamed"
         let live = try #require(store.openProject(project.id)?.project)
-        let toSave = ProjectSettingsSheetWrite.apply(draft: edited, colorToken: colorToken,
-                                                     validatedName: "Quest Renamed", to: live)
+        let toSave = ProjectSettingsSheetWrite.apply(
+            draft: edited, colorToken: colorToken,
+            validatedName: "Quest Renamed", to: live)
         try store.updateProject(toSave, actor: .user)
 
         let saved = try #require(store.openProject(project.id)?.project)
@@ -73,8 +76,9 @@ struct ProjectSettingsSheetSaveTests {
         draft.kind = .general
         let live = try #require(store.openProject(project.id)?.project)
 
-        let toSave = ProjectSettingsSheetWrite.apply(draft: draft, colorToken: .success,
-                                                     validatedName: "Renamed", to: live)
+        let toSave = ProjectSettingsSheetWrite.apply(
+            draft: draft, colorToken: .success,
+            validatedName: "Renamed", to: live)
 
         #expect(toSave.name == "Renamed")
         #expect(toSave.summaryText == "New summary")

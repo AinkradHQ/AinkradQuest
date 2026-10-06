@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// Shared editor used by every surface that opens a single item.
 ///
@@ -24,9 +24,11 @@ struct ItemEditor: View {
 
     @Environment(\.ainkradTheme) private var theme
 
-    init(store: ProjectStore, document: ProjectDocument, item: WorkItem,
-         report: @escaping (String, AinkradStatus) -> Void,
-         onClose: @escaping () -> Void) {
+    init(
+        store: ProjectStore, document: ProjectDocument, item: WorkItem,
+        report: @escaping (String, AinkradStatus) -> Void,
+        onClose: @escaping () -> Void
+    ) {
         self.store = store
         self.document = document
         self.report = report
@@ -82,15 +84,19 @@ struct ItemEditor: View {
             AinkradTextField(text: $draft.title, placeholder: "Title")
         }
         AinkradFormRow(title: "Type") {
-            AinkradSelect(items: WorkItemType.allCases,
-                          selection: $draft.type) { $0.rawValue.capitalized }
+            AinkradSelect(
+                items: WorkItemType.allCases,
+                selection: $draft.type
+            ) { $0.rawValue.capitalized }
         }
         AinkradFormRow(title: "Status") {
             AinkradSelect(items: statusIDs, selection: $draft.statusID) { statusName($0) }
         }
         AinkradFormRow(title: "Priority") {
-            AinkradSegmentedPicker(items: Priority.allCases,
-                                   selection: $draft.priority) { priorityLabel($0) }
+            AinkradSegmentedPicker(
+                items: Priority.allCases,
+                selection: $draft.priority
+            ) { priorityLabel($0) }
         }
         dateRow(label: "Start", has: $hasStartDate, date: $draft.startDate)
         dateRow(label: "Due", has: $hasDueDate, date: $draft.dueDate)
@@ -108,8 +114,9 @@ struct ItemEditor: View {
     private var links: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
             AinkradSectionHeader(title: "Links")
-            LinkListView(store: store, target: .item(draft.id),
-                         links: currentLinks, report: report)
+            LinkListView(
+                store: store, target: .item(draft.id),
+                links: currentLinks, report: report)
             LinkEditor(store: store, target: .item(draft.id), report: report)
         }
         .submitScope()
@@ -150,9 +157,12 @@ struct ItemEditor: View {
                         date.wrappedValue = newValue ? (date.wrappedValue ?? Date()) : nil
                     }
                 if has.wrappedValue {
-                    DatePicker(label, selection: Binding(
-                        get: { date.wrappedValue ?? Date() },
-                        set: { date.wrappedValue = $0 }), displayedComponents: .date)
+                    DatePicker(
+                        label,
+                        selection: Binding(
+                            get: { date.wrappedValue ?? Date() },
+                            set: { date.wrappedValue = $0 }), displayedComponents: .date
+                    )
                     .labelsHidden()
                 }
             }

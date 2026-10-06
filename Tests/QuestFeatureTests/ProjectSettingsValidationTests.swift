@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("Project settings — validation and colour tokens")
@@ -25,8 +26,11 @@ struct ProjectSettingsValidationTests {
     @Test("the colour control offers theme token names, never raw colours")
     func tokensAreThemeNames() {
         let names = Set(ProjectColorToken.allCases.map(\.rawValue))
-        #expect(names == ["accentPrimary", "accentSecondary", "success", "warning",
-                          "danger", "muted"])
+        #expect(
+            names == [
+                "accentPrimary", "accentSecondary", "success", "warning",
+                "danger", "muted",
+            ])
         // No stored value is a literal colour: nothing hex-like, nothing that
         // would survive a theme change as the wrong shade.
         #expect(names.allSatisfy { !$0.hasPrefix("#") })

@@ -12,16 +12,23 @@ import Foundation
 /// trail and `updatedAt` bump must not be lost just because the data itself
 /// moved to a different store.
 extension ProjectStore {
-    public func bindProject(_ id: UUID, to connectionID: UUID,
-                            remoteProjectKey: String, actor: ActivityActor) throws {
+    public func bindProject(
+        _ id: UUID, to connectionID: UUID,
+        remoteProjectKey: String, actor: ActivityActor
+    ) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
         overlay.updateHubConfig {
-            $0.bind(id, to: ProjectBinding(connectionID: connectionID,
-                                           remoteProjectKey: remoteProjectKey))
+            $0.bind(
+                id,
+                to: ProjectBinding(
+                    connectionID: connectionID,
+                    remoteProjectKey: remoteProjectKey))
         }
         document.project.updatedAt = Date()
-        document.activity.append(ActivityEvent(projectID: id, actor: actor, kind: .projectUpdated,
-                                               summary: "bound to a connection"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: id, actor: actor, kind: .projectUpdated,
+                summary: "bound to a connection"))
         commit(document)
     }
 
@@ -31,13 +38,17 @@ extension ProjectStore {
         // a project on a provider we can no longer reach.
         overlay.updateHubConfig { $0.unbind(id) }
         document.project.updatedAt = Date()
-        document.activity.append(ActivityEvent(projectID: id, actor: actor, kind: .projectUpdated,
-                                               summary: "unbound from its connection"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: id, actor: actor, kind: .projectUpdated,
+                summary: "unbound from its connection"))
         commit(document)
     }
 
-    public func attachRepo(_ repo: AttachedRepo, to projectID: UUID,
-                           actor: ActivityActor) throws {
+    public func attachRepo(
+        _ repo: AttachedRepo, to projectID: UUID,
+        actor: ActivityActor
+    ) throws {
         guard var document = openProject(projectID) else { throw QuestError.projectNotFound(projectID) }
         // Same slug on a DIFFERENT connection is a different repo, so the
         // duplicate check is scoped by connection.
@@ -48,13 +59,17 @@ extension ProjectStore {
         guard !clash else { throw QuestError.duplicateRepo(repo.slug) }
         overlay.update(projectID: projectID) { $0.repos.append(repo) }
         document.project.updatedAt = Date()
-        document.activity.append(ActivityEvent(projectID: projectID, actor: actor, kind: .projectUpdated,
-                                               summary: "attached repo \(repo.slug)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, actor: actor, kind: .projectUpdated,
+                summary: "attached repo \(repo.slug)"))
         commit(document)
     }
 
-    public func detachRepo(_ repoID: UUID, from projectID: UUID,
-                           actor: ActivityActor) throws {
+    public func detachRepo(
+        _ repoID: UUID, from projectID: UUID,
+        actor: ActivityActor
+    ) throws {
         guard var document = openProject(projectID) else { throw QuestError.projectNotFound(projectID) }
         let existing = overlay.overlay(for: projectID).repos
         guard let repo = existing.first(where: { $0.id == repoID }) else {
@@ -64,8 +79,10 @@ extension ProjectStore {
             current.repos.removeAll { $0.id == repoID }
         }
         document.project.updatedAt = Date()
-        document.activity.append(ActivityEvent(projectID: projectID, actor: actor, kind: .projectUpdated,
-                                               summary: "detached repo \(repo.slug)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: projectID, actor: actor, kind: .projectUpdated,
+                summary: "detached repo \(repo.slug)"))
         commit(document)
     }
 
@@ -95,8 +112,10 @@ extension ProjectStore {
         for id in ids {
             guard var document = openProject(id) else { continue }
             document.project.updatedAt = Date()
-            document.activity.append(ActivityEvent(projectID: id, actor: actor, kind: .projectUpdated,
-                                                   summary: "connection removed — binding severed"))
+            document.activity.append(
+                ActivityEvent(
+                    projectID: id, actor: actor, kind: .projectUpdated,
+                    summary: "connection removed — binding severed"))
             commit(document)
         }
     }

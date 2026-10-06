@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -8,12 +9,14 @@ import AinkradAppKit
 struct QuestMCPServerTests {
     @Test("the table publishes every operation the assistant needs")
     func toolNames() {
-        #expect(Set(QuestMCPServer.tools.map(\.name)) == Set([
-            "list_projects", "get_project", "search_items", "get_item",
-            "create_project", "update_project", "create_item", "update_item",
-            "move_item", "set_status", "delete_item", "delete_project",
-            "add_link", "remove_link", "update_status_scheme",
-        ]))
+        #expect(
+            Set(QuestMCPServer.tools.map(\.name))
+                == Set([
+                    "list_projects", "get_project", "search_items", "get_item",
+                    "create_project", "update_project", "create_item", "update_item",
+                    "move_item", "set_status", "delete_item", "delete_project",
+                    "add_link", "remove_link", "update_status_scheme",
+                ]))
     }
 
     /// Every tool's `operation` must be one of the tokens

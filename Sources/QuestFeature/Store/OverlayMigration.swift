@@ -38,9 +38,11 @@ public enum OverlayMigration {
     /// `nothingToDo`, or `blocked` (see `Outcome`).
     @MainActor
     @discardableResult
-    public static func migrateIfNeeded(projectID: UUID,
-                                       repository: any ProjectRepository,
-                                       overlay: OverlayStore) -> Outcome {
+    public static func migrateIfNeeded(
+        projectID: UUID,
+        repository: any ProjectRepository,
+        overlay: OverlayStore
+    ) -> Outcome {
         guard let document = repository.loadProject(projectID) else { return .nothingToDo }
         let project = document.project
         var moved = false
@@ -73,11 +75,15 @@ public enum OverlayMigration {
         }
 
         if let connectionID = project.legacyConnectionID,
-           let key = project.legacyRemoteProjectKey,
-           !overlay.hubConfig().hasMigratedBinding(projectID) {
+            let key = project.legacyRemoteProjectKey,
+            !overlay.hubConfig().hasMigratedBinding(projectID)
+        {
             overlay.updateHubConfig {
-                $0.bind(projectID, to: ProjectBinding(connectionID: connectionID,
-                                                      remoteProjectKey: key))
+                $0.bind(
+                    projectID,
+                    to: ProjectBinding(
+                        connectionID: connectionID,
+                        remoteProjectKey: key))
                 $0.markBindingMigrated(projectID)
             }
             moved = true

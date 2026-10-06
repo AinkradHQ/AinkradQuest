@@ -79,7 +79,8 @@ public final class ProjectStore {
             summary.isTrashed = true
             return summary
         }
-        self.projects = live.filter { $0.state != .archived }
+        self.projects =
+            live.filter { $0.state != .archived }
             + live.filter { $0.state == .archived }
         self.deletedProjectIDs = Set(trashed.map(\.id))
         self.trashedProjects = trashed
@@ -101,14 +102,16 @@ public final class ProjectStore {
             let blockedCount = (live + trashed)
                 .map(\.id)
                 .reduce(into: 0) { count, id in
-                    let outcome = OverlayMigration.migrateIfNeeded(projectID: id, repository: repository,
-                                                                   overlay: overlay)
+                    let outcome = OverlayMigration.migrateIfNeeded(
+                        projectID: id, repository: repository,
+                        overlay: overlay)
                     if outcome == .blocked { count += 1 }
                     if outcome == .blocked || outcome == .incomplete { sawUnfinished = true }
                 }
             if blockedCount > 0 {
                 let plural = blockedCount == 1 ? "project's" : "projects'"
-                persistenceFailure = "\(blockedCount) \(plural) repos could not finish migrating: "
+                persistenceFailure =
+                    "\(blockedCount) \(plural) repos could not finish migrating: "
                     + "their overlay could not be read. Restore or remove the corrupt overlay to complete the move."
             }
             // Only mark the scan complete once the loop finishes AND nothing
@@ -146,13 +149,17 @@ public final class ProjectStore {
     // MARK: writing
 
     @discardableResult
-    public func createProject(name: String, kind: ProjectKind,
-                              actor: ActivityActor) -> Project {
+    public func createProject(
+        name: String, kind: ProjectKind,
+        actor: ActivityActor
+    ) -> Project {
         let project = Project(id: UUID(), name: name, kind: kind)
         var document = ProjectDocument(project: project)
-        document.activity.append(ActivityEvent(projectID: project.id, actor: actor,
-                                               kind: .projectCreated,
-                                               summary: "created project \(name)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: project.id, actor: actor,
+                kind: .projectCreated,
+                summary: "created project \(name)"))
         documents[project.id] = document
         persist(document)
         projects.append(project.summary)
@@ -163,18 +170,22 @@ public final class ProjectStore {
 
     /// `kind`/`summary` let a caller that knows WHAT it changed say so in the
     /// feed — "added link foo" reads better than a generic "updated project".
-    public func updateProject(_ project: Project, actor: ActivityActor,
-                              kind: ActivityKind = .projectUpdated,
-                              summary: String? = nil) throws {
+    public func updateProject(
+        _ project: Project, actor: ActivityActor,
+        kind: ActivityKind = .projectUpdated,
+        summary: String? = nil
+    ) throws {
         guard var document = openProject(project.id) else {
             throw QuestError.projectNotFound(project.id)
         }
         var updated = project
         updated.updatedAt = Date()
         document.project = updated
-        document.activity.append(ActivityEvent(projectID: updated.id, actor: actor,
-                                               kind: kind,
-                                               summary: summary ?? "updated project \(updated.name)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: updated.id, actor: actor,
+                kind: kind,
+                summary: summary ?? "updated project \(updated.name)"))
         commit(document)
     }
 
@@ -184,16 +195,20 @@ public final class ProjectStore {
 
     /// The general form of `archiveProject`, which stays as a convenience.
     /// Pause exists in the model but had no way to be reached before this.
-    public func setState(_ id: UUID, state: ProjectState, actor: ActivityActor,
-                         summary: String? = nil) throws {
+    public func setState(
+        _ id: UUID, state: ProjectState, actor: ActivityActor,
+        summary: String? = nil
+    ) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
         document.project.state = state
         // archivedAt tracks the archived state rather than accumulating: a
         // project brought back out of the archive is not still archived.
         document.project.archivedAt = state == .archived ? Date() : nil
-        document.activity.append(ActivityEvent(projectID: id, actor: actor,
-                                               kind: .projectUpdated,
-                                               summary: summary ?? "set project state to \(state.rawValue)"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: id, actor: actor,
+                kind: .projectUpdated,
+                summary: summary ?? "set project state to \(state.rawValue)"))
         commit(document)
     }
 
@@ -201,18 +216,22 @@ public final class ProjectStore {
     /// so a wrong agent call is one restore away.
     public func deleteProject(_ id: UUID, actor: ActivityActor) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
-        document.activity.append(ActivityEvent(projectID: id, actor: actor,
-                                               kind: .projectDeleted,
-                                               summary: "moved project to trash"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: id, actor: actor,
+                kind: .projectDeleted,
+                summary: "moved project to trash"))
         deletedProjectIDs.insert(id)
         commit(document)
     }
 
     public func restoreProject(_ id: UUID, actor: ActivityActor) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
-        document.activity.append(ActivityEvent(projectID: id, actor: actor,
-                                               kind: .projectRestored,
-                                               summary: "restored project from trash"))
+        document.activity.append(
+            ActivityEvent(
+                projectID: id, actor: actor,
+                kind: .projectRestored,
+                summary: "restored project from trash"))
         deletedProjectIDs.remove(id)
         commit(document)
     }
@@ -301,8 +320,9 @@ public final class ProjectStore {
                 failures.append((error as? QuestError)?.message ?? error.localizedDescription)
             }
         }
-        return TrashPurgeOutcome(purgedItems: purgedItems, purgedProjects: purgedProjects,
-                                 failures: failures)
+        return TrashPurgeOutcome(
+            purgedItems: purgedItems, purgedProjects: purgedProjects,
+            failures: failures)
     }
 
     // MARK: internals

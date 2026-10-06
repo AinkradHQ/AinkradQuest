@@ -45,9 +45,11 @@ public struct TrashPurgeOutcome: Equatable, Sendable {
     /// The sentence shown when the run finishes. Partial success leads with
     /// what was destroyed, because that is the irreversible half.
     public var message: String {
-        let done = [TrashPurge.count(purgedItems, "item", "items"),
-                    TrashPurge.count(purgedProjects, "project", "projects")]
-            .compactMap { $0 }
+        let done = [
+            TrashPurge.count(purgedItems, "item", "items"),
+            TrashPurge.count(purgedProjects, "project", "projects"),
+        ]
+        .compactMap { $0 }
         let deleted = done.isEmpty ? "Nothing was deleted" : "Deleted \(done.joined(separator: " and "))"
         guard !failures.isEmpty else { return "\(deleted)." }
         return "\(deleted). \(failures.count) could not be deleted: \(failures.joined(separator: "; "))"
@@ -60,19 +62,24 @@ public enum TrashPurge {
     ///     purged individually because the project itself survives.
     ///   - trashedProjectIDs: projects in the trash; each is purged whole.
     ///   - trashedItemIDs: the trashed item ids in a given project.
-    public static func plan(liveProjectIDs: [UUID], trashedProjectIDs: [UUID],
-                            trashedItemIDs: (UUID) -> [UUID]) -> TrashPurgePlan {
-        TrashPurgePlan(itemIDs: liveProjectIDs.flatMap(trashedItemIDs),
-                       projectIDs: trashedProjectIDs)
+    public static func plan(
+        liveProjectIDs: [UUID], trashedProjectIDs: [UUID],
+        trashedItemIDs: (UUID) -> [UUID]
+    ) -> TrashPurgePlan {
+        TrashPurgePlan(
+            itemIDs: liveProjectIDs.flatMap(trashedItemIDs),
+            projectIDs: trashedProjectIDs)
     }
 
     /// Counts phrased for a confirm dialog. Written out rather than templated
     /// with a bare number because "1 items" in the one place the app is about
     /// to do something irreversible reads as carelessness.
     public static func confirmMessage(_ plan: TrashPurgePlan) -> String {
-        let parts = [count(plan.itemIDs.count, "item", "items"),
-                     count(plan.projectIDs.count, "project", "projects")]
-            .compactMap { $0 }
+        let parts = [
+            count(plan.itemIDs.count, "item", "items"),
+            count(plan.projectIDs.count, "project", "projects"),
+        ]
+        .compactMap { $0 }
         guard !parts.isEmpty else { return "The trash is already empty." }
         let subject = parts.joined(separator: " and ")
         // Projects carry everything inside them, so say so: a project row in

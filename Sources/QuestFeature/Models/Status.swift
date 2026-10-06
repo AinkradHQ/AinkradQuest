@@ -42,6 +42,7 @@ public struct StatusScheme: Codable, Sendable, Hashable {
         Status(id: "done", name: "Done", category: .done, colorToken: "success"),
     ])
 
-    public static let generalDefault = StatusScheme(statuses:
-        softwareDefault.statuses.filter { $0.id != "in_review" })
+    public static let generalDefault = StatusScheme(
+        statuses:
+            softwareDefault.statuses.filter { $0.id != "in_review" })
 }

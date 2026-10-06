@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @MainActor
@@ -32,7 +33,8 @@ struct OverlayStoreTests {
     @Test("an item overlay is reachable and mutable through its project")
     func updateItemOverlay() {
         let store = makeStore()
-        let projectID = UUID(), itemID = UUID()
+        let projectID = UUID()
+        let itemID = UUID()
 
         store.updateItem(itemID, in: projectID) {
             $0.notes = "item scratch"
@@ -48,7 +50,8 @@ struct OverlayStoreTests {
     func reload() {
         let repository = InMemoryProjectRepository()
         let store = OverlayStore(repository: repository)
-        let projectID = UUID(), itemID = UUID()
+        let projectID = UUID()
+        let itemID = UUID()
         store.update(projectID: projectID) { $0.notes = "project" }
         store.updateItem(itemID, in: projectID) { $0.notes = "item" }
 
@@ -60,7 +63,8 @@ struct OverlayStoreTests {
     @Test("clearing the last content prunes the item record")
     func pruning() {
         let store = makeStore()
-        let projectID = UUID(), itemID = UUID()
+        let projectID = UUID()
+        let itemID = UUID()
         store.updateItem(itemID, in: projectID) { $0.notes = "temp" }
         #expect(store.overlay(for: projectID).item(itemID) != nil)
 
@@ -74,7 +78,8 @@ struct OverlayStoreTests {
     @Test("a personal order of zero is kept, not pruned")
     func zeroOrderSurvives() {
         let store = makeStore()
-        let projectID = UUID(), itemID = UUID()
+        let projectID = UUID()
+        let itemID = UUID()
 
         store.updateItem(itemID, in: projectID) { $0.personalOrder = 0 }
 
@@ -100,12 +105,16 @@ struct OverlayStoreTests {
         let repository = InMemoryProjectRepository()
         let store = OverlayStore(repository: repository)
         let ref = RemoteRef(connectionID: UUID(), remoteKey: "QST-7")
-        let local = UUID(), projectID = UUID()
+        let local = UUID()
+        let projectID = UUID()
 
         store.updateLinkMap { $0.link(ref, to: local) }
         store.updateHubConfig {
-            $0.bind(projectID, to: ProjectBinding(connectionID: ref.connectionID,
-                                                  remoteProjectKey: "QST"))
+            $0.bind(
+                projectID,
+                to: ProjectBinding(
+                    connectionID: ref.connectionID,
+                    remoteProjectKey: "QST"))
         }
 
         let reloaded = OverlayStore(repository: repository)
@@ -130,8 +139,9 @@ struct OverlayStoreTests {
     func corruptOverlayReadsEmptyAndRaisesFailure() {
         let documents = MemoryDocumentStore()
         let projectID = UUID()
-        documents.setData(Data("not json".utf8),
-                          forKey: DocumentProjectRepository.overlayKey(projectID))
+        documents.setData(
+            Data("not json".utf8),
+            forKey: DocumentProjectRepository.overlayKey(projectID))
         let repository = DocumentProjectRepository(documents: documents)
         let store = OverlayStore(repository: repository)
 
@@ -165,7 +175,8 @@ struct OverlayStoreTests {
     @Test("a write against a corrupt item overlay is blocked and does not touch the repository")
     func itemWriteBlockedForCorruptOverlay() {
         let documents = MemoryDocumentStore()
-        let projectID = UUID(), itemID = UUID()
+        let projectID = UUID()
+        let itemID = UUID()
         let corruptBytes = Data("not json".utf8)
         documents.setData(corruptBytes, forKey: DocumentProjectRepository.overlayKey(projectID))
         let repository = DocumentProjectRepository(documents: documents)

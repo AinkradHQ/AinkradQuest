@@ -25,9 +25,10 @@ public enum LinkResolution {
             // a url link can hold arbitrary text. Handing that to the system
             // opener is how an unexpected app launches — accept http(s) only.
             guard let url = URL(string: link.identifier),
-                  let scheme = url.scheme?.lowercased(),
-                  scheme == "http" || scheme == "https",
-                  url.host?.isEmpty == false else {
+                let scheme = url.scheme?.lowercased(),
+                scheme == "http" || scheme == "https",
+                url.host?.isEmpty == false
+            else {
                 return .inert(reason: "That link is not a web address (http or https).")
             }
             return .web(url)
@@ -45,8 +46,9 @@ public enum LinkResolution {
             return .reveal(url)
 
         case .repo, .branch, .pr, .commit:
-            return .inert(reason: "Opening \(link.scheme.rawValue) links needs Git Mage, "
-                          + "which Quest cannot drive yet.")
+            return .inert(
+                reason: "Opening \(link.scheme.rawValue) links needs Git Mage, "
+                    + "which Quest cannot drive yet.")
 
         case .unknown:
             return .inert(reason: "Quest does not know how to open this kind of link.")

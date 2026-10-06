@@ -35,12 +35,15 @@ public enum WorkItemViewBuilder {
     /// purged must not resurrect as a phantom with notes and no title. Order is
     /// preserved exactly — the surfaces already sort, and a join that quietly
     /// reorders would break them.
-    public static func build(items: [WorkItem], overlay: ProjectOverlay,
-                             linkMap: LinkMap) -> [WorkItemView] {
+    public static func build(
+        items: [WorkItem], overlay: ProjectOverlay,
+        linkMap: LinkMap
+    ) -> [WorkItemView] {
         items.map { item in
-            WorkItemView(item: item,
-                         overlay: overlay.item(item.id) ?? ItemOverlay(),
-                         remoteRef: linkMap.remoteRef(for: item.id))
+            WorkItemView(
+                item: item,
+                overlay: overlay.item(item.id) ?? ItemOverlay(),
+                remoteRef: linkMap.remoteRef(for: item.id))
         }
     }
 }

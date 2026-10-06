@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import QuestFeature
 
 /// Covers the PURE parser only — `GitHubAccountParsing.parseAccounts(_:)` — never
@@ -12,22 +13,22 @@ struct GitHubCLITests {
     @Test("parses the real single-account payload")
     func singleAccount() throws {
         let json = """
-        {
-          "hosts": {
-            "github.com": [
-              {
-                "state": "success",
-                "active": true,
-                "host": "github.com",
-                "login": "AhmedMElhalaby",
-                "tokenSource": "keyring",
-                "scopes": "gist, read:org, repo, user, workflow",
-                "gitProtocol": "https"
+            {
+              "hosts": {
+                "github.com": [
+                  {
+                    "state": "success",
+                    "active": true,
+                    "host": "github.com",
+                    "login": "AhmedMElhalaby",
+                    "tokenSource": "keyring",
+                    "scopes": "gist, read:org, repo, user, workflow",
+                    "gitProtocol": "https"
+                  }
+                ]
               }
-            ]
-          }
-        }
-        """
+            }
+            """
         let accounts = try GitHubAccountParsing.parseAccounts(Data(json.utf8))
         #expect(accounts.count == 1)
         let account = try #require(accounts.first)
@@ -42,15 +43,15 @@ struct GitHubCLITests {
     @Test("multiple accounts on one host, one active one not")
     func multipleAccountsOneHost() throws {
         let json = """
-        {
-          "hosts": {
-            "github.com": [
-              {"state": "success", "active": true, "host": "github.com", "login": "alice", "tokenSource": "keyring", "scopes": "repo, user", "gitProtocol": "https"},
-              {"state": "success", "active": false, "host": "github.com", "login": "bob", "tokenSource": "keyring", "scopes": "gist", "gitProtocol": "https"}
-            ]
-          }
-        }
-        """
+            {
+              "hosts": {
+                "github.com": [
+                  {"state": "success", "active": true, "host": "github.com", "login": "alice", "tokenSource": "keyring", "scopes": "repo, user", "gitProtocol": "https"},
+                  {"state": "success", "active": false, "host": "github.com", "login": "bob", "tokenSource": "keyring", "scopes": "gist", "gitProtocol": "https"}
+                ]
+              }
+            }
+            """
         let accounts = try GitHubAccountParsing.parseAccounts(Data(json.utf8))
         #expect(accounts.count == 2)
         #expect(accounts.first { $0.login == "alice" }?.isActive == true)
@@ -60,17 +61,17 @@ struct GitHubCLITests {
     @Test("multiple hosts including a GitHub Enterprise host")
     func multipleHosts() throws {
         let json = """
-        {
-          "hosts": {
-            "github.com": [
-              {"state": "success", "active": true, "host": "github.com", "login": "alice", "tokenSource": "keyring", "scopes": "repo", "gitProtocol": "https"}
-            ],
-            "github.enterprise.example.com": [
-              {"state": "success", "active": true, "host": "github.enterprise.example.com", "login": "alice-work", "tokenSource": "keyring", "scopes": "repo", "gitProtocol": "https"}
-            ]
-          }
-        }
-        """
+            {
+              "hosts": {
+                "github.com": [
+                  {"state": "success", "active": true, "host": "github.com", "login": "alice", "tokenSource": "keyring", "scopes": "repo", "gitProtocol": "https"}
+                ],
+                "github.enterprise.example.com": [
+                  {"state": "success", "active": true, "host": "github.enterprise.example.com", "login": "alice-work", "tokenSource": "keyring", "scopes": "repo", "gitProtocol": "https"}
+                ]
+              }
+            }
+            """
         let accounts = try GitHubAccountParsing.parseAccounts(Data(json.utf8))
         #expect(accounts.count == 2)
         #expect(Set(accounts.map(\.host)) == ["github.com", "github.enterprise.example.com"])
@@ -82,14 +83,14 @@ struct GitHubCLITests {
     @Test("an unhealthy account (state != success) reports isHealthy == false")
     func unhealthyAccount() throws {
         let json = """
-        {
-          "hosts": {
-            "github.com": [
-              {"state": "error", "active": true, "host": "github.com", "login": "alice", "tokenSource": "keyring", "scopes": "repo", "gitProtocol": "https"}
-            ]
-          }
-        }
-        """
+            {
+              "hosts": {
+                "github.com": [
+                  {"state": "error", "active": true, "host": "github.com", "login": "alice", "tokenSource": "keyring", "scopes": "repo", "gitProtocol": "https"}
+                ]
+              }
+            }
+            """
         let accounts = try GitHubAccountParsing.parseAccounts(Data(json.utf8))
         #expect(accounts.first?.isHealthy == false)
     }
@@ -97,11 +98,11 @@ struct GitHubCLITests {
     @Test("scopes parse into an array, and hasRepoScope is true/false correctly")
     func scopesArray() throws {
         let jsonWithRepo = """
-        {"hosts": {"github.com": [{"state": "success", "active": true, "host": "github.com", "login": "a", "tokenSource": "keyring", "scopes": "repo, gist", "gitProtocol": "https"}]}}
-        """
+            {"hosts": {"github.com": [{"state": "success", "active": true, "host": "github.com", "login": "a", "tokenSource": "keyring", "scopes": "repo, gist", "gitProtocol": "https"}]}}
+            """
         let jsonWithoutRepo = """
-        {"hosts": {"github.com": [{"state": "success", "active": true, "host": "github.com", "login": "a", "tokenSource": "keyring", "scopes": "gist, user", "gitProtocol": "https"}]}}
-        """
+            {"hosts": {"github.com": [{"state": "success", "active": true, "host": "github.com", "login": "a", "tokenSource": "keyring", "scopes": "gist, user", "gitProtocol": "https"}]}}
+            """
         let withRepo = try GitHubAccountParsing.parseAccounts(Data(jsonWithRepo.utf8))
         let withoutRepo = try GitHubAccountParsing.parseAccounts(Data(jsonWithoutRepo.utf8))
         #expect(withRepo.first?.hasRepoScope == true)
@@ -111,8 +112,8 @@ struct GitHubCLITests {
     @Test("hosts present but empty throws the logged-out error, not a crash")
     func emptyHosts() throws {
         let json = """
-        {"hosts": {}}
-        """
+            {"hosts": {}}
+            """
         #expect(throws: GitHubCLIError.self) {
             try GitHubAccountParsing.parseAccounts(Data(json.utf8))
         }
@@ -141,23 +142,23 @@ struct GitHubCLITests {
     @Test("an unknown extra field in the payload still parses")
     func unknownField() throws {
         let json = """
-        {
-          "hosts": {
-            "github.com": [
-              {
-                "state": "success",
-                "active": true,
-                "host": "github.com",
-                "login": "alice",
-                "tokenSource": "keyring",
-                "scopes": "repo",
-                "gitProtocol": "https",
-                "somethingGhAddedLater": {"nested": true}
+            {
+              "hosts": {
+                "github.com": [
+                  {
+                    "state": "success",
+                    "active": true,
+                    "host": "github.com",
+                    "login": "alice",
+                    "tokenSource": "keyring",
+                    "scopes": "repo",
+                    "gitProtocol": "https",
+                    "somethingGhAddedLater": {"nested": true}
+                  }
+                ]
               }
-            ]
-          }
-        }
-        """
+            }
+            """
         let accounts = try GitHubAccountParsing.parseAccounts(Data(json.utf8))
         #expect(accounts.count == 1)
         #expect(accounts.first?.login == "alice")

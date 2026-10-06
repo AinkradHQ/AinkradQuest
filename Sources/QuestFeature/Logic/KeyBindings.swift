@@ -37,7 +37,10 @@ public struct KeyBinding: Equatable, Sendable {
     public let label: String
 
     public init(id: String, key: Character, modifiers: KeyBindings.Modifiers, label: String) {
-        self.id = id; self.key = key; self.modifiers = modifiers; self.label = label
+        self.id = id
+        self.key = key
+        self.modifiers = modifiers
+        self.label = label
     }
 
     /// Conventional macOS order: ⌃⌥⇧⌘ then the key, uppercased.

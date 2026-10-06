@@ -1,18 +1,21 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import QuestFeature
 
 @Suite("CommandCatalog")
 struct CommandCatalogTests {
     private func summary(_ name: String) -> ProjectSummary {
-        ProjectSummary(id: UUID(), name: name, icon: "folder", colorToken: "blue",
-                       kind: .software, state: .active, updatedAt: Date())
+        ProjectSummary(
+            id: UUID(), name: name, icon: "folder", colorToken: "blue",
+            kind: .software, state: .active, updatedAt: Date())
     }
 
     @Test("with no project selected, no surface, status or settings command is offered")
     func noProject() {
-        let entries = CommandCatalog.entries(projects: [], hasProject: false,
-                                             statuses: StatusScheme.softwareDefault.statuses)
+        let entries = CommandCatalog.entries(
+            projects: [], hasProject: false,
+            statuses: StatusScheme.softwareDefault.statuses)
         #expect(!entries.contains { if case .openSurface = $0.action { return true } else { return false } })
         #expect(!entries.contains { if case .setStatus = $0.action { return true } else { return false } })
         // Deliberately changed: `openSettings` used to be listed here
@@ -35,8 +38,9 @@ struct CommandCatalogTests {
 
     @Test("with a project, each project surface and each status is offered")
     func withProject() {
-        let entries = CommandCatalog.entries(projects: [], hasProject: true,
-                                             statuses: StatusScheme.softwareDefault.statuses)
+        let entries = CommandCatalog.entries(
+            projects: [], hasProject: true,
+            statuses: StatusScheme.softwareDefault.statuses)
         let surfaces = entries.compactMap { entry -> QuestSurface? in
             if case .openSurface(let s) = entry.action { return s } else { return nil }
         }
@@ -65,17 +69,19 @@ struct CommandCatalogTests {
 
     @Test("an empty or whitespace query returns everything, unreordered")
     func emptyQuery() {
-        let entries = CommandCatalog.entries(projects: [summary("A")], hasProject: true,
-                                             statuses: StatusScheme.softwareDefault.statuses)
+        let entries = CommandCatalog.entries(
+            projects: [summary("A")], hasProject: true,
+            statuses: StatusScheme.softwareDefault.statuses)
         #expect(CommandCatalog.filtered(entries, query: "") == entries)
         #expect(CommandCatalog.filtered(entries, query: "   ") == entries)
     }
 
     @Test("ids are unique, since AinkradCommandMenu keys rows on them")
     func uniqueIDs() {
-        let entries = CommandCatalog.entries(projects: [summary("A"), summary("B")],
-                                             hasProject: true,
-                                             statuses: StatusScheme.softwareDefault.statuses)
+        let entries = CommandCatalog.entries(
+            projects: [summary("A"), summary("B")],
+            hasProject: true,
+            statuses: StatusScheme.softwareDefault.statuses)
         #expect(Set(entries.map(\.id)).count == entries.count)
     }
 }
