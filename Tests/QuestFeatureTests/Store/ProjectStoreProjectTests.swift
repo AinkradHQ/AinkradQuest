@@ -162,7 +162,7 @@ struct ProjectStoreProjectTests {
         try store.setState(project.id, state: .paused, actor: .user)
 
         #expect(store.activeProjects.isEmpty)
-        #expect(store.pausedProjects.map(\.name) == ["Later"])
+        #expect(store.projects(inState: .paused).map(\.name) == ["Later"])
         #expect(store.projects.count == 1)
         #expect(store.openProject(project.id)?.project.state == .paused)
     }
@@ -177,7 +177,7 @@ struct ProjectStoreProjectTests {
         let event = store.activity(for: project.id).last
         #expect(event?.kind == .projectUpdated)
         #expect(event?.actor == .agent)
-        #expect(store.archivedProjects.map(\.name) == ["P"])
+        #expect(store.projects(inState: .archived).map(\.name) == ["P"])
     }
 
     @Test("state survives a relaunch")
@@ -188,7 +188,7 @@ struct ProjectStoreProjectTests {
         try store.setState(project.id, state: .paused, actor: .user)
 
         let reopened = makeProjectStore(repository)
-        #expect(reopened.pausedProjects.map(\.name) == ["P"])
+        #expect(reopened.projects(inState: .paused).map(\.name) == ["P"])
     }
 
     @Test("setting a project back to active clears an archive stamp")

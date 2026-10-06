@@ -130,8 +130,6 @@ public final class ProjectStore {
         projects.filter { $0.state == state }
     }
 
-    public var pausedProjects: [ProjectSummary] { projects(inState: .paused) }
-    public var archivedProjects: [ProjectSummary] { projects(inState: .archived) }
 
     // MARK: reading
 

@@ -7,7 +7,6 @@ public enum LinkValidation {
         case invalid(String)
 
         public var value: Link? { if case .valid(let link) = self { link } else { nil } }
-        public var isFailure: Bool { value == nil }
     }
 
     /// Repo-scoped schemes must name their repo: a project with eleven repos

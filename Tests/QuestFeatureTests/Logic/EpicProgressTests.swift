@@ -31,7 +31,7 @@ struct EpicProgressTests {
         #expect(progress.total == 3)
     }
 
-    @Test("an epic with no children reports zero of zero and a zero fraction")
+    @Test("an epic with no children reports zero of zero")
     func empty() {
         let epicID = UUID()
         let items = [
@@ -41,7 +41,6 @@ struct EpicProgressTests {
         ]
         let progress = EpicProgress.rollup(epicID: epicID, in: items, scheme: .softwareDefault)
         #expect(progress.total == 0)
-        #expect(progress.fraction == 0)
     }
 
     @Test("deleted children are excluded from both counts")

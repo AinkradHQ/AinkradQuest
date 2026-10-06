@@ -61,11 +61,4 @@ public struct LinkMap: Codable, Sendable {
         refs.remove(at: index)
         locals.remove(at: index)
     }
-
-    public mutating func unlinkAll(connectionID: UUID) {
-        for index in refs.indices.reversed() where refs[index].connectionID == connectionID {
-            refs.remove(at: index)
-            locals.remove(at: index)
-        }
-    }
 }

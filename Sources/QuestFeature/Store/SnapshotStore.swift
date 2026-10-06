@@ -70,7 +70,10 @@ public final class SnapshotStore {
         return [lastSnapshotAt, onDisk].compactMap { $0 }.max()
     }
 
-    private let overlay: OverlayStore
+    /// Internal, not private, so a test can drive a REAL mutation through
+    /// `OverlayStore.update` — the only way to exercise
+    /// `withObservationTracking`'s `onChange`.
+    let overlay: OverlayStore
     private let documents: any PluginDocumentStore
     private let projectIDs: () -> [UUID]
 
@@ -88,7 +91,7 @@ public final class SnapshotStore {
     static let pollTolerance: TimeInterval = pollInterval * 0.5
     private var pollTimer: Timer?
     /// `overlay.revision` as observed by the most recent `tick()`.
-    private var observedRevision: Int?
+    private(set) var observedRevision: Int?
     /// When `observedRevision` last actually changed.
     private var lastChangeAt: Date = .distantPast
     /// `overlay.revision` as of the last snapshot written — automatic OR
@@ -196,26 +199,6 @@ public final class SnapshotStore {
         self.documents = documents
         self.projectIDs = projectIDs
     }
-
-    /// Testing seam: a minimally-wired store for exercising the observation
-    /// cadence in isolation, without a caller needing to construct its own
-    /// overlay/documents/projectIDs. Internal — every caller is a test in
-    /// this module.
-    static func makeForTesting() -> SnapshotStore {
-        SnapshotStore(
-            overlay: OverlayStore(repository: InMemoryProjectRepository()),
-            documents: InMemoryDocumentStoreForSnapshotTesting(), projectIDs: { [] })
-    }
-
-    /// Testing seam mirroring `observedRevision`, which is otherwise private.
-    var observedRevisionForTesting: Int? { observedRevision }
-
-    /// Testing seam exposing the `overlay` this store was wired with (only
-    /// meaningful paired with `makeForTesting()`), so a test can drive a REAL
-    /// mutation through `OverlayStore.update` — the only way to actually
-    /// exercise `withObservationTracking`'s `onChange`, as opposed to calling
-    /// `overlayDidChange` directly, which never touches Observation at all.
-    var overlayForTesting: OverlayStore { overlay }
 
     /// Deliberately NOT `public`: `FolderBookmark` is an internal type, and a
     /// public method cannot expose it. Every consumer — the settings view — is
@@ -400,17 +383,5 @@ public final class SnapshotStore {
             config.migratedRepoProjects = snapshot.migratedRepoProjects
             config.migratedBindingProjects = snapshot.migratedBindingProjects
         }
-    }
-}
-
-/// Minimal in-memory `PluginDocumentStore` for `SnapshotStore.makeForTesting()`.
-/// Internal — no vault access is ever granted, so `snapshotNow()` cannot
-/// actually write with it; it exists only to satisfy the initializer for
-/// tests exercising the observation/cadence plumbing, not persistence.
-final class InMemoryDocumentStoreForSnapshotTesting: PluginDocumentStore {
-    private var storage: [String: Data] = [:]
-    func data(forKey key: String) -> Data? { storage[key] }
-    func setData(_ data: Data?, forKey key: String) {
-        if let data { storage[key] = data } else { storage.removeValue(forKey: key) }
     }
 }

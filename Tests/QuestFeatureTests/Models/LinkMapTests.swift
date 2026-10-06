@@ -49,22 +49,6 @@ struct LinkMapTests {
         #expect(map.localID(for: keep) == keepID)
     }
 
-    @Test("unlinking a whole connection clears only its rows")
-    func unlinkConnection() {
-        var map = LinkMap()
-        let gone = UUID()
-        let stays = UUID()
-        map.link(RemoteRef(connectionID: gone, remoteKey: "A"), to: UUID())
-        map.link(RemoteRef(connectionID: gone, remoteKey: "B"), to: UUID())
-        let keptID = UUID()
-        map.link(RemoteRef(connectionID: stays, remoteKey: "C"), to: keptID)
-
-        map.unlinkAll(connectionID: gone)
-
-        #expect(map.count == 1)
-        #expect(map.remoteRef(for: keptID)?.connectionID == stays)
-    }
-
     @Test("relinking a local id replaces its old ref rather than orphaning it")
     func relink() {
         var map = LinkMap()

@@ -9,7 +9,7 @@ struct LinkValidationTests {
         let result = LinkValidation.normalize(
             scheme: .branch, identifier: "main",
             label: "main", repo: nil)
-        #expect(result.isFailure)
+        #expect(result.value == nil)
     }
 
     @Test("a repo-scoped link with a repo is accepted and keeps it")
@@ -27,7 +27,7 @@ struct LinkValidationTests {
             LinkValidation.normalize(
                 scheme: .url, identifier: "  ",
                 label: "x", repo: nil
-            ).isFailure)
+            ).value == nil)
     }
 
     @Test("a missing label falls back to the identifier rather than being blank")
@@ -46,7 +46,7 @@ struct LinkValidationTests {
         let result = LinkValidation.normalize(
             scheme: scheme, identifier: "main",
             label: "main", repo: "   ")
-        #expect(result.isFailure)
+        #expect(result.value == nil)
     }
 
     @Test("a whitespace-only identifier is refused for a non-repo scheme")
@@ -54,7 +54,7 @@ struct LinkValidationTests {
         let result = LinkValidation.normalize(
             scheme: .file, identifier: "   \n",
             label: "x", repo: nil)
-        #expect(result.isFailure)
+        #expect(result.value == nil)
     }
 
     @Test("a whitespace-only label falls back to the trimmed identifier")

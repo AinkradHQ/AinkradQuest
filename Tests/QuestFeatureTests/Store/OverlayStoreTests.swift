@@ -41,9 +41,9 @@ struct OverlayStoreTests {
             $0.personalOrder = 2
         }
 
-        let item = store.itemOverlay(itemID, in: projectID)
-        #expect(item.notes == "item scratch")
-        #expect(item.personalOrder == 2)
+        let item = store.overlay(for: projectID).item(itemID)
+        #expect(item?.notes == "item scratch")
+        #expect(item?.personalOrder == 2)
     }
 
     @Test("overlays survive a relaunch")
@@ -57,7 +57,7 @@ struct OverlayStoreTests {
 
         let reloaded = OverlayStore(repository: repository)
         #expect(reloaded.overlay(for: projectID).notes == "project")
-        #expect(reloaded.itemOverlay(itemID, in: projectID).notes == "item")
+        #expect(reloaded.overlay(for: projectID).item(itemID)?.notes == "item")
     }
 
     @Test("clearing the last content prunes the item record")
@@ -85,7 +85,7 @@ struct OverlayStoreTests {
 
         // Top of the list is a real position. Pruning it would silently lose
         // the user's most important item.
-        #expect(store.itemOverlay(itemID, in: projectID).personalOrder == 0)
+        #expect(store.overlay(for: projectID).item(itemID)?.personalOrder == 0)
         #expect(store.overlay(for: projectID).item(itemID) != nil)
     }
 

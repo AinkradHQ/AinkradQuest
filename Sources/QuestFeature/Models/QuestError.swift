@@ -29,7 +29,6 @@ public enum QuestError: Error, Equatable, Sendable {
     case connectionInUse(UUID, Int)
     case duplicateRepo(String)
     case repoNotFound(UUID)
-    case localWriteMustUseStore
     /// A provider key that is not even shaped like a valid id for this
     /// provider — distinct from `projectNotFound`, which names a real id that
     /// does not resolve. Reusing `projectNotFound` here would have to
@@ -83,8 +82,6 @@ public enum QuestError: Error, Equatable, Sendable {
             "\(slug) is already attached to this project on that connection."
         case .repoNotFound(let id):
             "No attached repo with id \(id)."
-        case .localWriteMustUseStore:
-            "Local writes go through ProjectStore, not the provider seam."
         case .malformedProjectKey(let key):
             "'\(key)' is not a valid local project key (expected a UUID)."
         case .overlayCorrupt(let id):

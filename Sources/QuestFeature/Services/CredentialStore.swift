@@ -41,14 +41,3 @@ public protocol CredentialStore: Sendable {
     /// revoked token later, which is a miserable thing to debug.
     func setSecret(_ secret: String?, forRef ref: String) throws
 }
-
-/// Test double. Keeps registry tests off the real Keychain, which would
-/// otherwise prompt and pollute the developer's login keychain.
-public final class InMemoryCredentialStore: CredentialStore, @unchecked Sendable {
-    private var storage: [String: String] = [:]
-    public init() {}
-    public func secret(forRef ref: String) -> String? { storage[ref] }
-    public func setSecret(_ secret: String?, forRef ref: String) throws {
-        if let secret { storage[ref] = secret } else { storage.removeValue(forKey: ref) }
-    }
-}

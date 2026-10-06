@@ -23,7 +23,7 @@ struct SnapshotStoreToleranceTests {
         let store = SnapshotStore.makeForTesting()
         store.startAutoBackup()
         store.overlayDidChange(revision: 7, at: Date(timeIntervalSince1970: 100))
-        #expect(store.observedRevisionForTesting == 7)
+        #expect(store.observedRevision == 7)
     }
 
     @Test @MainActor func aSecondRealOverlayMutationIsStillObserved() async {
@@ -37,16 +37,16 @@ struct SnapshotStoreToleranceTests {
         store.startAutoBackup()
         let projectID = UUID()
 
-        store.overlayForTesting.update(projectID: projectID) { $0.notes = "first edit" }
+        store.overlay.update(projectID: projectID) { $0.notes = "first edit" }
         // `onChange`'s body runs inside `Task { @MainActor in ... }`, so it
         // lands on a later main-actor turn, not synchronously here.
         await Task.yield()
-        let afterFirst = store.observedRevisionForTesting
+        let afterFirst = store.observedRevision
         #expect(afterFirst != nil)
 
-        store.overlayForTesting.update(projectID: projectID) { $0.notes = "second edit" }
+        store.overlay.update(projectID: projectID) { $0.notes = "second edit" }
         await Task.yield()
-        let afterSecond = store.observedRevisionForTesting
+        let afterSecond = store.observedRevision
         #expect(afterSecond != afterFirst)
     }
 }

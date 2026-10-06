@@ -45,31 +45,3 @@ public protocol ProjectRepository: AnyObject {
     /// Throws when the write could not be completed. See `saveIndex`.
     func saveHubConfig(_ config: HubConfig) throws
 }
-
-/// Test double. Keeps store tests free of encoding concerns.
-public final class InMemoryProjectRepository: ProjectRepository {
-    private var index: [ProjectSummary] = []
-    private var documents: [UUID: ProjectDocument] = [:]
-    private var connections: [Connection] = []
-    private var overlays: [UUID: ProjectOverlay] = [:]
-    private var linkMap = LinkMap()
-    private var hubConfig = HubConfig()
-
-    public init() {}
-
-    public func loadIndex() -> [ProjectSummary] { index }
-    public func saveIndex(_ summaries: [ProjectSummary]) { index = summaries }
-    public func loadProject(_ id: UUID) -> ProjectDocument? { documents[id] }
-    public func saveProject(_ document: ProjectDocument) { documents[document.project.id] = document }
-    public func removeProject(_ id: UUID) { documents.removeValue(forKey: id) }
-    public func loadConnections() -> [Connection] { connections }
-    public func saveConnections(_ connections: [Connection]) { self.connections = connections }
-
-    public func loadOverlay(_ projectID: UUID) throws -> ProjectOverlay? { overlays[projectID] }
-    public func saveOverlay(_ overlay: ProjectOverlay) { overlays[overlay.projectID] = overlay }
-    public func removeOverlay(_ projectID: UUID) { overlays.removeValue(forKey: projectID) }
-    public func loadLinkMap() -> LinkMap { linkMap }
-    public func saveLinkMap(_ map: LinkMap) { linkMap = map }
-    public func loadHubConfig() -> HubConfig { hubConfig }
-    public func saveHubConfig(_ config: HubConfig) { hubConfig = config }
-}
