@@ -95,10 +95,6 @@ public final class OverlayStore {
         }
     }
 
-    public func itemOverlay(_ itemID: UUID, in projectID: UUID) -> ItemOverlay {
-        overlay(for: projectID).item(itemID) ?? ItemOverlay()
-    }
-
     /// Whether writes to this project's overlay are blocked because its
     /// on-disk overlay failed to decode. Triggers the load first (as
     /// `overlay(for:)` does) so this is accurate even before anything else

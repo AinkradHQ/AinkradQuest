@@ -63,14 +63,6 @@ public final class ConnectionRegistry {
         return connection
     }
 
-    public func updateConnection(_ connection: Connection) throws {
-        guard let index = connections.firstIndex(where: { $0.id == connection.id }) else {
-            throw QuestError.connectionNotFound(connection.id)
-        }
-        connections[index] = connection
-        persist()
-    }
-
     /// `boundProjectCount` is passed in rather than read, because the registry
     /// deliberately knows nothing about projects — the caller (the settings
     /// view, which holds both) counts them.
@@ -87,7 +79,7 @@ public final class ConnectionRegistry {
         // secret deletion must not block removal, only be reported. Silently
         // swallowing it was deliberate before Task 7's confirm dialog, which
         // now promises the user "its saved token will be deleted"
-        // (`ConnectionsSettings.swift`): a swallowed failure would make the
+        // (`QuestSettingsCatalog.remove`): a swallowed failure would make the
         // app assert a destruction that did not happen, while the token sits
         // in the login keychain.
         var secretDeletionFailure: String?

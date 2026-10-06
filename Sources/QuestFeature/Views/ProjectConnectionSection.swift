@@ -2,49 +2,6 @@ import AinkradAppKit
 import Foundation
 import SwiftUI
 
-/// The attach-repo form's state, split out of the view for the same reason as
-/// `ConnectionDraft`.
-public struct RepoDraft: Equatable {
-    public var connectionID: UUID?
-    public var slugText: String = ""
-    public var localPath: String = ""
-
-    public init() {}
-
-    private var parts: [String] {
-        slugText.trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(separator: "/", omittingEmptySubsequences: false).map(String.init)
-    }
-
-    public var owner: String? {
-        guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else { return nil }
-        return parts[0]
-    }
-
-    public var name: String? {
-        guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else { return nil }
-        return parts[1]
-    }
-
-    public var validationMessage: String? {
-        // Connection first: a repo without one cannot be disambiguated between
-        // two accounts that can both see the same slug.
-        if connectionID == nil { return "Choose which account this repo comes from." }
-        if owner == nil || name == nil { return "Enter the repo as owner/name." }
-        return nil
-    }
-
-    public var isValid: Bool { validationMessage == nil }
-
-    public func repo(id: UUID) -> AttachedRepo? {
-        guard let connectionID, let owner, let name else { return nil }
-        let path = localPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        return AttachedRepo(
-            id: id, connectionID: connectionID, owner: owner,
-            name: name, localPath: path.isEmpty ? nil : path)
-    }
-}
-
 /// Binds a project to a connection, and attaches the repos it works out of —
 /// which may span several different accounts (the duplicate-repo guard in
 /// `ProjectStore.attachRepo` is scoped BY connection, so the same slug can
@@ -119,11 +76,7 @@ struct ProjectConnectionSection: View {
     }
 
     private var defaultActionAttach: some View {
-        Button("") { attach() }
-            .keyboardShortcut(.defaultAction)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
+        HiddenShortcutButton(.defaultAction) { attach() }
     }
 
     @ViewBuilder private var connectionFields: some View {
@@ -206,8 +159,6 @@ struct ProjectConnectionSection: View {
             try store.bindProject(project.id, to: connectionID, remoteProjectKey: key, actor: .user)
             pendingConnectionSelection = Self.noConnection
             remoteProjectKeyText = ""
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -216,8 +167,6 @@ struct ProjectConnectionSection: View {
     private func unbind() {
         do {
             try store.unbindProject(project.id, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -228,8 +177,6 @@ struct ProjectConnectionSection: View {
         do {
             try store.attachRepo(repo, to: project.id, actor: .user)
             repoDraft = RepoDraft()
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -238,8 +185,6 @@ struct ProjectConnectionSection: View {
     private func detach(_ repo: AttachedRepo) {
         do {
             try store.detachRepo(repo.id, from: project.id, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

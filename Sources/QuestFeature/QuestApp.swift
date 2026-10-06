@@ -125,14 +125,9 @@ public struct QuestApp: AinkradApp {
                 state: settingsStates.value(for: instance(of: host)) { QuestSettingsState() }))
     }
 
-    public static func makeSettingsView(host: HostServices) -> AnyView {
-        AnyView(
-            QuestSettingsView(
-                presentation: host.presentation, modeControl: host.mode,
-                documents: host.documents,
-                store: store(for: host), registry: registry(for: host),
-                snapshots: snapshotStore(for: host)))
-    }
+    /// Empty: the host draws Quest's settings from `settingsCatalog`, and
+    /// only falls back to this view when there is no catalog.
+    public static func makeSettingsView(host: HostServices) -> AnyView { AnyView(EmptyView()) }
 
     public static func chromeFill(host: HostServices) -> Color? {
         host.theme.tokens.background

@@ -1,32 +1,6 @@
 import AinkradAppKit
 import SwiftUI
 
-/// Which projects the sidebar lists. `all` exists so no state can strand a
-/// project out of reach — the bug this filter was added to fix.
-public enum ProjectStateFilter: String, CaseIterable, Identifiable, Sendable {
-    case active, paused, archived, all
-
-    public var id: String { rawValue }
-
-    public var title: String {
-        switch self {
-        case .active: "Active"
-        case .paused: "Paused"
-        case .archived: "Archived"
-        case .all: "All"
-        }
-    }
-
-    public func apply(to summaries: [ProjectSummary]) -> [ProjectSummary] {
-        switch self {
-        case .all: summaries
-        case .active: summaries.filter { $0.state == .active }
-        case .paused: summaries.filter { $0.state == .paused }
-        case .archived: summaries.filter { $0.state == .archived }
-        }
-    }
-}
-
 /// Wraps a freshly created project's attachment suggestions for presentation,
 /// which needs `Identifiable` rather than a bare tuple. File-scope (no longer
 /// private to the sidebar) because `NewProjectForm` owns creation now.
@@ -167,8 +141,6 @@ struct QuestSidebar: View {
         do {
             try store.setState(id, state: state, actor: .user)
             report("Moved to \(state.rawValue)", .success)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -179,8 +151,6 @@ struct QuestSidebar: View {
             try store.deleteProject(id, actor: .user)
             if selection == id { selection = nil }
             report("Moved to Trash", .success)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -247,12 +217,8 @@ struct NewProjectForm: View {
     /// `Button("Create").keyboardShortcut(.defaultAction)` did. Disabled on an
     /// empty name so Return matches the visibly disabled Create button.
     private var defaultActionCreate: some View {
-        Button("") { create() }
-            .keyboardShortcut(.defaultAction)
+        HiddenShortcutButton(.defaultAction) { create() }
             .disabled(trimmed.isEmpty)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
     }
 
     private func create() {

@@ -4,8 +4,6 @@ public enum EpicProgress {
     public struct Progress: Sendable, Equatable {
         public let done: Int
         public let total: Int
-        /// 0 when there is nothing to do — an empty epic is not complete.
-        public var fraction: Double { total == 0 ? 0 : Double(done) / Double(total) }
     }
 
     /// Counts every live descendant, not just direct children: a subtask is

@@ -1,41 +1,6 @@
 import AinkradAppKit
 import SwiftUI
 
-/// Input validation at the boundary where links enter the system.
-public enum LinkValidation {
-    public enum Outcome {
-        case valid(Link)
-        case invalid(String)
-
-        public var value: Link? { if case .valid(let link) = self { link } else { nil } }
-        public var isFailure: Bool { value == nil }
-    }
-
-    /// Repo-scoped schemes must name their repo: a project with eleven repos
-    /// cannot resolve a bare branch name, and storing one would produce a link
-    /// that looks fine and goes nowhere.
-    public static func normalize(
-        scheme: LinkScheme, identifier: String,
-        label: String, repo: String?
-    ) -> Outcome {
-        let trimmedIdentifier = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedIdentifier.isEmpty else { return .invalid("A link needs an identifier.") }
-
-        let repoScoped: Set<LinkScheme> = [.branch, .pr, .commit]
-        let trimmedRepo = repo?.trimmingCharacters(in: .whitespacesAndNewlines)
-        if repoScoped.contains(scheme), trimmedRepo?.isEmpty != false {
-            return .invalid("A \(scheme.rawValue) link must say which repo it belongs to.")
-        }
-
-        let trimmedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .valid(
-            Link(
-                scheme: scheme, identifier: trimmedIdentifier,
-                label: trimmedLabel.isEmpty ? trimmedIdentifier : trimmedLabel,
-                repo: repoScoped.contains(scheme) ? trimmedRepo : nil))
-    }
-}
-
 /// The kinds a user may pick, in offer order. Named rather than `allCases` so
 /// `.unknown` — a value only a malformed document can produce — is never
 /// offered as something to create.
@@ -99,8 +64,6 @@ struct LinkEditor: View {
                 identifier = ""
                 label = ""
                 repo = ""
-            } catch let failure as QuestError {
-                report(failure.message, .danger)
             } catch {
                 report(error.localizedDescription, .danger)
             }
@@ -188,8 +151,6 @@ struct LinkListView: View {
             // makes every removal path — here, `remove_link` over MCP, project
             // delete — leak-free by construction rather than by remembering.
             try store.removeLink(from: target, link: link, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
