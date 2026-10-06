@@ -14,6 +14,14 @@ func makeProjectStore(_ repository: any ProjectRepository) -> ProjectStore {
     ProjectStore(repository: repository, overlay: OverlayStore(repository: repository))
 }
 
+/// The MCP operations under test and the store they write through, shared by
+/// the three `QuestMCP…OperationsTests` suites.
+@MainActor
+func makeSubject() -> (QuestMCPOperations, ProjectStore) {
+    let store = makeProjectStore(InMemoryProjectRepository())
+    return (QuestMCPOperations(store: store), store)
+}
+
 /// An in-memory `PluginDocumentStore`, so repository tests exercise the real
 /// encode/decode path without a host.
 final class MemoryDocumentStore: PluginDocumentStore, @unchecked Sendable {
