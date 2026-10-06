@@ -278,8 +278,6 @@ struct ListSurface: View {
                 projectID: document.project.id, parentID: epicID,
                 type: .task, title: "New item",
                 statusID: statusID, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

@@ -2,7 +2,9 @@ import Foundation
 
 /// Typed failures. Surfaced inline in the UI and as structured MCP errors, so
 /// each case's `message` is written to be read by a person AND by the assistant.
-public enum QuestError: Error, Equatable, Sendable {
+/// `LocalizedError`, so a caller can show any error through one
+/// `localizedDescription` and still get `message` for this type.
+public enum QuestError: Error, Equatable, Sendable, LocalizedError {
     case projectNotFound(UUID)
     case itemNotFound(UUID)
     case parentNotFound(UUID)
@@ -90,4 +92,6 @@ public enum QuestError: Error, Equatable, Sendable {
             "The document '\(key)' could not be read and was not overwritten."
         }
     }
+
+    public var errorDescription: String? { message }
 }

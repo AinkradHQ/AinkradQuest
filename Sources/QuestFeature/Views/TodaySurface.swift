@@ -168,8 +168,6 @@ struct TodaySurface: View {
             item.priority = parsed.priority
             try store.updateItem(item, actor: .user)
             captureText = ""
-        } catch let error as QuestError {
-            report(error.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

@@ -34,8 +34,6 @@ enum FolderAttachment {
             do {
                 try store.addLink(to: .project(projectID), link: link, actor: .user)
                 return nil
-            } catch let failure as QuestError {
-                return failure.message
             } catch {
                 return error.localizedDescription
             }

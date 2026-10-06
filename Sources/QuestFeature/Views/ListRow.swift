@@ -118,8 +118,6 @@ struct ListRow: View {
     private func delete() {
         do {
             try store.deleteItem(item.id, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -134,8 +132,6 @@ struct ListRow: View {
                     try withAnimation(AinkradMotion.present) {
                         try store.setStatus(item.id, statusID: newStatusID, actor: .user)
                     }
-                } catch let failure as QuestError {
-                    report(failure.message, .danger)
                 } catch {
                     report(error.localizedDescription, .danger)
                 }
@@ -153,9 +149,6 @@ struct ListRow: View {
         updated.title = normalized
         do {
             try store.updateItem(updated, actor: .user)
-        } catch let failure as QuestError {
-            title = item.title
-            report(failure.message, .danger)
         } catch {
             title = item.title
             report(error.localizedDescription, .danger)

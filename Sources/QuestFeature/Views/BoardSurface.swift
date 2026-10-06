@@ -135,9 +135,6 @@ struct BoardSurface: View {
                             try store.setStatus(id, statusID: column.status.id, actor: .user)
                         }
                         return true
-                    } catch let failure as QuestError {
-                        report(failure.message, .danger)
-                        return false
                     } catch {
                         report(error.localizedDescription, .danger)
                         return false

@@ -255,8 +255,6 @@ struct TrashView: View {
         do {
             try work()
             ok()
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

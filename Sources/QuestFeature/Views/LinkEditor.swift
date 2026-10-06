@@ -64,8 +64,6 @@ struct LinkEditor: View {
                 identifier = ""
                 label = ""
                 repo = ""
-            } catch let failure as QuestError {
-                report(failure.message, .danger)
             } catch {
                 report(error.localizedDescription, .danger)
             }
@@ -153,8 +151,6 @@ struct LinkListView: View {
             // makes every removal path — here, `remove_link` over MCP, project
             // delete — leak-free by construction rather than by remembering.
             try store.removeLink(from: target, link: link, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

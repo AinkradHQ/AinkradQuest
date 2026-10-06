@@ -141,8 +141,6 @@ struct QuestSidebar: View {
         do {
             try store.setState(id, state: state, actor: .user)
             report("Moved to \(state.rawValue)", .success)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -153,8 +151,6 @@ struct QuestSidebar: View {
             try store.deleteProject(id, actor: .user)
             if selection == id { selection = nil }
             report("Moved to Trash", .success)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -221,12 +217,8 @@ struct NewProjectForm: View {
     /// `Button("Create").keyboardShortcut(.defaultAction)` did. Disabled on an
     /// empty name so Return matches the visibly disabled Create button.
     private var defaultActionCreate: some View {
-        Button("") { create() }
-            .keyboardShortcut(.defaultAction)
+        HiddenShortcutButton(.defaultAction) { create() }
             .disabled(trimmed.isEmpty)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
     }
 
     private func create() {

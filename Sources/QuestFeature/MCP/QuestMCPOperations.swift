@@ -42,8 +42,6 @@ public final class QuestMCPOperations {
             return failure(error.message)
         } catch let error as ValidationError {
             return failure(error.message)
-        } catch let error as QuestError {
-            return failure(error.message)
         } catch {
             return failure(error.localizedDescription)
         }

@@ -41,8 +41,6 @@ extension QuestSettingsCatalog {
             // so a restore cannot resurrect a binding to a missing connection.
             c.store.severBindings(toConnection: connection.id, actor: .user)
             c.state.connectionMessage = nil
-        } catch let failure as QuestError {
-            c.state.connectionMessage = failure.message
         } catch {
             c.state.connectionMessage = error.localizedDescription
         }
@@ -135,10 +133,6 @@ extension QuestSettingsCatalog {
                 baseURL: draft.baseURL, secret: draft.secret, tokenProvenance: draft.tokenProvenance)
             c.state.draft = ConnectionDraft(provider: draft.provider)
             c.state.connectionMessage = nil
-        } catch let failure as QuestError {
-            c.state.connectionMessage = failure.message
-        } catch let failure as CredentialError {
-            c.state.connectionMessage = failure.message
         } catch {
             c.state.connectionMessage = error.localizedDescription
         }

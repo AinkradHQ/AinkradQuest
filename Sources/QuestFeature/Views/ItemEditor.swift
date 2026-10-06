@@ -72,11 +72,7 @@ struct ItemEditor: View {
     /// Return-with-nothing-focused commits, exactly as the pre-kit
     /// `Button("Save").keyboardShortcut(.defaultAction)` did.
     private var defaultActionSave: some View {
-        Button("") { save() }
-            .keyboardShortcut(.defaultAction)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
+        HiddenShortcutButton(.defaultAction) { save() }
     }
 
     @ViewBuilder private var fields: some View {
@@ -186,8 +182,6 @@ struct ItemEditor: View {
             try store.updateItem(draft, actor: .user)
             // LAST statement on this path — see `onClose`.
             onClose()
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

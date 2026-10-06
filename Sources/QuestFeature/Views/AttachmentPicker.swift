@@ -66,11 +66,7 @@ struct AttachmentPicker: View {
     /// the app. Checking nothing and pressing Return is harmless: `attachChecked`
     /// attaches an empty set and finishes, which is what Skip does.
     private var defaultActionAttach: some View {
-        Button("") { attachChecked() }
-            .keyboardShortcut(.defaultAction)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
+        HiddenShortcutButton(.defaultAction) { attachChecked() }
     }
 
     private func isChecked(_ suggestion: AttachmentSuggestion) -> Binding<Bool> {

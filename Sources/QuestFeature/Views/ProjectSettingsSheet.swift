@@ -113,11 +113,7 @@ struct ProjectSettingsSheet: View {
     /// Return-with-nothing-focused commits, exactly as the pre-kit
     /// `Button("Save").keyboardShortcut(.defaultAction)` did.
     @ViewBuilder private var defaultActionSave: some View {
-        Button("") { save() }
-            .keyboardShortcut(.defaultAction)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
+        HiddenShortcutButton(.defaultAction) { save() }
     }
 
     @ViewBuilder private var fields: some View {
@@ -194,8 +190,6 @@ struct ProjectSettingsSheet: View {
             // LAST statement on this path — everything after it would run in an
             // unmounted subtree.
             onClose()
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

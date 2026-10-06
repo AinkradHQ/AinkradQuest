@@ -133,11 +133,7 @@ struct StatusSchemeEditor: View {
     }
 
     private func defaultActionApply(_ plan: SchemePlan.Plan) -> some View {
-        Button("") { apply(plan) }
-            .keyboardShortcut(.defaultAction)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
+        HiddenShortcutButton(.defaultAction) { apply(plan) }
     }
 
     private var items: [WorkItem] { store.allItems(in: project.id) }
@@ -219,8 +215,6 @@ struct StatusSchemeEditor: View {
             reassignments = recovered.reassignments
             pendingPlan = nil
             report(QuestError.schemeChangedUnderneath.message, .danger)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

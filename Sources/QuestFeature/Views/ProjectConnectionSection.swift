@@ -76,11 +76,7 @@ struct ProjectConnectionSection: View {
     }
 
     private var defaultActionAttach: some View {
-        Button("") { attach() }
-            .keyboardShortcut(.defaultAction)
-            .opacity(0)
-            .frame(width: 0, height: 0)
-            .accessibilityHidden(true)
+        HiddenShortcutButton(.defaultAction) { attach() }
     }
 
     @ViewBuilder private var connectionFields: some View {
@@ -163,8 +159,6 @@ struct ProjectConnectionSection: View {
             try store.bindProject(project.id, to: connectionID, remoteProjectKey: key, actor: .user)
             pendingConnectionSelection = Self.noConnection
             remoteProjectKeyText = ""
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -173,8 +167,6 @@ struct ProjectConnectionSection: View {
     private func unbind() {
         do {
             try store.unbindProject(project.id, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -185,8 +177,6 @@ struct ProjectConnectionSection: View {
         do {
             try store.attachRepo(repo, to: project.id, actor: .user)
             repoDraft = RepoDraft()
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }
@@ -195,8 +185,6 @@ struct ProjectConnectionSection: View {
     private func detach(_ repo: AttachedRepo) {
         do {
             try store.detachRepo(repo.id, from: project.id, actor: .user)
-        } catch let failure as QuestError {
-            report(failure.message, .danger)
         } catch {
             report(error.localizedDescription, .danger)
         }

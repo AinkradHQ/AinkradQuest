@@ -338,14 +338,10 @@ struct QuestShellContent: View {
     /// the chord that actually fires.
     @ViewBuilder private var shortcuts: some View {
         ForEach(KeyBindings.all, id: \.id) { binding in
-            Button("") { activate(binding.id) }
-                .keyboardShortcut(
-                    KeyEquivalent(binding.key),
-                    modifiers: binding.modifiers.eventModifiers)
+            HiddenShortcutButton(
+                KeyboardShortcut(KeyEquivalent(binding.key), modifiers: binding.modifiers.eventModifiers)
+            ) { activate(binding.id) }
         }
-        .opacity(0)
-        .frame(width: 0, height: 0)
-        .accessibilityHidden(true)
     }
 
     private func activate(_ id: String) {

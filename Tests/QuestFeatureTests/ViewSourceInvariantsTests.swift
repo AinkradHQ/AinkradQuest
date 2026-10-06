@@ -144,7 +144,7 @@ struct ViewSourceInvariantsTests {
                     """
                     \(file.name): `\(type.name)` has a `.primary` AinkradButton but no \
                     `.keyboardShortcut(.defaultAction)`. AinkradButton binds no keys, so Return \
-                    does nothing here. Add a hidden default-action Button, as ItemEditor does.
+                    does nothing here. Add a `HiddenShortcutButton(.defaultAction)`, as ItemEditor does.
                     """)
             }
         }

@@ -383,7 +383,7 @@ struct OverlayMigrationTests {
 
     @Test("a completed scan does not re-read every project on the next launch")
     func scanIsGatedAfterCompletion() throws {
-        let documents = CountingDocumentStore()
+        let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
         let overlay = OverlayStore(repository: repository)
         let first = ProjectStore(repository: repository, overlay: overlay)
@@ -403,7 +403,7 @@ struct OverlayMigrationTests {
 
     @Test("an ungated store still scans, so an upgrade migrates")
     func scanRunsWhenNotYetComplete() throws {
-        let documents = CountingDocumentStore()
+        let documents = MemoryDocumentStore()
         let repository = DocumentProjectRepository(documents: documents)
         let overlay = OverlayStore(repository: repository)
         let store = ProjectStore(repository: repository, overlay: overlay)

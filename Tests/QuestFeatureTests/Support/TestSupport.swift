@@ -23,19 +23,9 @@ func makeSubject() -> (QuestMCPOperations, ProjectStore) {
 }
 
 /// An in-memory `PluginDocumentStore`, so repository tests exercise the real
-/// encode/decode path without a host.
+/// encode/decode path without a host. It also counts reads, so a test can
+/// prove work was SKIPPED rather than merely that its result was the same.
 final class MemoryDocumentStore: PluginDocumentStore, @unchecked Sendable {
-    private var storage: [String: Data] = [:]
-    func data(forKey key: String) -> Data? { storage[key] }
-    func setData(_ data: Data?, forKey key: String) {
-        if let data { storage[key] = data } else { storage.removeValue(forKey: key) }
-    }
-    var keys: [String] { Array(storage.keys) }
-}
-
-/// A `MemoryDocumentStore` that counts reads, so a test can prove work was
-/// SKIPPED rather than merely that its result was the same.
-final class CountingDocumentStore: PluginDocumentStore, @unchecked Sendable {
     private var storage: [String: Data] = [:]
     private var readCounts: [String: Int] = [:]
 
@@ -47,6 +37,8 @@ final class CountingDocumentStore: PluginDocumentStore, @unchecked Sendable {
     func setData(_ data: Data?, forKey key: String) {
         if let data { storage[key] = data } else { storage.removeValue(forKey: key) }
     }
+
+    var keys: [String] { Array(storage.keys) }
 
     func resetCounts() { readCounts.removeAll() }
 
