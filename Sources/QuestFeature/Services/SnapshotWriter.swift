@@ -1,6 +1,7 @@
 import Foundation
+import os
 
-public enum SnapshotError: Error, Equatable, Sendable {
+public enum SnapshotError: Error, Equatable, Sendable, LocalizedError {
     case vaultNotGranted
     case vaultUnresolvable(String?)
     case writeFailed(String)
@@ -47,6 +48,10 @@ public enum SnapshotError: Error, Equatable, Sendable {
                 + "Nothing was changed."
         }
     }
+
+    /// `LocalizedError` routes through `message`, so a caller that only knows
+    /// `Error.localizedDescription` shows the same text.
+    public var errorDescription: String? { message }
 }
 
 /// Writes snapshots into the vault, atomically, keeping a bounded rotation.
@@ -89,7 +94,7 @@ public enum SnapshotWriter {
             try FileManager.default.moveItem(at: temporary, to: destination)
             return destination
         } catch {
-            try? FileManager.default.removeItem(at: temporary)
+            removeLogged(temporary, "the failed write's temporary file")
             throw SnapshotError.writeFailed(error.localizedDescription)
         }
     }
@@ -124,7 +129,7 @@ public enum SnapshotWriter {
                     .attributesOfItem(atPath: url.path)[.modificationDate] as? Date
             else { continue }
             if Date().timeIntervalSince(modified) >= staleTempAge {
-                try? FileManager.default.removeItem(at: url)
+                removeLogged(url, "a stale temporary file")
             }
         }
 
@@ -134,8 +139,19 @@ public enum SnapshotWriter {
             .sorted(by: >)
         let urls = names.map { directory.appendingPathComponent($0) }
         for url in urls.dropFirst(keeping) {
-            try? FileManager.default.removeItem(at: url)
+            removeLogged(url, "a rotated-out backup")
         }
         return Array(urls.prefix(keeping))
+    }
+
+    /// Best-effort cleanup: a file that will not delete is retried by the next
+    /// rotation and costs no backup, so it is logged rather than thrown.
+    private static func removeLogged(_ url: URL, _ what: String) {
+        do {
+            try FileManager.default.removeItem(at: url)
+        } catch {
+            Log.snapshot.error(
+                "Could not delete \(what, privacy: .public) \(url.lastPathComponent): \(error.localizedDescription)")
+        }
     }
 }

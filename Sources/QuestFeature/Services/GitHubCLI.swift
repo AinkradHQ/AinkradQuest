@@ -108,8 +108,11 @@ public final class GitHubCLI: GitHubAccountSource, Sendable {
         process.standardError = stderrPipe
 
         let readGroup = DispatchGroup()
-        var stdoutData = Data()
-        var stderrData = Data()
+        // Each is written once on its read queue and read only after
+        // `readGroup.wait`; the group's leave/wait orders that write before
+        // the read, which the compiler cannot see through `DispatchGroup`.
+        nonisolated(unsafe) var stdoutData = Data()
+        nonisolated(unsafe) var stderrData = Data()
 
         readGroup.enter()
         DispatchQueue.global(qos: .userInitiated).async {

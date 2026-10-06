@@ -2,7 +2,9 @@ import Foundation
 import Security
 
 /// Generic-password items in the login keychain, one per connection.
-public final class KeychainCredentialStore: CredentialStore, @unchecked Sendable {
+/// Plainly `Sendable`: its only state is an immutable service name, and the
+/// Keychain calls are thread-safe.
+public final class KeychainCredentialStore: CredentialStore, Sendable {
     private let service: String
 
     public init(service: String = "com.ainkrad.quest") {

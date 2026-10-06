@@ -20,7 +20,7 @@ struct ProjectConnectionSection: View {
     /// represented by this sentinel id — a real UUID that matches no
     /// connection — exactly the trick `StatusSchemeEditor.destinations` uses
     /// with its `""` sentinel.
-    private static let noConnection = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+    private static let noConnection = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!  // design-lint: allow force-unwrap constant literal UUID, always valid
 
     @State private var remoteProjectKeyText: String = ""
     @State private var pendingConnectionSelection: UUID = ProjectConnectionSection.noConnection

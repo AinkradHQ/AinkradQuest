@@ -157,6 +157,8 @@ private func loadAndSaveEmpty(_ repository: DocumentProjectRepository, key: Stri
 
 /// An in-memory `PluginDocumentStore` whose `setData` ignores backup keys,
 /// simulating a failed verification read-back after the set-aside write.
+/// `@unchecked`: unlocked mutable state, safe because each test owns its
+/// instance and drives it from that one test's task.
 private final class RejectingCorruptDocs: PluginDocumentStore, @unchecked Sendable {
     private var storage: [String: Data] = [:]
     func data(forKey key: String) -> Data? { storage[key] }

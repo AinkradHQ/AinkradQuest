@@ -1,11 +1,11 @@
 import Foundation
 
-public enum CredentialError: Error, Equatable, LocalizedError {
+public enum CredentialError: Error, Equatable, Sendable, LocalizedError {
     /// Which Keychain operation failed, so `message` can name it accurately.
     /// `ConnectionRegistry.removeConnection` composes this into a larger
     /// sentence about a failed DELETE — a `save`-worded message there produced
     /// a self-contradictory "…could not be deleted…: Could not save…".
-    public enum Operation: Equatable {
+    public enum Operation: Equatable, Sendable {
         case save
         case delete
     }

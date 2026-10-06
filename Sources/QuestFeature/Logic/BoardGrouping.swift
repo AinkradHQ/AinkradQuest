@@ -100,6 +100,6 @@ extension BoardGrouping {
     }
 
     private static var orphanGroupID: UUID {
-        UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        UUID(uuidString: "00000000-0000-0000-0000-000000000001")!  // design-lint: allow force-unwrap constant literal UUID, always valid
     }
 }

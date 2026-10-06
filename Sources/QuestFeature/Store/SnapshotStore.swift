@@ -266,11 +266,8 @@ public final class SnapshotStore {
                     throw SnapshotError.rotatedAwayImmediately
                 }
                 return true
-            } catch let failure as SnapshotError {
-                lastError = failure.message
-                return false
             } catch {
-                lastError = SnapshotError.writeFailed(error.localizedDescription).message
+                lastError = (error as? SnapshotError ?? .writeFailed(error.localizedDescription)).message
                 return false
             }
         }
