@@ -99,9 +99,9 @@ struct QuestMCPServerTests {
     }
 
     @Test("a call routes its tool's operation to the perform closure")
-    func routing() async {
+    func routing() async throws {
         var seen: String?
-        let tool = try! #require(QuestMCPServer.tools.first { $0.name == "create_item" })
+        let tool = try #require(QuestMCPServer.tools.first { $0.name == "create_item" })
         _ = await QuestMCPServer.invoke(tool, arguments: "{}") { operation, _ in
             seen = operation
             return AgentActionResult(text: "ok", isError: false)

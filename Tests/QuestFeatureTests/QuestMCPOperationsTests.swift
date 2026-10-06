@@ -30,16 +30,16 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("create_item refuses a fourth hierarchy level with the typed message")
-    func depthRefused() async {
+    func depthRefused() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "E", statusID: "todo", actor: .user)
-        let item = try! store.createItem(
+        let item = try store.createItem(
             projectID: project.id, parentID: epic.id, type: .task,
             title: "I", statusID: "todo", actor: .user)
-        let subtask = try! store.createItem(
+        let subtask = try store.createItem(
             projectID: project.id, parentID: item.id, type: .task,
             title: "S", statusID: "todo", actor: .user)
 
@@ -69,13 +69,13 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("search_items matches across projects and returns titles")
-    func search() async {
+    func search() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "Auth epic", statusID: "todo", actor: .user)
-        _ = try! store.createItem(
+        _ = try store.createItem(
             projectID: project.id, parentID: epic.id, type: .bug,
             title: "Refresh token loops", statusID: "todo", actor: .user)
 
@@ -86,10 +86,10 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("delete_item is soft — the item is recoverable afterwards")
-    func softDelete() async {
+    func softDelete() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "E", statusID: "todo", actor: .user)
 
@@ -102,10 +102,10 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("get_item says so when the item is in the trash")
-    func getItemReportsTrash() async {
+    func getItemReportsTrash() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "E", statusID: "todo", actor: .user)
         let live = await operations.run(
@@ -113,7 +113,7 @@ struct QuestMCPOperationsTests {
             arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
         #expect(!live.text.contains("IN TRASH"))
 
-        try! store.deleteItem(epic.id, actor: .user)
+        try store.deleteItem(epic.id, actor: .user)
         let trashed = await operations.run(
             operation: "getItem",
             arguments: #"{"itemID":"\#(epic.id.uuidString)"}"#)
@@ -122,13 +122,13 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("mutations refuse a soft-deleted item and say it must be restored first")
-    func mutationsRefuseTrashedItem() async {
+    func mutationsRefuseTrashedItem() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "E", statusID: "todo", actor: .user)
-        try! store.deleteItem(epic.id, actor: .user)
+        try store.deleteItem(epic.id, actor: .user)
         let id = epic.id.uuidString
 
         for (operation, arguments) in [
@@ -146,13 +146,13 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("mutations refuse an item inside a trashed project")
-    func mutationsRefuseItemInTrashedProject() async {
+    func mutationsRefuseItemInTrashedProject() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "E", statusID: "todo", actor: .user)
-        try! store.deleteProject(project.id, actor: .user)
+        try store.deleteProject(project.id, actor: .user)
 
         let result = await operations.run(
             operation: "setStatus",
@@ -163,13 +163,13 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("create_item refuses a trashed parent — no live item under a deleted parent")
-    func createItemRefusesTrashedParent() async {
+    func createItemRefusesTrashedParent() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        let epic = try! store.createItem(
+        let epic = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "E", statusID: "todo", actor: .user)
-        try! store.deleteItem(epic.id, actor: .user)
+        try store.deleteItem(epic.id, actor: .user)
 
         let result = await operations.run(
             operation: "createItem",
@@ -185,10 +185,10 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("create_item refuses a trashed project — work cannot land where the user cannot see it")
-    func createItemRefusesTrashedProject() async {
+    func createItemRefusesTrashedProject() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        try! store.deleteProject(project.id, actor: .user)
+        try store.deleteProject(project.id, actor: .user)
 
         let result = await operations.run(
             operation: "createItem",
@@ -201,10 +201,10 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("update_project refuses a trashed project rather than succeeding silently")
-    func updateProjectRefusesTrashedProject() async {
+    func updateProjectRefusesTrashedProject() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
-        try! store.deleteProject(project.id, actor: .user)
+        try store.deleteProject(project.id, actor: .user)
 
         let result = await operations.run(
             operation: "updateProject",
@@ -217,7 +217,7 @@ struct QuestMCPOperationsTests {
     }
 
     @Test("get_project says so when the project is in the trash")
-    func getProjectReportsTrash() async {
+    func getProjectReportsTrash() async throws {
         let (operations, store) = makeSubject()
         let project = store.createProject(name: "P", kind: .software, actor: .user)
 
@@ -227,7 +227,7 @@ struct QuestMCPOperationsTests {
         #expect(!live.isError)
         #expect(!live.text.contains("IN TRASH"))
 
-        try! store.deleteProject(project.id, actor: .user)
+        try store.deleteProject(project.id, actor: .user)
         let trashed = await operations.run(
             operation: "getProject",
             arguments: #"{"projectID":"\#(project.id.uuidString)"}"#)
