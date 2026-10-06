@@ -2,28 +2,28 @@ import Foundation
 
 /// The add/edit form's state, split out of the view so validation is testable
 /// without a view host — the same split `ProjectSettingsValidationTests` uses.
-public struct ConnectionDraft: Equatable {
-    public var provider: ProviderKind
-    public var accountLabel: String = ""
-    public var accountIdentifier: String = ""
-    public var baseURLText: String = ""
-    public var secret: String = ""
+struct ConnectionDraft: Equatable {
+    var provider: ProviderKind
+    var accountLabel: String = ""
+    var accountIdentifier: String = ""
+    var baseURLText: String = ""
+    var secret: String = ""
     /// Set when `secret` was filled in by picking a `gh` account rather than
     /// typing a token. Reset to `.manual` the moment the user edits the
     /// secret field by hand, so a stale pick never gets credited as CLI-backed.
-    public var tokenProvenance: TokenProvenance = .manual
+    var tokenProvenance: TokenProvenance = .manual
 
-    public init(provider: ProviderKind) {
+    init(provider: ProviderKind) {
         self.provider = provider
     }
 
     /// Whether this provider is addressed by site. Jira is per-site and GitHub
     /// may be Enterprise; Linear is a single host.
-    public var requiresBaseURL: Bool {
+    var requiresBaseURL: Bool {
         provider == .jira
     }
 
-    public var baseURL: URL? {
+    var baseURL: URL? {
         let trimmed = baseURLText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty,
             let url = URL(string: trimmed),
@@ -32,7 +32,7 @@ public struct ConnectionDraft: Equatable {
         return url
     }
 
-    public var validationMessage: String? {
+    var validationMessage: String? {
         func blank(_ value: String) -> Bool {
             value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
@@ -46,11 +46,11 @@ public struct ConnectionDraft: Equatable {
         return nil
     }
 
-    public var isValid: Bool { validationMessage == nil }
+    var isValid: Bool { validationMessage == nil }
 
     /// Applies a successful `gh` account pick: fills the identifier and
     /// secret and marks their provenance as CLI-backed.
-    public mutating func apply(login: String, token: String) {
+    mutating func apply(login: String, token: String) {
         accountIdentifier = login
         secret = token
         tokenProvenance = .githubCLI
@@ -62,7 +62,7 @@ public struct ConnectionDraft: Equatable {
     /// the CLI. Extracted so this rule is unit-testable on its own, since
     /// the settings catalog's token field (the only call site today) needs a
     /// host to exercise directly.
-    public mutating func setManualSecret(_ value: String) {
+    mutating func setManualSecret(_ value: String) {
         secret = value
         tokenProvenance = .manual
     }

@@ -6,8 +6,8 @@ import Foundation
 /// Three schemes resolve in-process; the rest are honestly inert. Half-working
 /// would be worse: opening a repo's folder when the user clicked a `repo` link
 /// looks like success and is not what they asked for.
-public enum LinkResolution {
-    public enum Route: Equatable {
+enum LinkResolution {
+    enum Route: Equatable {
         /// Show the file in Finder, selected — not launched in whatever app owns
         /// the extension. Quest's links are references, so the usual intent is
         /// to find the thing.
@@ -18,7 +18,7 @@ public enum LinkResolution {
         case inert(reason: String)
     }
 
-    public static func route(for link: Link) -> Route {
+    static func route(for link: Link) -> Route {
         switch link.scheme {
         case .url:
             // `LinkEditor` lets a user type anything into the identifier field, so

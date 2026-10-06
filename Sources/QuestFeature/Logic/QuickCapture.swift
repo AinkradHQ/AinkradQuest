@@ -3,15 +3,15 @@ import Foundation
 /// One-line capture syntax: `bug: title #label #label !!`. Deliberately tiny —
 /// anything richer belongs in the editor, and a capture box you have to think
 /// about is one you stop using.
-public enum QuickCapture {
-    public struct Parsed: Sendable, Equatable {
-        public let title: String
-        public let type: WorkItemType
-        public let labels: [String]
-        public let priority: Priority
+enum QuickCapture {
+    struct Parsed: Sendable, Equatable {
+        let title: String
+        let type: WorkItemType
+        let labels: [String]
+        let priority: Priority
     }
 
-    public static func parse(_ raw: String) -> Parsed {
+    static func parse(_ raw: String) -> Parsed {
         var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         var type = WorkItemType.task
 

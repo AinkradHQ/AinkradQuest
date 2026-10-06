@@ -39,15 +39,15 @@ import Foundation
 /// `host.documents` and works with no Quest window open, which is what lets the
 /// assistant file a task while you are in a terminal.
 @MainActor
-public enum QuestMCPServer {
-    public struct Tool {
-        public let name: String
+enum QuestMCPServer {
+    struct Tool {
+        let name: String
         /// The operation token forwarded to `QuestMCPOperations`.
-        public let operation: String
-        public let summary: String
-        public let destructive: Bool
-        public let readOnly: Bool
-        public let schemaJSON: String
+        let operation: String
+        let summary: String
+        let destructive: Bool
+        let readOnly: Bool
+        let schemaJSON: String
 
         init(
             _ name: String, _ operation: String, _ summary: String,
@@ -78,7 +78,7 @@ public enum QuestMCPServer {
     /// tokens by `QuestMCPServerTests.operationTokensMatchOperationsLayer`,
     /// so a typo here fails a test rather than silently producing a tool that
     /// always errors at runtime.
-    public static let tools: [Tool] = [
+    static let tools: [Tool] = [
         Tool(
             "list_projects", "listProjects",
             "List every project in Quest with its id, name and state. Start here: the "
@@ -268,7 +268,7 @@ public enum QuestMCPServer {
         await perform(tool.operation, arguments)
     }
 
-    public static func make(
+    static func make(
         appID: String,
         perform: @escaping @MainActor @Sendable (String, String) async -> AgentActionResult
     ) -> (server: MCPAppServer, failures: [String]) {

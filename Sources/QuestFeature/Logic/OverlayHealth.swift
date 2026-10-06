@@ -12,7 +12,7 @@ import Foundation
 /// "is project X editable?" could not answer correctly from this type alone
 /// and had to fall back to `OverlayStore.isUnreadable(_:)`. The set makes the
 /// per-project question answerable here directly, via `isReadOnly(_:)`.
-public enum OverlayHealth: Equatable, Sendable {
+enum OverlayHealth: Equatable, Sendable {
     case healthy
     /// Project overlay documents that exist but could not be decoded. Writes
     /// for them are blocked so the corrupt bytes are not overwritten with
@@ -27,7 +27,7 @@ public enum OverlayHealth: Equatable, Sendable {
     /// Whether THIS project's editing should be disabled. Only an unreadable
     /// overlay is genuinely read-only; a failed write keeps the change in
     /// memory and can be retried.
-    public func isReadOnly(_ projectID: UUID) -> Bool {
+    func isReadOnly(_ projectID: UUID) -> Bool {
         switch self {
         case .unreadable(let ids), .writeBlocked(let ids): ids.contains(projectID)
         case .healthy, .writeFailed: false
@@ -36,7 +36,7 @@ public enum OverlayHealth: Equatable, Sendable {
 
     /// Whether ANY project is currently read-only because of this state.
     /// `healthy`/`writeFailed` stay non-project-scoped, as before.
-    public var isReadOnly: Bool {
+    var isReadOnly: Bool {
         switch self {
         case .unreadable(let ids), .writeBlocked(let ids): !ids.isEmpty
         case .healthy, .writeFailed: false
@@ -44,14 +44,14 @@ public enum OverlayHealth: Equatable, Sendable {
     }
 
     /// Every project id this state concerns. Empty for `.healthy`/`.writeFailed`.
-    public var affectedProjects: Set<UUID> {
+    var affectedProjects: Set<UUID> {
         switch self {
         case .unreadable(let ids), .writeBlocked(let ids): ids
         case .healthy, .writeFailed: []
         }
     }
 
-    public var message: String? {
+    var message: String? {
         switch self {
         case .healthy: nil
         case .unreadable(let ids):

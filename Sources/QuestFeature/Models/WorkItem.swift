@@ -1,16 +1,16 @@
 import Foundation
 
-public enum WorkItemType: String, Codable, Sendable, CaseIterable {
+enum WorkItemType: String, Codable, Sendable, CaseIterable {
     case epic, task, bug, story, chore, spike
 }
 
-public enum Priority: Int, Codable, Sendable, CaseIterable, Comparable {
+enum Priority: Int, Codable, Sendable, CaseIterable, Comparable {
     case none = 0
     case low = 1
     case medium = 2
     case high = 3
     case urgent = 4
-    public static func < (a: Priority, b: Priority) -> Bool { a.rawValue < b.rawValue }
+    static func < (a: Priority, b: Priority) -> Bool { a.rawValue < b.rawValue }
 }
 
 /// A job an item does for the app, as opposed to for the user. Distinct from
@@ -19,32 +19,32 @@ public enum Priority: Int, Codable, Sendable, CaseIterable, Comparable {
 /// Deliberately an enum rather than an `isInbox` flag: the next such role
 /// (a backlog, an archive) then costs a case instead of another Bool that has
 /// to be kept mutually exclusive with the first by hand.
-public enum WorkItemRole: String, Codable, Sendable {
+enum WorkItemRole: String, Codable, Sendable {
     /// Where quick captures land when the user picked no epic.
     case inbox
 }
 
-public struct WorkItem: Codable, Sendable, Identifiable, Hashable {
-    public let id: UUID
-    public let projectID: UUID
+struct WorkItem: Codable, Sendable, Identifiable, Hashable {
+    let id: UUID
+    let projectID: UUID
     /// Nil means depth 0 — an epic. Enforced by `HierarchyRules`.
-    public var parentID: UUID?
-    public var type: WorkItemType
-    public var title: String
-    public var body: String
-    public var statusID: String
-    public var priority: Priority
-    public var labels: [String]
-    public var startDate: Date?
-    public var dueDate: Date?
-    public var orderIndex: Int
-    public var links: [Link]
-    public var createdAt: Date
-    public var updatedAt: Date
-    public var closedAt: Date?
+    var parentID: UUID?
+    var type: WorkItemType
+    var title: String
+    var body: String
+    var statusID: String
+    var priority: Priority
+    var labels: [String]
+    var startDate: Date?
+    var dueDate: Date?
+    var orderIndex: Int
+    var links: [Link]
+    var createdAt: Date
+    var updatedAt: Date
+    var closedAt: Date?
     /// Soft delete. Non-nil items are excluded from every surface and query
     /// but remain restorable — this is what makes agent-driven deletes safe.
-    public var deletedAt: Date?
+    var deletedAt: Date?
     /// What this item is FOR, when the app needs to find it again — currently
     /// only the Inbox. Nil for everything the user made themselves.
     ///
@@ -53,9 +53,9 @@ public struct WorkItem: Codable, Sendable, Identifiable, Hashable {
     /// non-optional `isInbox = false` would fail to decode every document
     /// written before this field existed. An Optional decodes as nil when
     /// absent, which is exactly the migration story wanted here.
-    public var role: WorkItemRole?
+    var role: WorkItemRole?
 
-    public init(
+    init(
         id: UUID, projectID: UUID, parentID: UUID?, type: WorkItemType,
         title: String, statusID: String, body: String = "",
         priority: Priority = .none, labels: [String] = [],
@@ -84,5 +84,5 @@ public struct WorkItem: Codable, Sendable, Identifiable, Hashable {
         self.role = role
     }
 
-    public var isDeleted: Bool { deletedAt != nil }
+    var isDeleted: Bool { deletedAt != nil }
 }

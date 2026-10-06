@@ -4,20 +4,20 @@ import Foundation
 /// pointer the user clicks, while an attached repo is structural — it names
 /// which connection owns it, and repo-scoped work (branches, PRs) resolves
 /// against it. Multi-repo projects are the normal case, not an edge case.
-public struct AttachedRepo: Codable, Sendable, Identifiable, Hashable {
-    public let id: UUID
+struct AttachedRepo: Codable, Sendable, Identifiable, Hashable {
+    let id: UUID
     /// Which connection this repo came from. Two GitHub identities can both
     /// see an `acme/api`, and they are not the same repo.
-    public var connectionID: UUID
-    public var owner: String
-    public var name: String
+    var connectionID: UUID
+    var owner: String
+    var name: String
     /// Where it is checked out locally, when it is. Optional because a repo
     /// can be attached before it has ever been cloned.
-    public var localPath: String?
+    var localPath: String?
 
-    public var slug: String { "\(owner)/\(name)" }
+    var slug: String { "\(owner)/\(name)" }
 
-    public init(
+    init(
         id: UUID, connectionID: UUID, owner: String, name: String,
         localPath: String? = nil
     ) {
@@ -40,7 +40,7 @@ public struct AttachedRepo: Codable, Sendable, Identifiable, Hashable {
     /// inside the array fails to decode. So the first field ever added to this
     /// type would take the whole project document unreadable, not just the
     /// repo list.
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         connectionID = try container.decode(UUID.self, forKey: .connectionID)

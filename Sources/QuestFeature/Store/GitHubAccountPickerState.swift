@@ -13,14 +13,14 @@ import Observation
 /// actor would freeze the window.
 @MainActor
 @Observable
-public final class GitHubAccountPickerState {
-    public private(set) var accounts: [GitHubAccount] = []
+final class GitHubAccountPickerState {
+    private(set) var accounts: [GitHubAccount] = []
     /// True while either `accounts()` or `token(for:)` is running off-actor.
-    public private(set) var isLoading = false
+    private(set) var isLoading = false
     /// `.cliNotInstalled` and `.notLoggedIn` are expected, common states, not
     /// rare errors — their `.message` is already actionable, so it is shown
     /// here verbatim and the user carries on with manual entry.
-    public private(set) var errorMessage: String?
+    private(set) var errorMessage: String?
 
     /// Builds the source lazily rather than holding one directly: the real
     /// `GitHubCLI.init()` itself can shell out (locating the binary via
@@ -29,17 +29,17 @@ public final class GitHubAccountPickerState {
     /// Defaults to the real CLI; tests inject `InMemoryGitHubAccountSource`.
     private let makeSource: @Sendable () throws -> any GitHubAccountSource
 
-    public init(makeSource: @escaping @Sendable () throws -> any GitHubAccountSource = { try GitHubCLI() }) {
+    init(makeSource: @escaping @Sendable () throws -> any GitHubAccountSource = { try GitHubCLI() }) {
         self.makeSource = makeSource
     }
 
-    public convenience init(source: any GitHubAccountSource) {
+    convenience init(source: any GitHubAccountSource) {
         self.init(makeSource: { source })
     }
 
     /// Loads the accounts `gh` already knows about. Safe to call repeatedly
     /// (e.g. a "Refresh" action) — each call replaces the previous result.
-    public func load() async {
+    func load() async {
         isLoading = true
         errorMessage = nil
         let makeSource = self.makeSource
@@ -64,7 +64,7 @@ public final class GitHubAccountPickerState {
     ///
     /// Returns a plain value rather than taking `draft` `inout` because an
     /// `inout` binding cannot cross the `await` this method needs.
-    public func pick(_ account: GitHubAccount) async -> (login: String, token: String)? {
+    func pick(_ account: GitHubAccount) async -> (login: String, token: String)? {
         isLoading = true
         errorMessage = nil
         let makeSource = self.makeSource

@@ -4,7 +4,7 @@ import Foundation
 /// each case's `message` is written to be read by a person AND by the assistant.
 /// `LocalizedError`, so a caller can show any error through one
 /// `localizedDescription` and still get `message` for this type.
-public enum QuestError: Error, Equatable, Sendable, LocalizedError {
+enum QuestError: Error, Equatable, Sendable, LocalizedError {
     case projectNotFound(UUID)
     case itemNotFound(UUID)
     case parentNotFound(UUID)
@@ -47,7 +47,7 @@ public enum QuestError: Error, Equatable, Sendable, LocalizedError {
     /// matching save throws this rather than overwriting the only copy.
     case documentCorrupt(String)
 
-    public var message: String {
+    var message: String {
         switch self {
         case .projectNotFound(let id): "No project with id \(id)."
         case .itemNotFound(let id): "No work item with id \(id)."
@@ -93,5 +93,5 @@ public enum QuestError: Error, Equatable, Sendable, LocalizedError {
         }
     }
 
-    public var errorDescription: String? { message }
+    var errorDescription: String? { message }
 }

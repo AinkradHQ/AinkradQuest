@@ -4,17 +4,17 @@ import Foundation
 
 extension ProjectStore {
     /// Live items only. Soft-deleted items are excluded from every surface.
-    public func items(in projectID: UUID) -> [WorkItem] {
+    func items(in projectID: UUID) -> [WorkItem] {
         (openProject(projectID)?.items ?? []).filter { !$0.isDeleted }
     }
 
     /// Including trashed ones — the trash view and restore path need these.
-    public func allItems(in projectID: UUID) -> [WorkItem] {
+    func allItems(in projectID: UUID) -> [WorkItem] {
         openProject(projectID)?.items ?? []
     }
 
     @discardableResult
-    public func createItem(
+    func createItem(
         projectID: UUID, parentID: UUID?, type: WorkItemType,
         title: String, statusID: String,
         actor: ActivityActor,
@@ -50,7 +50,7 @@ extension ProjectStore {
         return item
     }
 
-    public func updateItem(_ item: WorkItem, actor: ActivityActor) throws {
+    func updateItem(_ item: WorkItem, actor: ActivityActor) throws {
         guard var document = openProject(item.projectID) else {
             throw QuestError.projectNotFound(item.projectID)
         }
@@ -80,7 +80,7 @@ extension ProjectStore {
         commit(document)
     }
 
-    public func setStatus(_ id: UUID, statusID: String, actor: ActivityActor) throws {
+    func setStatus(_ id: UUID, statusID: String, actor: ActivityActor) throws {
         guard let projectID = projectID(owning: id),
             var document = openProject(projectID),
             let position = document.items.firstIndex(where: { $0.id == id })
@@ -102,7 +102,7 @@ extension ProjectStore {
         commit(document)
     }
 
-    public func moveItem(
+    func moveItem(
         _ id: UUID, toParent parentID: UUID?, orderIndex: Int,
         actor: ActivityActor
     ) throws {
@@ -127,7 +127,7 @@ extension ProjectStore {
 
     /// Soft, and it takes descendants with it — a hidden epic whose children
     /// still appeared on the board would be worse than either outcome.
-    public func deleteItem(_ id: UUID, actor: ActivityActor) throws {
+    func deleteItem(_ id: UUID, actor: ActivityActor) throws {
         guard let projectID = projectID(owning: id), var document = openProject(projectID) else {
             throw QuestError.itemNotFound(id)
         }
@@ -151,7 +151,7 @@ extension ProjectStore {
         commit(document)
     }
 
-    public func restoreItem(_ id: UUID, actor: ActivityActor) throws {
+    func restoreItem(_ id: UUID, actor: ActivityActor) throws {
         guard let projectID = projectID(owning: id), var document = openProject(projectID) else {
             throw QuestError.itemNotFound(id)
         }
@@ -201,7 +201,7 @@ extension ProjectStore {
     /// and round-trip a whole `WorkItem` — and would log an `itemUpdated` event
     /// for something the user did not do. Adoption is bookkeeping, so it is
     /// deliberately silent in the activity feed.
-    public func setRole(_ role: WorkItemRole?, on id: UUID) throws {
+    func setRole(_ role: WorkItemRole?, on id: UUID) throws {
         guard let projectID = projectID(owning: id), var document = openProject(projectID) else {
             throw QuestError.itemNotFound(id)
         }
@@ -226,7 +226,7 @@ extension ProjectStore {
     ///
     /// Links need no cleanup: they are stored ON the item (`WorkItem.links`)
     /// and leave with it.
-    public func purgeItem(_ id: UUID, actor: ActivityActor) throws {
+    func purgeItem(_ id: UUID, actor: ActivityActor) throws {
         guard let projectID = projectID(owning: id), var document = openProject(projectID) else {
             throw QuestError.itemNotFound(id)
         }

@@ -5,7 +5,7 @@ import Foundation
 /// `id` an account gets) lives in `GitHubAccountParsing.parseAccounts`, which
 /// is pure and unit-tested. This type's only job is finding the binary and
 /// running two commands.
-public final class GitHubCLI: GitHubAccountSource, Sendable {
+final class GitHubCLI: GitHubAccountSource, Sendable {
     /// Homebrew (Apple Silicon and Intel default prefixes) and the common
     /// system locations. Checked in order before falling back to `PATH`,
     /// because `Process` does not consult the shell's PATH resolution on its
@@ -24,7 +24,7 @@ public final class GitHubCLI: GitHubAccountSource, Sendable {
 
     private let binaryPath: String
 
-    public init() throws {
+    init() throws {
         self.binaryPath = try Self.locateBinary()
     }
 
@@ -48,7 +48,7 @@ public final class GitHubCLI: GitHubAccountSource, Sendable {
         throw GitHubCLIError.cliNotInstalled
     }
 
-    public func accounts() throws -> [GitHubAccount] {
+    func accounts() throws -> [GitHubAccount] {
         let result = try Self.runProcess(executable: binaryPath, arguments: ["auth", "status", "--json", "hosts"])
         guard result.exitCode == 0 else {
             throw GitHubCLIError.commandFailed(stderr: Self.excerpt(result.stderr))
@@ -56,7 +56,7 @@ public final class GitHubCLI: GitHubAccountSource, Sendable {
         return try GitHubAccountParsing.parseAccounts(Data(result.stdout.utf8))
     }
 
-    public func token(for account: GitHubAccount) throws -> String {
+    func token(for account: GitHubAccount) throws -> String {
         let result = try Self.runProcess(
             executable: binaryPath,
             arguments: ["auth", "token", "--user", account.login, "--hostname", account.host]

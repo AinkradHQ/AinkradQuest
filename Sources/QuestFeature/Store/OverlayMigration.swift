@@ -13,9 +13,9 @@ import Foundation
 /// A crash between the halves leaves one marker set and one not, so the
 /// unfinished half resumes on the next launch rather than duplicating or
 /// getting stuck.
-public enum OverlayMigration {
+enum OverlayMigration {
     /// What one `migrateIfNeeded` call did, so a caller can log or count.
-    public enum Outcome: Equatable {
+    enum Outcome: Equatable {
         /// Neither half had anything left to do.
         case nothingToDo
         /// At least one half moved data and marked itself done.
@@ -38,7 +38,7 @@ public enum OverlayMigration {
     /// `nothingToDo`, or `blocked` (see `Outcome`).
     @MainActor
     @discardableResult
-    public static func migrateIfNeeded(
+    static func migrateIfNeeded(
         projectID: UUID,
         repository: any ProjectRepository,
         overlay: OverlayStore

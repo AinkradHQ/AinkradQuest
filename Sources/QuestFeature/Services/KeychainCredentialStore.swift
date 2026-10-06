@@ -4,10 +4,10 @@ import Security
 /// Generic-password items in the login keychain, one per connection.
 /// Plainly `Sendable`: its only state is an immutable service name, and the
 /// Keychain calls are thread-safe.
-public final class KeychainCredentialStore: CredentialStore, Sendable {
+final class KeychainCredentialStore: CredentialStore, Sendable {
     private let service: String
 
-    public init(service: String = "com.ainkrad.quest") {
+    init(service: String = "com.ainkrad.quest") {
         self.service = service
     }
 
@@ -19,7 +19,7 @@ public final class KeychainCredentialStore: CredentialStore, Sendable {
         ]
     }
 
-    public func secret(forRef ref: String) -> String? {
+    func secret(forRef ref: String) -> String? {
         var lookup = query(ref)
         lookup[kSecReturnData as String] = true
         lookup[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -30,7 +30,7 @@ public final class KeychainCredentialStore: CredentialStore, Sendable {
         return String(data: data, encoding: .utf8)
     }
 
-    public func setSecret(_ secret: String?, forRef ref: String) throws {
+    func setSecret(_ secret: String?, forRef ref: String) throws {
         let existing = query(ref)
         guard let secret else {
             let status = SecItemDelete(existing as CFDictionary)

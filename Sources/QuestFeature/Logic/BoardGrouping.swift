@@ -1,12 +1,12 @@
 import Foundation
 
-public struct BoardColumn: Sendable, Identifiable {
-    public var id: String { status.id }
-    public let status: Status
-    public let items: [WorkItem]
+struct BoardColumn: Sendable, Identifiable {
+    var id: String { status.id }
+    let status: Status
+    let items: [WorkItem]
 }
 
-public enum BoardGrouping {
+enum BoardGrouping {
     /// One column per status in scheme order, empty columns included — a board
     /// whose columns appear and disappear with their contents is unusable as a
     /// drop target.
@@ -14,7 +14,7 @@ public enum BoardGrouping {
     /// Epics are excluded: they are containers whose status is derived from
     /// their children, and putting them on the board invites moving a whole
     /// epic by dragging one card.
-    public static func columns(
+    static func columns(
         items: [WorkItem], scheme: StatusScheme,
         filter: ItemFilter
     ) -> [BoardColumn] {
@@ -27,16 +27,16 @@ public enum BoardGrouping {
     }
 }
 
-public struct BoardGroup: Sendable, Identifiable {
-    public var id: UUID { epic.id }
-    public let epic: WorkItem
-    public let columns: [BoardColumn]
+struct BoardGroup: Sendable, Identifiable {
+    var id: UUID { epic.id }
+    let epic: WorkItem
+    let columns: [BoardColumn]
     /// True for the synthetic trailing group that catches live items whose
     /// owning epic could not be resolved (see `groupedByEpic`). `epic` in
     /// that case is a placeholder, not a stored item.
-    public let isOrphanGroup: Bool
+    let isOrphanGroup: Bool
 
-    public init(epic: WorkItem, columns: [BoardColumn], isOrphanGroup: Bool = false) {
+    init(epic: WorkItem, columns: [BoardColumn], isOrphanGroup: Bool = false) {
         self.epic = epic
         self.columns = columns
         self.isOrphanGroup = isOrphanGroup
@@ -63,7 +63,7 @@ extension BoardGrouping {
     /// before that guard existed, and for any future path that bypasses it:
     /// any live non-epic item not reachable from a live epic is surfaced in a
     /// trailing "No epic" group instead of silently vanishing.
-    public static func groupedByEpic(
+    static func groupedByEpic(
         items: [WorkItem], scheme: StatusScheme,
         filter: ItemFilter
     ) -> [BoardGroup] {

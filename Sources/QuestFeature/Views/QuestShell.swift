@@ -10,7 +10,7 @@ import SwiftUI
 /// modifier, handing back the `@Entry` default — an instance the host's
 /// overlay never renders, so every `report(...)` would be silently dropped.
 /// `QuestShellContent` therefore lives inside the host, not around it.
-public struct QuestShell: View {
+struct QuestShell: View {
     let store: ProjectStore
     let registry: ConnectionRegistry
     /// Part of the host `PluginLoader`'s entry-point signature and kept for it.
@@ -20,7 +20,7 @@ public struct QuestShell: View {
     let theme: HostTheme
     let documents: PluginDocumentStore
 
-    public init(
+    init(
         store: ProjectStore, registry: ConnectionRegistry, theme: HostTheme,
         documents: PluginDocumentStore
     ) {
@@ -30,7 +30,7 @@ public struct QuestShell: View {
         self.documents = documents
     }
 
-    public var body: some View {
+    var body: some View {
         QuestShellContent(store: store, registry: registry, documents: documents)
             .ainkradToastHost()
     }

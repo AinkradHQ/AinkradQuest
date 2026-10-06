@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-public enum SnapshotError: Error, Equatable, Sendable, LocalizedError {
+enum SnapshotError: Error, Equatable, Sendable, LocalizedError {
     case vaultNotGranted
     case vaultUnresolvable(String?)
     case writeFailed(String)
@@ -22,7 +22,7 @@ public enum SnapshotError: Error, Equatable, Sendable, LocalizedError {
 
     /// Written to be read by a person AND by the assistant, matching
     /// `QuestError.message`'s style.
-    public var message: String {
+    var message: String {
         switch self {
         case .vaultNotGranted:
             "Backups are off because no vault folder has been granted. "
@@ -51,19 +51,19 @@ public enum SnapshotError: Error, Equatable, Sendable, LocalizedError {
 
     /// `LocalizedError` routes through `message`, so a caller that only knows
     /// `Error.localizedDescription` shows the same text.
-    public var errorDescription: String? { message }
+    var errorDescription: String? { message }
 }
 
 /// Writes snapshots into the vault, atomically, keeping a bounded rotation.
-public enum SnapshotWriter {
-    public static let directoryName = "Quest Snapshots"
-    public static let keep = 5
+enum SnapshotWriter {
+    static let directoryName = "Quest Snapshots"
+    static let keep = 5
 
     /// Sortable, collision-resistant, and readable in a file listing. The
     /// random suffix exists because a debounce can fire twice within one
     /// second; without it the second write would overwrite the first and the
     /// rotation would hold four distinct snapshots instead of five.
-    public static func filename(for date: Date) -> String {
+    static func filename(for date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
         formatter.timeZone = TimeZone(identifier: "UTC")
@@ -82,7 +82,7 @@ public enum SnapshotWriter {
     }
 
     @discardableResult
-    public static func write(_ snapshot: OverlaySnapshot, into directory: URL) throws -> URL {
+    static func write(_ snapshot: OverlaySnapshot, into directory: URL) throws -> URL {
         let destination = directory.appendingPathComponent(filename(for: snapshot.takenAt))
         let temporary = destination.appendingPathExtension("tmp")
         do {
@@ -115,7 +115,7 @@ public enum SnapshotWriter {
     /// Called only AFTER a successful write, so a failed write never costs the
     /// user an existing backup.
     @discardableResult
-    public static func rotate(in directory: URL, keeping: Int = keep) throws -> [URL] {
+    static func rotate(in directory: URL, keeping: Int = keep) throws -> [URL] {
         let allNames = try FileManager.default.contentsOfDirectory(atPath: directory.path)
 
         // Only ever touch files this writer itself created — this directory

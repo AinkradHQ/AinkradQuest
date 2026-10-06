@@ -8,7 +8,7 @@ extension ProjectStore {
     /// Validation is NOT repeated here — `SchemePlan.plan` owns it, and the
     /// plan's own contents are what execute, which is what keeps the confirm
     /// step honest.
-    public func applyScheme(
+    func applyScheme(
         _ plan: SchemePlan.Plan, to projectID: UUID,
         actor: ActivityActor
     ) throws {

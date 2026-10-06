@@ -3,13 +3,13 @@ import Foundation
 import Observation
 
 /// One snapshot on disk, as the restore list needs to show it.
-public struct SnapshotFile: Identifiable, Sendable, Equatable {
-    public let url: URL
-    public let takenAt: Date
-    public let projectCount: Int
-    public var id: URL { url }
+struct SnapshotFile: Identifiable, Sendable, Equatable {
+    let url: URL
+    let takenAt: Date
+    let projectCount: Int
+    var id: URL { url }
 
-    public init(url: URL, takenAt: Date, projectCount: Int) {
+    init(url: URL, takenAt: Date, projectCount: Int) {
         self.url = url
         self.takenAt = takenAt
         self.projectCount = projectCount
@@ -25,13 +25,13 @@ public struct SnapshotFile: Identifiable, Sendable, Equatable {
 /// vanishing from the UI with no trace is its own failure mode. A damaged
 /// entry carries only what is knowable without decoding it (its filename) and
 /// is never offerable to `restore(from:)`, which still takes a `SnapshotFile`.
-public enum SnapshotEntry: Identifiable, Sendable, Equatable {
+enum SnapshotEntry: Identifiable, Sendable, Equatable {
     case readable(SnapshotFile)
     /// `url` for identity/display, `filename` for the message — kept
     /// separate so a caller never has to re-derive the name from the URL.
     case damaged(url: URL, filename: String)
 
-    public var id: URL {
+    var id: URL {
         switch self {
         case .readable(let file): file.url
         case .damaged(let url, _): url
@@ -46,13 +46,13 @@ public enum SnapshotEntry: Identifiable, Sendable, Equatable {
 /// that hands out a resolved, access-started URL.
 @MainActor
 @Observable
-public final class SnapshotStore {
+final class SnapshotStore {
     /// When the last snapshot was successfully written, for the age indicator.
     /// A backup that silently stopped weeks ago is the worst outcome in this
     /// design, so this is surfaced rather than kept internal.
-    public private(set) var lastSnapshotAt: Date?
+    private(set) var lastSnapshotAt: Date?
     /// Why the last attempt failed, in `.message` form. Never `localizedDescription`.
-    public private(set) var lastError: String?
+    private(set) var lastError: String?
 
     /// The age indicator's actual source of truth (BLOCKER 2). `lastSnapshotAt`
     /// is in-memory only, so on every relaunch it reads `nil` and the UI said
@@ -62,7 +62,7 @@ public final class SnapshotStore {
     /// the DISPLAYED age from the newest `.readable` entry actually on disk,
     /// falling back to `lastSnapshotAt` so a backup just written this session
     /// (not yet re-listed) still reads as fresh even if listing lags.
-    public func lastBackupAt() -> Date? {
+    func lastBackupAt() -> Date? {
         let onDisk = listSnapshots().compactMap { entry -> Date? in
             if case .readable(let file) = entry { return file.takenAt }
             return nil
@@ -101,7 +101,7 @@ public final class SnapshotStore {
 
     /// Starts the debounced cadence. Called once per `SnapshotStore` instance,
     /// from `QuestApp`. Safe to call again — it simply replaces the timer.
-    public func startAutoBackup() {
+    func startAutoBackup() {
         observedRevision = overlay.revision
         lastSnapshotRevision = overlay.revision
         lastChangeAt = .distantPast
@@ -153,7 +153,7 @@ public final class SnapshotStore {
     /// Stops the timer without writing anything. Called from
     /// `flushOnTeardown()` before its own final check, so the timer never
     /// fires again after the instance is torn down.
-    public func stopAutoBackup() {
+    func stopAutoBackup() {
         pollTimer?.invalidate()
         pollTimer = nil
     }
@@ -181,7 +181,7 @@ public final class SnapshotStore {
     /// per-instance teardown, the closest hook available). Writes one final
     /// snapshot if anything changed since the last one, so a session that
     /// closes inside the five-minute quiet window is not silently lost.
-    public func flushOnTeardown(now: Date = Date()) {
+    func flushOnTeardown(now: Date = Date()) {
         stopAutoBackup()
         guard
             SnapshotCadence.shouldSnapshotOnTeardown(
@@ -191,7 +191,7 @@ public final class SnapshotStore {
         _ = snapshotNow(at: now)
     }
 
-    public init(
+    init(
         overlay: OverlayStore, documents: any PluginDocumentStore,
         projectIDs: @escaping () -> [UUID]
     ) {
@@ -222,7 +222,7 @@ public final class SnapshotStore {
 
     /// Writes one snapshot now. Returns whether it was written.
     @discardableResult
-    public func snapshotNow(at date: Date = Date()) -> Bool {
+    func snapshotNow(at date: Date = Date()) -> Bool {
         switch vaultGrant() {
         case .notGranted:
             lastError = SnapshotError.vaultNotGranted.message
@@ -293,7 +293,7 @@ public final class SnapshotStore {
         return true
     }
 
-    public func listSnapshots() -> [SnapshotEntry] {
+    func listSnapshots() -> [SnapshotEntry] {
         FolderBookmark.withAccess(
             forKey: FolderBookmark.vaultRootKey,
             in: documents
@@ -330,7 +330,7 @@ public final class SnapshotStore {
         } ?? []
     }
 
-    public func restore(from file: SnapshotFile) throws {
+    func restore(from file: SnapshotFile) throws {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let snapshot: OverlaySnapshot? =

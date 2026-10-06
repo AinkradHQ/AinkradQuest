@@ -1,24 +1,24 @@
 import Foundation
 
-public struct ItemFilter: Sendable, Equatable {
-    public var text: String = ""
-    public var types: Set<WorkItemType> = []
-    public var statusIDs: Set<String> = []
-    public var labels: Set<String> = []
-    public var priorityAtLeast: Priority = .none
-    public var includeDone: Bool = true
+struct ItemFilter: Sendable, Equatable {
+    var text: String = ""
+    var types: Set<WorkItemType> = []
+    var statusIDs: Set<String> = []
+    var labels: Set<String> = []
+    var priorityAtLeast: Priority = .none
+    var includeDone: Bool = true
 
-    public init() {}
+    init() {}
 }
 
-public enum ItemSort: Sendable, Equatable {
+enum ItemSort: Sendable, Equatable {
     case manual, priority, dueDate, updated, title
 }
 
 /// Pure filtering and sorting. Every surface funnels through this so "what is
 /// visible" has one definition.
-public enum ItemQuery {
-    public static func apply(
+enum ItemQuery {
+    static func apply(
         _ filter: ItemFilter, sort: ItemSort,
         to items: [WorkItem],
         scheme: StatusScheme

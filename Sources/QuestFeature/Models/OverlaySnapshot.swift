@@ -8,20 +8,20 @@ import Foundation
 /// routing, and restoring them elsewhere would resurrect connections that do
 /// not exist on that machine. Project documents are excluded too: they are the
 /// mirror, and a re-sync rebuilds them.
-public struct OverlaySnapshot: Codable, Sendable {
+struct OverlaySnapshot: Codable, Sendable {
     /// Bumped when the payload's shape changes incompatibly. Read on restore so
     /// a future Quest can refuse a snapshot it does not understand rather than
     /// decoding it wrongly.
-    public let version: Int
-    public let takenAt: Date
-    public let overlays: [ProjectOverlay]
-    public let linkMap: LinkMap
-    public let migratedRepoProjects: Set<String>
-    public let migratedBindingProjects: Set<String>
+    let version: Int
+    let takenAt: Date
+    let overlays: [ProjectOverlay]
+    let linkMap: LinkMap
+    let migratedRepoProjects: Set<String>
+    let migratedBindingProjects: Set<String>
 
-    public static let currentVersion = 1
+    static let currentVersion = 1
 
-    public init(
+    init(
         version: Int = OverlaySnapshot.currentVersion, takenAt: Date,
         overlays: [ProjectOverlay], linkMap: LinkMap,
         migratedRepoProjects: Set<String>, migratedBindingProjects: Set<String>
@@ -38,7 +38,7 @@ public struct OverlaySnapshot: Codable, Sendable {
         case version, takenAt, overlays, linkMap, migratedRepoProjects, migratedBindingProjects
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         // `version` and `takenAt` are REQUIRED: a snapshot without them cannot
         // be judged for age or compatibility, and guessing either would be
