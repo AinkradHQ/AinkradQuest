@@ -40,14 +40,14 @@ struct QuestBasicModeTests {
     }
 
     @Test("An item opened in basic survives the escalation to advanced")
-    func openedItemCarriesAcrossTheModeSwitch() {
+    func openedItemCarriesAcrossTheModeSwitch() throws {
         // The bug this guards, which shipped once: basic dropped the item on
         // the claim advanced would re-derive it. It does not — `QuestShell` is
         // rebuilt on the switch, so `surface` starts `.landing` — so tapping an
         // item in Today landed you nowhere near it.
         let store = makeProjectStore(InMemoryProjectRepository())
         let project = store.createProject(name: "Ainkrad", kind: .general, actor: .user)
-        let item = try! store.createItem(
+        let item = try store.createItem(
             projectID: project.id, parentID: nil, type: .epic,
             title: "Ship basic mode", statusID: "todo", actor: .user)
 
