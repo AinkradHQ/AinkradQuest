@@ -12,7 +12,7 @@ import Foundation
 /// trail and `updatedAt` bump must not be lost just because the data itself
 /// moved to a different store.
 extension ProjectStore {
-    public func bindProject(
+    func bindProject(
         _ id: UUID, to connectionID: UUID,
         remoteProjectKey: String, actor: ActivityActor
     ) throws {
@@ -32,7 +32,7 @@ extension ProjectStore {
         commit(document)
     }
 
-    public func unbindProject(_ id: UUID, actor: ActivityActor) throws {
+    func unbindProject(_ id: UUID, actor: ActivityActor) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
         // Both fields clear together: a remote key without a connection names
         // a project on a provider we can no longer reach.
@@ -45,7 +45,7 @@ extension ProjectStore {
         commit(document)
     }
 
-    public func attachRepo(
+    func attachRepo(
         _ repo: AttachedRepo, to projectID: UUID,
         actor: ActivityActor
     ) throws {
@@ -66,7 +66,7 @@ extension ProjectStore {
         commit(document)
     }
 
-    public func detachRepo(
+    func detachRepo(
         _ repoID: UUID, from projectID: UUID,
         actor: ActivityActor
     ) throws {
@@ -88,7 +88,7 @@ extension ProjectStore {
 
     /// The registry refuses to delete a connection projects still use, but it
     /// knows nothing about projects — this is how the caller answers that.
-    public func projectCount(boundTo connectionID: UUID) -> Int {
+    func projectCount(boundTo connectionID: UUID) -> Int {
         projects
             .filter { overlay.hubConfig().binding(for: $0.id)?.connectionID == connectionID }
             .count
@@ -102,7 +102,7 @@ extension ProjectStore {
     /// trashed ones are severed here instead. Non-throwing: the connection is
     /// already gone, and refusing to sever would leave worse state than
     /// proceeding. Individual failures surface through `persistenceFailure`.
-    public func severBindings(toConnection connectionID: UUID, actor: ActivityActor) {
+    func severBindings(toConnection connectionID: UUID, actor: ActivityActor) {
         let ids = (projects + trashedProjects).map(\.id)
             .filter { overlay.hubConfig().binding(for: $0)?.connectionID == connectionID }
         guard !ids.isEmpty else { return }

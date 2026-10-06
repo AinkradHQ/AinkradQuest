@@ -11,6 +11,7 @@ import SwiftUI
 /// `StatusSchemeEditor` — it is not its own presented sheet, so it never
 /// touches `onClose`/`dismiss` itself.
 struct ProjectConnectionSection: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let registry: ConnectionRegistry
     let project: Project
@@ -20,7 +21,7 @@ struct ProjectConnectionSection: View {
     /// represented by this sentinel id — a real UUID that matches no
     /// connection — exactly the trick `StatusSchemeEditor.destinations` uses
     /// with its `""` sentinel.
-    private static let noConnection = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+    private static let noConnection = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!  // design-lint: allow force-unwrap constant literal UUID, always valid
 
     @State private var remoteProjectKeyText: String = ""
     @State private var pendingConnectionSelection: UUID = ProjectConnectionSection.noConnection
@@ -84,8 +85,8 @@ struct ProjectConnectionSection: View {
             // No accounts exist at all yet — a picker over an empty list
             // would just look broken, so say so plainly instead.
             Text("No connections yet. Add one under Connections to bind this project.")
-                .font(.caption)
-                .foregroundStyle(theme.foreground.opacity(0.7))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10")))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
         } else if let connectionID = boundConnectionID,
             let connection = registry.connection(connectionID)
         {
@@ -99,8 +100,8 @@ struct ProjectConnectionSection: View {
             // A project with no connection is a NATIVE project — the normal
             // case, not an error state.
             Text("Native project — not bound to a connection.")
-                .font(.caption)
-                .foregroundStyle(theme.foreground.opacity(0.7))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10")))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
             AinkradFormRow(title: "Account") {
                 AinkradSelect(
                     items: [Self.noConnection] + registry.connections.map(\.id),
@@ -144,8 +145,8 @@ struct ProjectConnectionSection: View {
         }
         if let message = repoDraft.validationMessage {
             Text(message)
-                .font(.caption)
-                .foregroundStyle(theme.foreground.opacity(0.7))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10")))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
         }
         AinkradButton(title: "Attach", style: .primary, action: attach)
             .disabled(!repoDraft.isValid)

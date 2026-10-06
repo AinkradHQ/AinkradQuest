@@ -11,10 +11,10 @@ import Foundation
 /// changes from the user's own, and an overlay store that already models its
 /// own health as a type.
 @MainActor
-public struct QuestSignalReporter {
+struct QuestSignalReporter {
     let signals: PluginSignalEmitter
 
-    public init(signals: PluginSignalEmitter) { self.signals = signals }
+    init(signals: PluginSignalEmitter) { self.signals = signals }
 
     /// The assistant filed or changed work.
     ///

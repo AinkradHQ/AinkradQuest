@@ -1,18 +1,18 @@
 import Foundation
 
-public struct TimelineBar: Sendable, Identifiable {
-    public var id: UUID { itemID }
-    public let itemID: UUID
-    public let title: String
-    public let start: Date
-    public let end: Date
+struct TimelineBar: Sendable, Identifiable {
+    var id: UUID { itemID }
+    let itemID: UUID
+    let title: String
+    let start: Date
+    let end: Date
     /// Row index. Bars that overlap in time never share a lane.
-    public let lane: Int
+    let lane: Int
     /// True when this span was computed from scheduled descendants rather
     /// than dates the item itself carries.
-    public let isDerived: Bool
+    let isDerived: Bool
 
-    public init(itemID: UUID, title: String, start: Date, end: Date, lane: Int, isDerived: Bool = false) {
+    init(itemID: UUID, title: String, start: Date, end: Date, lane: Int, isDerived: Bool = false) {
         self.itemID = itemID
         self.title = title
         self.start = start
@@ -22,16 +22,16 @@ public struct TimelineBar: Sendable, Identifiable {
     }
 }
 
-public enum TimelineLayout {
-    public struct Result: Sendable {
-        public let bars: [TimelineBar]
+enum TimelineLayout {
+    struct Result: Sendable {
+        let bars: [TimelineBar]
         /// Items with neither a start nor a due date. They get their own rail
         /// rather than being dropped — a task invisible because nobody dated it
         /// is a task that gets forgotten.
-        public let unscheduled: [WorkItem]
+        let unscheduled: [WorkItem]
     }
 
-    public static func build(items: [WorkItem]) -> Result {
+    static func build(items: [WorkItem]) -> Result {
         let live = items.filter { !$0.isDeleted }
         var unscheduled: [WorkItem] = []
         var dated: [(item: WorkItem, start: Date, end: Date, isDerived: Bool)] = []

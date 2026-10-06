@@ -8,12 +8,12 @@ import Foundation
 /// applies identically whether a call came from the assistant or from a view.
 /// Nothing here reimplements a rule.
 @MainActor
-public final class QuestMCPOperations {
+final class QuestMCPOperations {
     private let store: ProjectStore
 
-    public init(store: ProjectStore) { self.store = store }
+    init(store: ProjectStore) { self.store = store }
 
-    public func run(operation: String, arguments: String) async -> AgentActionResult {
+    func run(operation: String, arguments: String) async -> AgentActionResult {
         guard let data = arguments.data(using: .utf8),
             let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         else {

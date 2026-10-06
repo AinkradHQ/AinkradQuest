@@ -7,7 +7,7 @@ import Foundation
 /// handful of connections and wrong here: the sidebar and Today/Inbox would
 /// have to decode every work item ever written just to draw a list of project
 /// names. The index carries exactly what those surfaces need.
-public final class DocumentProjectRepository: ProjectRepository {
+final class DocumentProjectRepository: ProjectRepository {
     private let documents: PluginDocumentStore
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -19,26 +19,26 @@ public final class DocumentProjectRepository: ProjectRepository {
     static let indexKey = "project-index"
     static func projectKey(_ id: UUID) -> String { "project-\(id.uuidString)" }
 
-    public init(documents: PluginDocumentStore) {
+    init(documents: PluginDocumentStore) {
         self.documents = documents
         encoder.dateEncodingStrategy = .iso8601
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    public func loadIndex() -> [ProjectSummary] {
+    func loadIndex() -> [ProjectSummary] {
         let loaded = loadDocument(
             [ProjectSummary].self, key: Self.indexKey, from: documents, decoder: decoder, app: "quest")
         noteBlocked(loaded.canSave, key: Self.indexKey)
         return loaded.value ?? []
     }
 
-    public func saveIndex(_ summaries: [ProjectSummary]) throws {
+    func saveIndex(_ summaries: [ProjectSummary]) throws {
         try throwIfBlocked(Self.indexKey)
         let data = try encoder.encode(summaries)
         documents.setData(data, forKey: Self.indexKey)
     }
 
-    public func loadProject(_ id: UUID) -> ProjectDocument? {
+    func loadProject(_ id: UUID) -> ProjectDocument? {
         let key = Self.projectKey(id)
         let loaded = loadDocument(
             ProjectDocument.self, key: key, from: documents, decoder: decoder, app: "quest")
@@ -46,27 +46,27 @@ public final class DocumentProjectRepository: ProjectRepository {
         return loaded.value
     }
 
-    public func saveProject(_ document: ProjectDocument) throws {
+    func saveProject(_ document: ProjectDocument) throws {
         let key = Self.projectKey(document.project.id)
         try throwIfBlocked(key)
         let data = try encoder.encode(document)
         documents.setData(data, forKey: key)
     }
 
-    public func removeProject(_ id: UUID) {
+    func removeProject(_ id: UUID) {
         documents.setData(nil, forKey: Self.projectKey(id))
     }
 
     static let connectionsKey = "connection-index"
 
-    public func loadConnections() -> [Connection] {
+    func loadConnections() -> [Connection] {
         let loaded = loadDocument(
             [Connection].self, key: Self.connectionsKey, from: documents, decoder: decoder, app: "quest")
         noteBlocked(loaded.canSave, key: Self.connectionsKey)
         return loaded.value ?? []
     }
 
-    public func saveConnections(_ connections: [Connection]) throws {
+    func saveConnections(_ connections: [Connection]) throws {
         try throwIfBlocked(Self.connectionsKey)
         let data = try encoder.encode(connections)
         documents.setData(data, forKey: Self.connectionsKey)
@@ -76,7 +76,7 @@ public final class DocumentProjectRepository: ProjectRepository {
     static let linkMapKey = "link-map"
     static let hubConfigKey = "hub-config"
 
-    public func loadOverlay(_ projectID: UUID) throws -> ProjectOverlay? {
+    func loadOverlay(_ projectID: UUID) throws -> ProjectOverlay? {
         guard let data = documents.data(forKey: Self.overlayKey(projectID)) else { return nil }
         guard let overlay = try? decoder.decode(ProjectOverlay.self, from: data) else {
             throw QuestError.overlayCorrupt(projectID)
@@ -84,35 +84,35 @@ public final class DocumentProjectRepository: ProjectRepository {
         return overlay
     }
 
-    public func saveOverlay(_ overlay: ProjectOverlay) throws {
+    func saveOverlay(_ overlay: ProjectOverlay) throws {
         let data = try encoder.encode(overlay)
         documents.setData(data, forKey: Self.overlayKey(overlay.projectID))
     }
 
-    public func removeOverlay(_ projectID: UUID) {
+    func removeOverlay(_ projectID: UUID) {
         documents.setData(nil, forKey: Self.overlayKey(projectID))
     }
 
-    public func loadLinkMap() -> LinkMap {
+    func loadLinkMap() -> LinkMap {
         let loaded = loadDocument(
             LinkMap.self, key: Self.linkMapKey, from: documents, decoder: decoder, app: "quest")
         noteBlocked(loaded.canSave, key: Self.linkMapKey)
         return loaded.value ?? LinkMap()
     }
 
-    public func saveLinkMap(_ map: LinkMap) throws {
+    func saveLinkMap(_ map: LinkMap) throws {
         try throwIfBlocked(Self.linkMapKey)
         documents.setData(try encoder.encode(map), forKey: Self.linkMapKey)
     }
 
-    public func loadHubConfig() -> HubConfig {
+    func loadHubConfig() -> HubConfig {
         let loaded = loadDocument(
             HubConfig.self, key: Self.hubConfigKey, from: documents, decoder: decoder, app: "quest")
         noteBlocked(loaded.canSave, key: Self.hubConfigKey)
         return loaded.value ?? HubConfig()
     }
 
-    public func saveHubConfig(_ config: HubConfig) throws {
+    func saveHubConfig(_ config: HubConfig) throws {
         try throwIfBlocked(Self.hubConfigKey)
         documents.setData(try encoder.encode(config), forKey: Self.hubConfigKey)
     }

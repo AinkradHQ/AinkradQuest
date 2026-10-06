@@ -2,15 +2,15 @@ import Foundation
 
 /// The cross-project landing view's query. Pure, and it takes `now` rather than
 /// reading the clock so the sections are testable.
-public enum TodayInbox {
-    public struct Result: Sendable {
-        public let overdue: [WorkItem]
-        public let dueToday: [WorkItem]
-        public let active: [WorkItem]
-        public let recent: [WorkItem]
+enum TodayInbox {
+    struct Result: Sendable {
+        let overdue: [WorkItem]
+        let dueToday: [WorkItem]
+        let active: [WorkItem]
+        let recent: [WorkItem]
     }
 
-    public static func build(
+    static func build(
         items: [WorkItem], scheme: StatusScheme,
         now: Date, calendar: Calendar = .current
     ) -> Result {

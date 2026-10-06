@@ -9,6 +9,7 @@ import SwiftUI
 /// re-render mid-edit does not clobber what the user is typing; it commits
 /// explicitly on submit or on losing focus, never on every keystroke.
 struct ListRow: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let document: ProjectDocument
     let item: WorkItem
@@ -64,7 +65,7 @@ struct ListRow: View {
             // state is a hand-built row that matches the kit row's metrics.
             HStack(spacing: AinkradSpacing.md) {
                 AinkradIconGlyph(systemName: itemGlyph(for: item.type))
-                TextField("Title", text: $title)
+                TextField("Title", text: $title)  // design-lint: allow raw-control kit gap: AinkradTextField focus control
                     .textFieldStyle(.plain)
                     .foregroundStyle(theme.foreground)
                     .focused($titleFocused)
@@ -102,7 +103,7 @@ struct ListRow: View {
         ) { id in
             document.project.statusScheme.statuses.first { $0.id == id }?.name ?? id
         }
-        .frame(width: 140)
+        .frame(width: skin.size.s140)
     }
 
     /// Commit first, then tear the field down — the reverse order would write

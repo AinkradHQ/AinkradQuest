@@ -49,6 +49,7 @@ extension EnvironmentValues {
 }
 
 struct QuestSidebar: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let documents: PluginDocumentStore
     @Binding var selection: UUID?
@@ -78,7 +79,7 @@ struct QuestSidebar: View {
                 AinkradSectionHeader(title: "Projects")
                 Spacer()
                 AinkradSelect(items: ProjectStateFilter.allCases, selection: $filter) { $0.title }
-                    .frame(maxWidth: 104)
+                    .frame(maxWidth: skin.size.s104)
             }
 
             ScrollView {
@@ -169,6 +170,7 @@ struct QuestSidebar: View {
 /// Project creation, moved out of the sidebar footer into a modal so the
 /// sidebar is a list and nothing else.
 struct NewProjectForm: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let documents: PluginDocumentStore
     let report: (String, AinkradStatus) -> Void
@@ -210,7 +212,7 @@ struct NewProjectForm: View {
         // `.ainkradModal` already pads its content with `AinkradSpacing.lg`;
         // repeating it here would double the inset. 420 is inside the
         // modifier's 448pt content budget (480 cap less that padding).
-        .frame(width: 420)
+        .frame(width: skin.size.s420)
     }
 
     /// Return-with-nothing-focused creates, exactly as the pre-kit

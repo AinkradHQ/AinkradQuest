@@ -7,18 +7,18 @@ import Foundation
 /// against the projects that will still exist afterwards, and the projects
 /// purged last. Deriving that inside the loop that mutates is how a purge ends
 /// up either double-counting or throwing `itemNotFound` halfway through.
-public struct TrashPurgePlan: Equatable, Sendable {
+struct TrashPurgePlan: Equatable, Sendable {
     /// Trashed items living in projects that are NOT themselves being purged.
     /// Items inside a purged project are deliberately absent: the project purge
     /// removes them, and listing them here would count each one twice in the
     /// summary the user is shown.
-    public let itemIDs: [UUID]
+    let itemIDs: [UUID]
     /// Purged after the items, for the reason above.
-    public let projectIDs: [UUID]
+    let projectIDs: [UUID]
 
-    public var isEmpty: Bool { itemIDs.isEmpty && projectIDs.isEmpty }
+    var isEmpty: Bool { itemIDs.isEmpty && projectIDs.isEmpty }
 
-    public init(itemIDs: [UUID], projectIDs: [UUID]) {
+    init(itemIDs: [UUID], projectIDs: [UUID]) {
         self.itemIDs = itemIDs
         self.projectIDs = projectIDs
     }
@@ -31,12 +31,12 @@ public struct TrashPurgePlan: Equatable, Sendable {
 /// emptied with no account of what survived, which is the one state a user
 /// cannot reason about. Failures are collected and reported alongside the
 /// successes.
-public struct TrashPurgeOutcome: Equatable, Sendable {
-    public let purgedItems: Int
-    public let purgedProjects: Int
-    public let failures: [String]
+struct TrashPurgeOutcome: Equatable, Sendable {
+    let purgedItems: Int
+    let purgedProjects: Int
+    let failures: [String]
 
-    public init(purgedItems: Int, purgedProjects: Int, failures: [String]) {
+    init(purgedItems: Int, purgedProjects: Int, failures: [String]) {
         self.purgedItems = purgedItems
         self.purgedProjects = purgedProjects
         self.failures = failures
@@ -44,7 +44,7 @@ public struct TrashPurgeOutcome: Equatable, Sendable {
 
     /// The sentence shown when the run finishes. Partial success leads with
     /// what was destroyed, because that is the irreversible half.
-    public var message: String {
+    var message: String {
         let done = [
             TrashPurge.count(purgedItems, "item", "items"),
             TrashPurge.count(purgedProjects, "project", "projects"),
@@ -56,13 +56,13 @@ public struct TrashPurgeOutcome: Equatable, Sendable {
     }
 }
 
-public enum TrashPurge {
+enum TrashPurge {
     /// - Parameters:
     ///   - liveProjectIDs: projects not in the trash; their trashed items are
     ///     purged individually because the project itself survives.
     ///   - trashedProjectIDs: projects in the trash; each is purged whole.
     ///   - trashedItemIDs: the trashed item ids in a given project.
-    public static func plan(
+    static func plan(
         liveProjectIDs: [UUID], trashedProjectIDs: [UUID],
         trashedItemIDs: (UUID) -> [UUID]
     ) -> TrashPurgePlan {
@@ -74,7 +74,7 @@ public enum TrashPurge {
     /// Counts phrased for a confirm dialog. Written out rather than templated
     /// with a bare number because "1 items" in the one place the app is about
     /// to do something irreversible reads as carelessness.
-    public static func confirmMessage(_ plan: TrashPurgePlan) -> String {
+    static func confirmMessage(_ plan: TrashPurgePlan) -> String {
         let parts = [
             count(plan.itemIDs.count, "item", "items"),
             count(plan.projectIDs.count, "project", "projects"),

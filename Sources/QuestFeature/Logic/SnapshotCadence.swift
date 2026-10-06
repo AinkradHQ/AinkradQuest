@@ -8,11 +8,11 @@ import Foundation
 /// `Date()` — it is handed everything it needs as arguments, so the debounce
 /// decision is testable as ordinary logic rather than by sleeping five
 /// minutes in a test.
-public enum SnapshotCadence {
+enum SnapshotCadence {
     /// How long the overlay must sit unchanged before a debounced snapshot
     /// fires. A burst of edits (e.g. a fast typing session) keeps pushing this
     /// out, so it produces one snapshot per pause, not one per keystroke.
-    public static let quietPeriod: TimeInterval = 5 * 60
+    static let quietPeriod: TimeInterval = 5 * 60
 
     /// Whether a debounced snapshot should fire right now.
     ///
@@ -28,7 +28,7 @@ public enum SnapshotCadence {
     /// firing here unconditionally would rotate five identical backups and
     /// destroy the user's real history, which is exactly the failure this
     /// cadence exists to avoid introducing.
-    public static func shouldSnapshot(
+    static func shouldSnapshot(
         currentRevision: Int, lastSnapshotRevision: Int?,
         lastChangeAt: Date, now: Date
     ) -> Bool {
@@ -40,7 +40,7 @@ public enum SnapshotCadence {
     /// since the last snapshot, regardless of how recently. Unlike
     /// `shouldSnapshot`, there is no quiet period to wait out — the app is
     /// going away, so this is the last chance.
-    public static func shouldSnapshotOnTeardown(
+    static func shouldSnapshotOnTeardown(
         currentRevision: Int,
         lastSnapshotRevision: Int?
     ) -> Bool {

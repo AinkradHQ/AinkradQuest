@@ -10,14 +10,14 @@ import Foundation
 /// Pure and Foundation-only, like its neighbours: it decides, the caller
 /// writes. Creation is the caller's job because only it holds the store and
 /// the project's opening status.
-public enum InboxEpic {
+enum InboxEpic {
     /// The title given to an Inbox this app creates, and the fallback used to
     /// recognise one written before `WorkItemRole` existed. It is no longer the
     /// marker — `role == .inbox` is — so renaming the Inbox now keeps it the
     /// Inbox instead of silently spawning a second one on the next capture.
-    public static let title = "Inbox"
+    static let title = "Inbox"
 
-    public enum Resolution: Equatable, Sendable {
+    enum Resolution: Equatable, Sendable {
         /// File under this existing, live, marked Inbox epic.
         case existing(UUID)
         /// A pre-marker Inbox, recognised by title alone. The caller files under
@@ -38,7 +38,7 @@ public enum InboxEpic {
     /// `items` may include soft-deleted ones (`ProjectDocument.items` does);
     /// deleted epics are ignored, so a trashed Inbox is replaced rather than
     /// swallowing new captures.
-    public static func resolve(in items: [WorkItem]) -> Resolution {
+    static func resolve(in items: [WorkItem]) -> Resolution {
         let epics = items.filter { $0.type == .epic && !$0.isDeleted }
         // The marker wins over the title, always — including when some OTHER
         // epic has since been renamed to "Inbox". A rename of a real epic must

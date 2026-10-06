@@ -3,7 +3,7 @@ import Foundation
 /// The seam M4 replaces. Everything above it — store, views, MCP — is written
 /// against this protocol, so repointing Quest at the host-wide Ainkrad content
 /// store is a new conformance rather than a rewrite.
-public protocol ProjectRepository: AnyObject {
+protocol ProjectRepository: AnyObject {
     func loadIndex() -> [ProjectSummary]
     /// Throws when the write could not be completed. A repository must never
     /// swallow a failed write: the store's only way to know a save was lost is

@@ -3,12 +3,12 @@ import Foundation
 /// The depth cap and the epic-at-root rule, enforced here rather than by
 /// convention. Boards, rollups and timeline lanes all assume a bounded tree; a
 /// `parentID` that would break that assumption is refused before it is stored.
-public enum HierarchyRules {
+enum HierarchyRules {
     /// epic → item → subtask.
-    public static let maxDepth = 3
+    static let maxDepth = 3
 
     /// Depth of the node identified by `id`: 0 for "no parent", 1 for an epic.
-    public static func depth(of id: UUID?, in items: [WorkItem]) -> Int {
+    static func depth(of id: UUID?, in items: [WorkItem]) -> Int {
         guard let id else { return 0 }
         var depth = 0
         var cursor: UUID? = id
@@ -21,14 +21,14 @@ public enum HierarchyRules {
         return depth
     }
 
-    public static func descendants(of id: UUID, in items: [WorkItem]) -> [WorkItem] {
+    static func descendants(of id: UUID, in items: [WorkItem]) -> [WorkItem] {
         let direct = items.filter { $0.parentID == id }
         return direct + direct.flatMap { descendants(of: $0.id, in: items) }
     }
 
     /// Validates a placement. `movingItemID` is the item being reparented, or
     /// nil when creating — it exists only to catch the cycle case.
-    public static func validate(
+    static func validate(
         parentID: UUID?, type: WorkItemType,
         movingItemID: UUID?, in items: [WorkItem]
     ) throws {

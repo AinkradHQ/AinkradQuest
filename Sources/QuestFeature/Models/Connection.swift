@@ -3,7 +3,7 @@ import Foundation
 /// Which backend a connection speaks to. `local` is the native tracker, which
 /// is a provider like any other so that nothing above the adapter layer has to
 /// special-case an unlinked project.
-public enum ProviderKind: String, Codable, Sendable {
+enum ProviderKind: String, Codable, Sendable {
     case local, jira, linear, githubProjects
 }
 
@@ -11,7 +11,7 @@ public enum ProviderKind: String, Codable, Sendable {
 /// display, but it is recorded so a future refresh path can know whether a
 /// stale token can be silently re-pulled from `gh` or needs the user to type
 /// a new one.
-public enum TokenProvenance: String, Codable, Sendable {
+enum TokenProvenance: String, Codable, Sendable {
     /// Typed in by hand — the only path for a provider `gh` does not know, or
     /// a token that predates this feature.
     case manual
@@ -23,29 +23,29 @@ public enum TokenProvenance: String, Codable, Sendable {
 /// One authenticated account at one provider. Deliberately NOT a global app
 /// setting: two Jira sites and three GitHub identities coexist, and each
 /// project binds to exactly one of them.
-public struct Connection: Codable, Sendable, Identifiable, Hashable {
-    public let id: UUID
-    public var provider: ProviderKind
+struct Connection: Codable, Sendable, Identifiable, Hashable {
+    let id: UUID
+    var provider: ProviderKind
     /// What the user calls this account in the UI ("Work Jira").
-    public var accountLabel: String
+    var accountLabel: String
     /// What the provider calls it — email, login, workspace slug. Used to
     /// refuse a duplicate registration of the same account.
-    public var accountIdentifier: String
+    var accountIdentifier: String
     /// Self-hosted and per-site providers need this; Linear does not.
-    public var baseURL: URL?
+    var baseURL: URL?
     /// The Keychain account key. The secret itself is NEVER stored here — this
     /// document is written to disk in the clear.
-    public var credentialRef: String
-    public var createdAt: Date
+    var credentialRef: String
+    var createdAt: Date
     /// Where the secret behind `credentialRef` came from. Defaults to
     /// `.manual` for anything that predates this field.
-    public var tokenProvenance: TokenProvenance
+    var tokenProvenance: TokenProvenance
 
-    public static func credentialRef(for id: UUID) -> String {
+    static func credentialRef(for id: UUID) -> String {
         "quest.connection.\(id.uuidString)"
     }
 
-    public init(
+    init(
         id: UUID, provider: ProviderKind, accountLabel: String,
         accountIdentifier: String, baseURL: URL? = nil,
         createdAt: Date = Date(), tokenProvenance: TokenProvenance = .manual
@@ -65,7 +65,7 @@ public struct Connection: Codable, Sendable, Identifiable, Hashable {
         case tokenProvenance
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         // A connection written by a future Quest naming a provider this build

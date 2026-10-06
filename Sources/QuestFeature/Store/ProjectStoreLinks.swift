@@ -11,7 +11,7 @@ extension ProjectStore {
     /// A link already on the target is refused rather than appended. Two rows
     /// with the same identity are not useful to anyone, and they reintroduce the
     /// ambiguity the repo-qualified `Link.id` exists to remove.
-    public func addLink(to target: LinkTarget, link: Link, actor: ActivityActor) throws {
+    func addLink(to target: LinkTarget, link: Link, actor: ActivityActor) throws {
         try mutateLinks(
             target, actor: actor, kind: .linkAdded,
             verb: "added"
@@ -23,7 +23,7 @@ extension ProjectStore {
         }
     }
 
-    public func removeLink(
+    func removeLink(
         from target: LinkTarget, link: Link,
         actor: ActivityActor
     ) throws {

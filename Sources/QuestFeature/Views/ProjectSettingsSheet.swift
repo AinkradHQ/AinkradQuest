@@ -10,14 +10,14 @@ import SwiftUI
 /// forced every view that wanted a swatch to have the class threaded down to
 /// it by hand.
 extension ProjectColorToken {
-    func color(tokens: HostThemeTokens, statusColors: AinkradStatusColors) -> Color {
+    func color(tokens: HostThemeTokens, statusColors: AinkradStatusColors, skin: AinkradSkin) -> Color {
         switch self {
         case .accentPrimary: tokens.accentPrimary
         case .accentSecondary: tokens.accentSecondary
         case .success: statusColors.success
         case .warning: statusColors.warning
         case .danger: statusColors.danger
-        case .muted: tokens.foreground.opacity(0.4)
+        case .muted: tokens.foreground.opacity(skin.opacity.o40)
         }
     }
 }
@@ -29,6 +29,7 @@ extension ProjectColorToken {
 /// `@Environment(\.dismiss)`. Closing is the presenter's job, requested through
 /// `onClose`; a `dismiss()` here would compile and do nothing.
 struct ProjectSettingsSheet: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let registry: ConnectionRegistry
     let report: (String, AinkradStatus) -> Void
@@ -91,7 +92,7 @@ struct ProjectSettingsSheet: View {
             }
             // A deliberate cap, matching `ItemEditor`'s, so the buttons below
             // always stay on screen.
-            .frame(maxHeight: 420)
+            .frame(maxHeight: skin.size.s420)
 
             HStack {
                 AinkradButton(title: "Cancel", style: .secondary, action: onClose)
@@ -101,7 +102,7 @@ struct ProjectSettingsSheet: View {
         }
         // A deliberate fixed sheet width, so the form does not reflow with the
         // pane behind it. Inside `.ainkradModal`'s 480pt cap.
-        .frame(width: 420)
+        .frame(width: skin.size.s420)
         .foregroundStyle(theme.foreground)
         .onSubmit(save)
         // Mounted only while NO scheme plan is pending; `StatusSchemeEditor`
@@ -130,7 +131,7 @@ struct ProjectSettingsSheet: View {
             AinkradSelect(
                 items: ProjectColorToken.allCases, selection: $colorToken,
                 label: { $0.title },
-                swatch: { $0.color(tokens: theme, statusColors: statusColors) })
+                swatch: { $0.color(tokens: theme, statusColors: statusColors, skin: skin) })
         }
         // The kind picker only relabels the project; it does NOT change an
         // existing project's status scheme. Schemes ARE editable now, via

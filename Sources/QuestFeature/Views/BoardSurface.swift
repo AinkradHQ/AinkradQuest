@@ -3,6 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct BoardSurface: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let document: ProjectDocument
     /// Owned by the shell's header, the same binding `ListSurface` reads.
@@ -117,7 +118,7 @@ struct BoardSurface: View {
                 }
                 // A deliberate fixed column width, so columns stay drop-sized
                 // regardless of how much a card's title wants.
-                .frame(width: 260)
+                .frame(width: skin.size.s260)
                 .padding(AinkradSpacing.sm)
                 .ainkradPanel()
                 .dropDestination(for: String.self) { payload, _ in

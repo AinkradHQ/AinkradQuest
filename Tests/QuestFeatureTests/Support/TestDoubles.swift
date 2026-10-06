@@ -35,6 +35,8 @@ public final class InMemoryProjectRepository: ProjectRepository {
 
 /// Test double. Keeps registry tests off the real Keychain, which would
 /// otherwise prompt and pollute the developer's login keychain.
+/// `@unchecked`: unlocked mutable state, safe because each test owns its
+/// instance and drives it from that one test's task.
 public final class InMemoryCredentialStore: CredentialStore, @unchecked Sendable {
     private var storage: [String: String] = [:]
     public init() {}
@@ -47,7 +49,7 @@ public final class InMemoryCredentialStore: CredentialStore, @unchecked Sendable
 /// Test double. Keeps UI/view-model tests off a real `gh` subprocess, which
 /// would otherwise make them environment-dependent and slow, exactly the
 /// reason `InMemoryCredentialStore` exists for `CredentialStore`.
-public final class InMemoryGitHubAccountSource: GitHubAccountSource, @unchecked Sendable {
+public final class InMemoryGitHubAccountSource: GitHubAccountSource, Sendable {
     private let configuredAccounts: [GitHubAccount]
     private let accountsError: Error?
     private let tokens: [String: String]

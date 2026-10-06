@@ -2,6 +2,7 @@ import AinkradAppKit
 import SwiftUI
 
 struct TodaySurface: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let report: (String, AinkradStatus) -> Void
     let onOpen: (WorkItem) -> Void
@@ -121,7 +122,7 @@ struct TodaySurface: View {
                 // trigger reads "Project", as the old Picker's placeholder tag did.
                 store.activeProjects.first { $0.id == id }?.name ?? "Project"
             }
-            .frame(width: 160)
+            .frame(width: skin.size.s160)
             // No-`size` initializer: the frame comes from the kit default, not
             // a literal. That overload has no `tooltip:`, so the hint is
             // attached here along with the VoiceOver label `.help` cannot give.

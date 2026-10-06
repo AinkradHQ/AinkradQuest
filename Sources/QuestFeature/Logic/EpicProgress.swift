@@ -1,14 +1,14 @@
 import Foundation
 
-public enum EpicProgress {
-    public struct Progress: Sendable, Equatable {
-        public let done: Int
-        public let total: Int
+enum EpicProgress {
+    struct Progress: Sendable, Equatable {
+        let done: Int
+        let total: Int
     }
 
     /// Counts every live descendant, not just direct children: a subtask is
     /// real work, and an epic whose progress ignored them would lie.
-    public static func rollup(
+    static func rollup(
         epicID: UUID, in items: [WorkItem],
         scheme: StatusScheme
     ) -> Progress {

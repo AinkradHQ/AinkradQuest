@@ -5,14 +5,14 @@ import Observation
 /// activity logging and persistence cannot be bypassed by either.
 @MainActor
 @Observable
-public final class ProjectStore {
+final class ProjectStore {
     /// Live, non-deleted project summaries — what the sidebar renders.
-    public private(set) var projects: [ProjectSummary] = []
+    private(set) var projects: [ProjectSummary] = []
     /// Soft-deleted projects, restorable from the trash.
-    public private(set) var trashedProjects: [ProjectSummary] = []
+    private(set) var trashedProjects: [ProjectSummary] = []
     /// Set when a write to the repository could not be completed. Views show a
     /// persistent banner while this is non-nil; the in-memory change is kept.
-    public private(set) var persistenceFailure: String?
+    private(set) var persistenceFailure: String?
     /// Bumped once per mutation that passed validation and was applied in
     /// memory. Exists so a view can memoize derived cross-project work instead
     /// of recomputing it on every body pass — see `TodaySurface`. A rejected
@@ -22,7 +22,7 @@ public final class ProjectStore {
     /// banner (see `persist(_:)`), so a derived-work cache must invalidate to
     /// reflect it too. Treat this counter as "in-memory state changed," not as
     /// "durably saved."
-    public private(set) var revision: Int = 0
+    private(set) var revision: Int = 0
 
     private let repository: any ProjectRepository
     /// Where binding/repo data now lives, since M2A moved it out of the
@@ -54,18 +54,18 @@ public final class ProjectStore {
     ///
     /// Lives on the store because the store is the one thing both modes share;
     /// the two root views do not outlive each other.
-    public var pendingOpenItem: WorkItem?
+    var pendingOpenItem: WorkItem?
 
     /// Takes and clears the pending item, if any. Consumed exactly once, by
     /// whichever shell mounts next.
-    public func takePendingOpenItem() -> WorkItem? {
+    func takePendingOpenItem() -> WorkItem? {
         defer { pendingOpenItem = nil }
         return pendingOpenItem
     }
 
     /// `overlay` must be the ONE instance the rest of the app shares for this
     /// repository — `QuestApp` builds it once per host and passes it here.
-    public init(repository: any ProjectRepository, overlay: OverlayStore) {
+    init(repository: any ProjectRepository, overlay: OverlayStore) {
         self.repository = repository
         self.overlay = overlay
         let index = repository.loadIndex()
@@ -124,30 +124,30 @@ public final class ProjectStore {
         }
     }
 
-    public var activeProjects: [ProjectSummary] { projects.filter { $0.state == .active } }
+    var activeProjects: [ProjectSummary] { projects.filter { $0.state == .active } }
 
-    public func projects(inState state: ProjectState) -> [ProjectSummary] {
+    func projects(inState state: ProjectState) -> [ProjectSummary] {
         projects.filter { $0.state == state }
     }
 
 
     // MARK: reading
 
-    public func openProject(_ id: UUID) -> ProjectDocument? {
+    func openProject(_ id: UUID) -> ProjectDocument? {
         if let cached = documents[id] { return cached }
         guard let loaded = repository.loadProject(id) else { return nil }
         documents[id] = loaded
         return loaded
     }
 
-    public func activity(for id: UUID) -> [ActivityEvent] {
+    func activity(for id: UUID) -> [ActivityEvent] {
         openProject(id)?.activity ?? []
     }
 
     // MARK: writing
 
     @discardableResult
-    public func createProject(
+    func createProject(
         name: String, kind: ProjectKind,
         actor: ActivityActor
     ) -> Project {
@@ -168,7 +168,7 @@ public final class ProjectStore {
 
     /// `kind`/`summary` let a caller that knows WHAT it changed say so in the
     /// feed — "added link foo" reads better than a generic "updated project".
-    public func updateProject(
+    func updateProject(
         _ project: Project, actor: ActivityActor,
         kind: ActivityKind = .projectUpdated,
         summary: String? = nil
@@ -187,13 +187,13 @@ public final class ProjectStore {
         commit(document)
     }
 
-    public func archiveProject(_ id: UUID, actor: ActivityActor) throws {
+    func archiveProject(_ id: UUID, actor: ActivityActor) throws {
         try setState(id, state: .archived, actor: actor, summary: "archived project")
     }
 
     /// The general form of `archiveProject`, which stays as a convenience.
     /// Pause exists in the model but had no way to be reached before this.
-    public func setState(
+    func setState(
         _ id: UUID, state: ProjectState, actor: ActivityActor,
         summary: String? = nil
     ) throws {
@@ -212,7 +212,7 @@ public final class ProjectStore {
 
     /// Soft. The document stays on disk; only the index entry moves to trash,
     /// so a wrong agent call is one restore away.
-    public func deleteProject(_ id: UUID, actor: ActivityActor) throws {
+    func deleteProject(_ id: UUID, actor: ActivityActor) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
         document.activity.append(
             ActivityEvent(
@@ -223,7 +223,7 @@ public final class ProjectStore {
         commit(document)
     }
 
-    public func restoreProject(_ id: UUID, actor: ActivityActor) throws {
+    func restoreProject(_ id: UUID, actor: ActivityActor) throws {
         guard var document = openProject(id) else { throw QuestError.projectNotFound(id) }
         document.activity.append(
             ActivityEvent(
@@ -241,7 +241,7 @@ public final class ProjectStore {
     ///
     /// Deliberately takes no `ActivityActor`: the activity feed lives INSIDE
     /// the document being destroyed, so there is nowhere left to log to.
-    public func purgeProject(_ id: UUID) throws {
+    func purgeProject(_ id: UUID) throws {
         guard deletedProjectIDs.contains(id) else { throw QuestError.projectNotInTrash(id) }
         // Read the items BEFORE anything is destroyed: link-map rows are keyed
         // by ITEM id, and once the document is gone there is no way to learn
@@ -289,7 +289,7 @@ public final class ProjectStore {
     /// first failure would leave the trash half-emptied with no report of what
     /// remains — the one outcome the user cannot make sense of afterwards.
     @discardableResult
-    public func emptyTrash(actor: ActivityActor) -> TrashPurgeOutcome {
+    func emptyTrash(actor: ActivityActor) -> TrashPurgeOutcome {
         let plan = TrashPurge.plan(
             liveProjectIDs: projects.map(\.id),
             trashedProjectIDs: trashedProjects.map(\.id),

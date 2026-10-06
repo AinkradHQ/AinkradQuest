@@ -123,8 +123,6 @@ enum QuestSettingsCatalog {
         do {
             try c.snapshots.restore(from: file)
             c.state.backupMessage = nil
-        } catch let failure as SnapshotError {
-            c.state.backupMessage = failure.message
         } catch {
             c.state.backupMessage = error.localizedDescription
         }

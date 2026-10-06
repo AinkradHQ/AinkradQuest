@@ -6,20 +6,20 @@ import Foundation
 /// are two distinct accounts, so `id` is derived from host + login rather
 /// than login alone, mirroring how `Connection` scopes duplicate-detection by
 /// provider rather than by account name alone.
-public struct GitHubAccount: Sendable, Hashable, Identifiable {
-    public let login: String
-    public let host: String
-    public let isActive: Bool
-    public let scopes: [String]
-    public let isHealthy: Bool
+struct GitHubAccount: Sendable, Hashable, Identifiable {
+    let login: String
+    let host: String
+    let isActive: Bool
+    let scopes: [String]
+    let isHealthy: Bool
 
-    public var id: String { "\(host)|\(login)" }
+    var id: String { "\(host)|\(login)" }
 
     /// Lets the UI warn before the user picks an account that cannot read
     /// repos at all, instead of failing later on the first repo fetch.
-    public var hasRepoScope: Bool { scopes.contains("repo") }
+    var hasRepoScope: Bool { scopes.contains("repo") }
 
-    public init(login: String, host: String, isActive: Bool, scopes: [String], isHealthy: Bool) {
+    init(login: String, host: String, isActive: Bool, scopes: [String], isHealthy: Bool) {
         self.login = login
         self.host = host
         self.isActive = isActive
@@ -31,7 +31,7 @@ public struct GitHubAccount: Sendable, Hashable, Identifiable {
 /// Typed failures for the `gh` CLI seam. Written to be read by a person AND by
 /// the assistant, matching `QuestError.message`'s convention — each message
 /// says what to do next, not just what went wrong.
-public enum GitHubCLIError: Error, Equatable, Sendable, LocalizedError {
+enum GitHubCLIError: Error, Equatable, Sendable, LocalizedError {
     /// `gh` was not found at any known install location or on `PATH`.
     case cliNotInstalled
     /// `gh` is installed but reports no accounts (`hosts` is empty/missing).
@@ -48,7 +48,7 @@ public enum GitHubCLIError: Error, Equatable, Sendable, LocalizedError {
     /// different remedy than a normal non-zero exit.
     case timedOut
 
-    public var message: String {
+    var message: String {
         switch self {
         case .cliNotInstalled:
             "GitHub CLI (`gh`) is not installed. Install it from https://cli.github.com "
@@ -72,13 +72,13 @@ public enum GitHubCLIError: Error, Equatable, Sendable, LocalizedError {
     /// matching `CredentialError`'s exact shape — otherwise a call site that
     /// only knows `Error.localizedDescription` gets Foundation's generic
     /// fallback instead of the message written for a person to read.
-    public var errorDescription: String? { message }
+    var errorDescription: String? { message }
 }
 
 /// The seam Task B's UI asks through. Mirrors `CredentialStore`'s shape: a
 /// narrow protocol the view depends on, with a real subprocess-backed
 /// conformance (`GitHubCLI`) and an in-memory test double below.
-public protocol GitHubAccountSource: Sendable {
+protocol GitHubAccountSource: Sendable {
     func accounts() throws -> [GitHubAccount]
     func token(for account: GitHubAccount) throws -> String
 }
@@ -101,12 +101,12 @@ private struct GitHubHostsPayload: Decodable {
 /// Namespace for the pure parser. Not a protocol requirement — an existential
 /// `any GitHubAccountSource` cannot carry a static member — so this lives as
 /// a free-standing enum that both `GitHubCLI` and the tests call directly.
-public enum GitHubAccountParsing {
+enum GitHubAccountParsing {
     /// Pure by design: no `Process`, no filesystem, no network. This is what
     /// makes the parsing testable against fixture strings instead of a real
     /// `gh` invocation — the subprocess wrapper (`GitHubCLI`) calls straight
     /// into this and adds nothing but I/O.
-    public static func parseAccounts(_ data: Data) throws -> [GitHubAccount] {
+    static func parseAccounts(_ data: Data) throws -> [GitHubAccount] {
         let payload: GitHubHostsPayload
         do {
             payload = try JSONDecoder().decode(GitHubHostsPayload.self, from: data)

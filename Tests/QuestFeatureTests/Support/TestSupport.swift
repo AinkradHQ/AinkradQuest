@@ -25,6 +25,8 @@ func makeSubject() -> (QuestMCPOperations, ProjectStore) {
 /// An in-memory `PluginDocumentStore`, so repository tests exercise the real
 /// encode/decode path without a host. It also counts reads, so a test can
 /// prove work was SKIPPED rather than merely that its result was the same.
+/// `@unchecked`: unlocked mutable state, safe because each test owns its
+/// instance and drives it from that one test's task.
 final class MemoryDocumentStore: PluginDocumentStore, @unchecked Sendable {
     private var storage: [String: Data] = [:]
     private var readCounts: [String: Int] = [:]
@@ -103,6 +105,8 @@ final class FailingSaveProjectRepository: ProjectRepository {
 /// secret), so tests can verify a failed Keychain delete surfaces rather than
 /// being swallowed. Non-deletion writes still succeed, matching
 /// `FailingSaveProjectRepository`'s "only the write under test fails" shape.
+/// `@unchecked`: unlocked mutable state, safe because each test owns its
+/// instance and drives it from that one test's task.
 final class DeleteFailingCredentialStore: CredentialStore, @unchecked Sendable {
     private var storage: [String: String] = [:]
     func secret(forRef ref: String) -> String? { storage[ref] }

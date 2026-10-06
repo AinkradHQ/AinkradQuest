@@ -8,47 +8,47 @@ import Foundation
 /// consequences" from "carry them out" means the dangerous half is fully
 /// testable without a store, and the plan a user confirms is the same value the
 /// store executes — the preview cannot drift from the action.
-public enum SchemePlan {
-    public struct Plan: Sendable, Equatable {
+enum SchemePlan {
+    struct Plan: Sendable, Equatable {
         /// The scheme this plan was diffed against. `applyScheme` refuses to
         /// apply a plan whose `current` no longer matches the stored scheme:
         /// a plan is a snapshot, and the store can be driven over MCP while a
         /// user sits on the confirm step. Without this, the later write silently
         /// reverts the earlier one whenever no item is left dangling.
-        public let current: StatusScheme
-        public let proposed: StatusScheme
-        public let added: [Status]
-        public let renamed: [Status]
-        public let recoloured: [Status]
-        public let recategorised: [Status]
-        public let removed: [Status]
+        let current: StatusScheme
+        let proposed: StatusScheme
+        let added: [Status]
+        let renamed: [Status]
+        let recoloured: [Status]
+        let recategorised: [Status]
+        let removed: [Status]
         /// removed status id → destination status id
-        public let reassignments: [String: String]
+        let reassignments: [String: String]
         /// Items whose `closedAt` will be stamped, because their status moved into `.done`.
-        public let closing: [UUID]
+        let closing: [UUID]
         /// Items whose `closedAt` will be cleared, because their status moved out of `.done`.
-        public let reopening: [UUID]
-        public let reordered: Bool
+        let reopening: [UUID]
+        let reordered: Bool
         /// How many items change status because their status is being removed.
-        public let itemsReassigned: Int
+        let itemsReassigned: Int
         /// Human- and agent-readable description of the whole plan.
-        public let summary: String
+        let summary: String
 
-        public var changesNothing: Bool {
+        var changesNothing: Bool {
             added.isEmpty && renamed.isEmpty && recoloured.isEmpty
                 && recategorised.isEmpty && removed.isEmpty && !reordered
         }
     }
 
-    public enum Outcome: Equatable {
+    enum Outcome: Equatable {
         case valid(Plan)
         case invalid(String)
 
-        public var value: Plan? { if case .valid(let plan) = self { plan } else { nil } }
-        public var message: String? { if case .invalid(let m) = self { m } else { nil } }
+        var value: Plan? { if case .valid(let plan) = self { plan } else { nil } }
+        var message: String? { if case .invalid(let m) = self { m } else { nil } }
     }
 
-    public static func plan(
+    static func plan(
         current: StatusScheme, proposed: StatusScheme,
         reassignments: [String: String],
         items: [WorkItem]

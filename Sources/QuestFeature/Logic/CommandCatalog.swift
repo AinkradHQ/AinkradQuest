@@ -3,7 +3,7 @@ import Foundation
 /// What ⌘K offers. `CommandAction` is a value, not a closure, because
 /// `AinkradCommandMenu<T: Hashable>` requires `Hashable` rows — the shell
 /// switches on the action instead of the menu carrying behaviour.
-public enum CommandAction: Hashable, Sendable {
+enum CommandAction: Hashable, Sendable {
     case openSurface(QuestSurface)
     case selectProject(UUID)
     case setStatus(String)
@@ -13,14 +13,14 @@ public enum CommandAction: Hashable, Sendable {
     case openSettings
 }
 
-public struct QuestCommand: Identifiable, Hashable, Sendable {
-    public let id: String
-    public let title: String
-    public let icon: String
-    public let detail: String?
-    public let action: CommandAction
+struct QuestCommand: Identifiable, Hashable, Sendable {
+    let id: String
+    let title: String
+    let icon: String
+    let detail: String?
+    let action: CommandAction
 
-    public init(
+    init(
         id: String, title: String, icon: String, detail: String? = nil,
         action: CommandAction
     ) {
@@ -32,11 +32,11 @@ public struct QuestCommand: Identifiable, Hashable, Sendable {
     }
 }
 
-public enum CommandCatalog {
+enum CommandCatalog {
     /// Order matters — it is the order rows appear. Project-scoped commands
     /// are omitted entirely when nothing is selected rather than offered and
     /// failing, which is the difference between a menu and a trap.
-    public static func entries(
+    static func entries(
         projects: [ProjectSummary],
         hasProject: Bool,
         statuses: [Status]
@@ -95,7 +95,7 @@ public enum CommandCatalog {
         return entries
     }
 
-    public static func filtered(_ entries: [QuestCommand], query: String) -> [QuestCommand] {
+    static func filtered(_ entries: [QuestCommand], query: String) -> [QuestCommand] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !needle.isEmpty else { return entries }
         return entries.filter {

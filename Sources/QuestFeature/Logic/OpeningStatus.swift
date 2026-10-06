@@ -11,7 +11,7 @@ extension StatusScheme {
     /// nonsense; falling back to the first status only if every status is a
     /// done status. `nil` when the scheme is empty, which the callers treat as
     /// "withhold the action" rather than "guess".
-    public var openingStatusID: String? {
+    var openingStatusID: String? {
         statuses.first { !isDone($0.id) }?.id ?? statuses.first?.id
     }
 }

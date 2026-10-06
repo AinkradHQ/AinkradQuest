@@ -11,13 +11,13 @@ import Foundation
 ///
 /// The rule is deliberately one place rather than a `.disabled(...)` repeated per
 /// button, so a new global action cannot be added and quietly left ungated.
-public enum GlobalActionGate {
+enum GlobalActionGate {
     /// - Parameters:
     ///   - surfaceModalOpen: a surface below the header is presenting its own
     ///     scoped modal (the item editors in List and Board).
     ///   - shellModalOpen: the shell itself is presenting one (new project,
     ///     attachment picker, command menu, trash, project settings).
-    public static func globalActionsEnabled(
+    static func globalActionsEnabled(
         surfaceModalOpen: Bool,
         shellModalOpen: Bool
     ) -> Bool {

@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-public enum LinkOpenError: Error, Equatable {
+enum LinkOpenError: Error, Equatable {
     case missingTarget(path: String)
     /// The target exists but is not a plain folder — a file, or a bundle such as
     /// a `.app`, which the system opener would LAUNCH rather than show.
@@ -9,7 +9,7 @@ public enum LinkOpenError: Error, Equatable {
     /// A URL reached `openWeb` that is not http(s).
     case notAWebAddress(url: String)
 
-    public var message: String {
+    var message: String {
         switch self {
         case .missingTarget(let path): "Nothing exists at \(path) any more."
         case .notAFolder(let path): "\(path) is not a folder, so Quest will not open it."
@@ -35,7 +35,7 @@ public enum LinkOpenError: Error, Equatable {
 /// - `openWeb` MUST re-check that the URL is http(s) and throw otherwise.
 ///   `LinkResolution` already decides this; repeating it here is deliberate
 ///   defense in depth — that is a pure decision, this is the irreversible act.
-@MainActor public protocol LinkOpener {
+@MainActor protocol LinkOpener {
     func reveal(_ url: URL) throws
     func openFolder(_ url: URL) throws
     func openWeb(_ url: URL) throws
@@ -50,20 +50,20 @@ public enum LinkOpenError: Error, Equatable {
 /// opening files and folders outside a granted root will start failing, and
 /// per-attachment security-scoped bookmarks (removed in M3 because nothing read
 /// them) come back, with this type as the reader that justifies them.
-@MainActor public struct WorkspaceLinkOpener: LinkOpener {
-    public init() {}
+@MainActor struct WorkspaceLinkOpener: LinkOpener {
+    init() {}
 
-    public func reveal(_ url: URL) throws {
+    func reveal(_ url: URL) throws {
         try requireExists(url)
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
-    public func openFolder(_ url: URL) throws {
+    func openFolder(_ url: URL) throws {
         try Self.validateFolder(url)
         NSWorkspace.shared.open(url)
     }
 
-    public func openWeb(_ url: URL) throws {
+    func openWeb(_ url: URL) throws {
         guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
             throw LinkOpenError.notAWebAddress(url: url.absoluteString)
         }
@@ -118,9 +118,9 @@ public enum LinkOpenError: Error, Equatable {
 
 /// Routes a link through `LinkResolution` and performs the result.
 /// Returns a reason when there was nothing to do, so the caller can show it.
-@MainActor public enum LinkOpening {
+@MainActor enum LinkOpening {
     @discardableResult
-    public static func open(_ link: Link, using opener: some LinkOpener) throws -> String? {
+    static func open(_ link: Link, using opener: some LinkOpener) throws -> String? {
         switch LinkResolution.route(for: link) {
         case .reveal(let url):
             try opener.reveal(url)

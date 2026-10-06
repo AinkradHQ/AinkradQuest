@@ -8,6 +8,7 @@ import SwiftUI
 /// which project is selected, so a trail restating it was a second row of
 /// chrome earning nothing.
 struct QuestHeader: View {
+    @Environment(\.ainkradSkin) private var skin
     @Binding var surface: QuestSurface
     @Binding var searchText: String
     var searchFocused: FocusState<Bool>.Binding
@@ -39,7 +40,7 @@ struct QuestHeader: View {
                 text: $searchText, placeholder: "Search items",
                 focus: searchFocused
             )
-            .frame(maxWidth: 280)
+            .frame(maxWidth: skin.size.s280)
             // The no-`size` initializer, so the button frame comes from the
             // kit's own default rather than a literal here. That overload
             // takes no `tooltip:`, so the hover hint and its VoiceOver

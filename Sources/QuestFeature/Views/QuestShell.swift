@@ -10,7 +10,7 @@ import SwiftUI
 /// modifier, handing back the `@Entry` default — an instance the host's
 /// overlay never renders, so every `report(...)` would be silently dropped.
 /// `QuestShellContent` therefore lives inside the host, not around it.
-public struct QuestShell: View {
+struct QuestShell: View {
     let store: ProjectStore
     let registry: ConnectionRegistry
     /// Part of the host `PluginLoader`'s entry-point signature and kept for it.
@@ -20,7 +20,7 @@ public struct QuestShell: View {
     let theme: HostTheme
     let documents: PluginDocumentStore
 
-    public init(
+    init(
         store: ProjectStore, registry: ConnectionRegistry, theme: HostTheme,
         documents: PluginDocumentStore
     ) {
@@ -30,7 +30,7 @@ public struct QuestShell: View {
         self.documents = documents
     }
 
-    public var body: some View {
+    var body: some View {
         QuestShellContent(store: store, registry: registry, documents: documents)
             .ainkradToastHost()
     }
@@ -64,6 +64,7 @@ extension EnvironmentValues {
 /// Carries no `HostTheme`: every view below resolves colour from
 /// `\.ainkradTheme`/`\.ainkradStatusColors`, which the host injects.
 struct QuestShellContent: View {
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: ProjectStore
     let registry: ConnectionRegistry
     let documents: PluginDocumentStore
@@ -133,8 +134,8 @@ struct QuestShellContent: View {
                     .padding(.top, AinkradSpacing.sm)
             }
 
-            // Also a structural zero: the `Divider()` below is the separation
-            // between sidebar and content, so any gap here would float it.
+            // Also a structural zero: no separator between sidebar and content
+            // (design bar, decision 18), and any gap here would float the sidebar.
             HStack(spacing: 0) {
                 QuestSidebar(
                     store: store, documents: documents,
@@ -142,8 +143,7 @@ struct QuestShellContent: View {
                     settingsProject: $settingsProject,
                     report: { report($0, status: $1) }
                 )
-                .frame(width: 232)
-                Divider()
+                .frame(width: skin.size.s232)
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

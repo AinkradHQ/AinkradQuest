@@ -9,7 +9,7 @@ import Observation
 /// what a re-sync could rebuild. Only this store's documents are backed up.
 @MainActor
 @Observable
-public final class OverlayStore {
+final class OverlayStore {
     /// Set when a write could not be completed, OR when a project's overlay
     /// could not be decoded on load. Reused (rather than adding a second
     /// property) for the same reason `ProjectStore` has only one banner:
@@ -18,14 +18,14 @@ public final class OverlayStore {
     /// corrupt-load warning for free. The in-memory change from a normal
     /// write failure is KEPT, exactly as `ProjectStore.persistenceFailure`
     /// does; a corrupt-load failure has no in-memory change to keep.
-    public private(set) var persistenceFailure: String?
+    private(set) var persistenceFailure: String?
     /// Typed successor to `persistenceFailure`, kept alongside it rather than
     /// replacing it: three call sites still read the string, and migrating
     /// them is follow-on work, not this property's job. Unlike
     /// `persistenceFailure`, an unrelated successful write must NOT downgrade
     /// an unresolved `.unreadable` — only resolving that specific project's
     /// condition (a fixed load, or `removeOverlay`) clears it.
-    public private(set) var health: OverlayHealth = .healthy {
+    private(set) var health: OverlayHealth = .healthy {
         didSet {
             // One hook on the property rather than one at each of the six
             // assignment sites: the rule is "when health changes", and six
@@ -41,11 +41,11 @@ public final class OverlayStore {
     /// Receives the OLD value too, because "became unreadable" is the event
     /// worth reporting and "was already unreadable" is not — without the
     /// previous value every re-evaluation would look like new news.
-    public var onHealthChanged: ((OverlayHealth, OverlayHealth) -> Void)?
+    var onHealthChanged: ((OverlayHealth, OverlayHealth) -> Void)?
     /// Bumped once per applied mutation, so a view can memoize derived work
     /// instead of recomputing on every body pass. Same contract as
     /// `ProjectStore.revision`: "in-memory state changed", not "durably saved".
-    public private(set) var revision: Int = 0
+    private(set) var revision: Int = 0
 
     private let repository: any ProjectRepository
     /// Loaded lazily per project and cached, so repeated reads do not re-decode.
@@ -66,7 +66,7 @@ public final class OverlayStore {
     private var map: LinkMap
     private var config: HubConfig
 
-    public init(repository: any ProjectRepository) {
+    init(repository: any ProjectRepository) {
         self.repository = repository
         self.map = repository.loadLinkMap()
         self.config = repository.loadHubConfig()
@@ -77,7 +77,7 @@ public final class OverlayStore {
     /// "has this project been touched before". A corrupt overlay's failure is
     /// surfaced separately via `persistenceFailure`, and further writes for
     /// that project are blocked — see `unreadableProjects`.
-    public func overlay(for projectID: UUID) -> ProjectOverlay {
+    func overlay(for projectID: UUID) -> ProjectOverlay {
         if let cached = overlays[projectID] { return cached }
         do {
             let loaded = try repository.loadOverlay(projectID) ?? ProjectOverlay(projectID: projectID)
@@ -101,7 +101,7 @@ public final class OverlayStore {
     /// has touched this project this session — a caller like
     /// `OverlayMigration` that needs to know WHETHER a write would be
     /// swallowed, not just get the empty overlay back, reads this.
-    public func isUnreadable(_ projectID: UUID) -> Bool {
+    func isUnreadable(_ projectID: UUID) -> Bool {
         _ = overlay(for: projectID)
         return unreadableProjects.contains(projectID)
     }
@@ -113,13 +113,13 @@ public final class OverlayStore {
     /// don't need this — `persistenceFailure` already surfaces it to the
     /// user — so the result is discardable.
     @discardableResult
-    public func update(projectID: UUID, _ mutate: (inout ProjectOverlay) -> Void) -> Bool {
+    func update(projectID: UUID, _ mutate: (inout ProjectOverlay) -> Void) -> Bool {
         var overlay = overlay(for: projectID)
         mutate(&overlay)
         return commit(overlay)
     }
 
-    public func updateItem(
+    func updateItem(
         _ itemID: UUID, in projectID: UUID,
         _ mutate: (inout ItemOverlay) -> Void
     ) {
@@ -134,7 +134,7 @@ public final class OverlayStore {
         commit(overlay)
     }
 
-    public func removeOverlay(for projectID: UUID) {
+    func removeOverlay(for projectID: UUID) {
         overlays.removeValue(forKey: projectID)
         unreadableProjects.remove(projectID)
         writeBlockedProjects.remove(projectID)
@@ -150,16 +150,16 @@ public final class OverlayStore {
         revision += 1
     }
 
-    public func linkMap() -> LinkMap { map }
+    func linkMap() -> LinkMap { map }
 
-    public func updateLinkMap(_ mutate: (inout LinkMap) -> Void) {
+    func updateLinkMap(_ mutate: (inout LinkMap) -> Void) {
         mutate(&map)
         persist { try repository.saveLinkMap(map) }
     }
 
-    public func hubConfig() -> HubConfig { config }
+    func hubConfig() -> HubConfig { config }
 
-    public func updateHubConfig(_ mutate: (inout HubConfig) -> Void) {
+    func updateHubConfig(_ mutate: (inout HubConfig) -> Void) {
         mutate(&config)
         persist { try repository.saveHubConfig(config) }
     }

@@ -1,11 +1,11 @@
 import Foundation
 
-public enum CredentialError: Error, Equatable, LocalizedError {
+enum CredentialError: Error, Equatable, Sendable, LocalizedError {
     /// Which Keychain operation failed, so `message` can name it accurately.
     /// `ConnectionRegistry.removeConnection` composes this into a larger
     /// sentence about a failed DELETE — a `save`-worded message there produced
     /// a self-contradictory "…could not be deleted…: Could not save…".
-    public enum Operation: Equatable {
+    enum Operation: Equatable, Sendable {
         case save
         case delete
     }
@@ -17,7 +17,7 @@ public enum CredentialError: Error, Equatable, LocalizedError {
     /// "The operation couldn't be completed. (QuestFeature.CredentialError
     /// error 0.)", for the single most important failure in the credential
     /// story.
-    public var message: String {
+    var message: String {
         switch self {
         case .keychain(let operation, let status):
             let verb = operation == .save ? "save" : "delete"
@@ -28,13 +28,13 @@ public enum CredentialError: Error, Equatable, LocalizedError {
 
     /// `LocalizedError` conformance routes through the same text, so any call
     /// site that only knows `Error.localizedDescription` still gets it.
-    public var errorDescription: String? { message }
+    var errorDescription: String? { message }
 }
 
 /// The seam that keeps secrets out of documents. Everything above it — the
 /// registry, the UI, the future adapters — asks for a secret by ref and never
 /// learns where it is kept.
-public protocol CredentialStore: Sendable {
+protocol CredentialStore: Sendable {
     func secret(forRef ref: String) -> String?
     /// Passing `nil` deletes the entry. Throws when the underlying store
     /// refused the write: a silently-lost credential looks exactly like a

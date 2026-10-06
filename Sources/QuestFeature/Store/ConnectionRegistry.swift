@@ -6,36 +6,36 @@ import Observation
 /// never into `connections`, which is persisted in the clear.
 @MainActor
 @Observable
-public final class ConnectionRegistry {
-    public private(set) var connections: [Connection] = []
+final class ConnectionRegistry {
+    private(set) var connections: [Connection] = []
     /// Set when a write to the repository could not be completed. The
     /// in-memory change is kept, exactly as `ProjectStore` does.
-    public private(set) var persistenceFailure: String?
+    private(set) var persistenceFailure: String?
 
     private let repository: any ProjectRepository
     private let credentials: any CredentialStore
 
-    public init(repository: any ProjectRepository, credentials: any CredentialStore) {
+    init(repository: any ProjectRepository, credentials: any CredentialStore) {
         self.repository = repository
         self.credentials = credentials
         self.connections = repository.loadConnections()
     }
 
-    public func connection(_ id: UUID) -> Connection? {
+    func connection(_ id: UUID) -> Connection? {
         connections.first { $0.id == id }
     }
 
-    public func connections(for provider: ProviderKind) -> [Connection] {
+    func connections(for provider: ProviderKind) -> [Connection] {
         connections.filter { $0.provider == provider }
     }
 
-    public func secret(for id: UUID) -> String? {
+    func secret(for id: UUID) -> String? {
         guard let connection = connection(id) else { return nil }
         return credentials.secret(forRef: connection.credentialRef)
     }
 
     @discardableResult
-    public func addConnection(
+    func addConnection(
         provider: ProviderKind, accountLabel: String,
         accountIdentifier: String, baseURL: URL?,
         secret: String, tokenProvenance: TokenProvenance = .manual
@@ -66,7 +66,7 @@ public final class ConnectionRegistry {
     /// `boundProjectCount` is passed in rather than read, because the registry
     /// deliberately knows nothing about projects — the caller (the settings
     /// view, which holds both) counts them.
-    public func removeConnection(_ id: UUID, boundProjectCount: Int) throws {
+    func removeConnection(_ id: UUID, boundProjectCount: Int) throws {
         guard let index = connections.firstIndex(where: { $0.id == id }) else {
             throw QuestError.connectionNotFound(id)
         }

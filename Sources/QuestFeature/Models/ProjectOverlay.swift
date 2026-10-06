@@ -2,13 +2,13 @@ import Foundation
 
 /// One logged stretch of work, entered by hand. Session time is DERIVED from
 /// transcripts and never stored here — see the design's "derived layer".
-public struct TimeEntry: Codable, Sendable, Hashable, Identifiable {
-    public let id: UUID
-    public var minutes: Int
-    public var spentOn: Date
-    public var note: String
+struct TimeEntry: Codable, Sendable, Hashable, Identifiable {
+    let id: UUID
+    var minutes: Int
+    var spentOn: Date
+    var note: String
 
-    public init(id: UUID, minutes: Int, spentOn: Date, note: String = "") {
+    init(id: UUID, minutes: Int, spentOn: Date, note: String = "") {
         self.id = id
         self.minutes = minutes
         self.spentOn = spentOn
@@ -19,7 +19,7 @@ public struct TimeEntry: Codable, Sendable, Hashable, Identifiable {
         case id, minutes, spentOn, note
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         minutes = try container.decode(Int.self, forKey: .minutes)
@@ -35,15 +35,15 @@ public struct TimeEntry: Codable, Sendable, Hashable, Identifiable {
 /// directory the slug was derived FROM, so moving a repo makes the orphaning
 /// detectable rather than silent. `label` is stored rather than re-read,
 /// because a raw UUID is unusable in a list and the transcript may be gone.
-public struct SessionAttachment: Codable, Sendable, Hashable, Identifiable {
-    public let id: UUID
-    public var sessionID: String
-    public var pathSlug: String
-    public var resolvedPath: String?
-    public var label: String
-    public var attachedAt: Date
+struct SessionAttachment: Codable, Sendable, Hashable, Identifiable {
+    let id: UUID
+    var sessionID: String
+    var pathSlug: String
+    var resolvedPath: String?
+    var label: String
+    var attachedAt: Date
 
-    public init(
+    init(
         id: UUID, sessionID: String, pathSlug: String,
         resolvedPath: String? = nil, label: String = "", attachedAt: Date = Date()
     ) {
@@ -59,7 +59,7 @@ public struct SessionAttachment: Codable, Sendable, Hashable, Identifiable {
         case id, sessionID, pathSlug, resolvedPath, label, attachedAt
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         sessionID = try container.decode(String.self, forKey: .sessionID)
@@ -71,16 +71,16 @@ public struct SessionAttachment: Codable, Sendable, Hashable, Identifiable {
 }
 
 /// Per-item overlay: yours, never sent to a provider, irreplaceable.
-public struct ItemOverlay: Codable, Sendable, Hashable {
-    public var notes: String
+struct ItemOverlay: Codable, Sendable, Hashable {
+    var notes: String
     /// A position in YOUR ordering, independent of `WorkItem.priority`, which
     /// is the team's and becomes provider truth once a project is linked.
     /// Sparse: most items have none.
-    public var personalOrder: Int?
-    public var timeEntries: [TimeEntry]
-    public var sessions: [SessionAttachment]
+    var personalOrder: Int?
+    var timeEntries: [TimeEntry]
+    var sessions: [SessionAttachment]
 
-    public init(
+    init(
         notes: String = "", personalOrder: Int? = nil,
         timeEntries: [TimeEntry] = [], sessions: [SessionAttachment] = []
     ) {
@@ -93,7 +93,7 @@ public struct ItemOverlay: Codable, Sendable, Hashable {
     /// Whether this record carries nothing worth persisting, so the store can
     /// prune it. `personalOrder == 0` is a real position — top of the list —
     /// and must NOT read as empty.
-    public var isEmpty: Bool {
+    var isEmpty: Bool {
         notes.isEmpty && personalOrder == nil && timeEntries.isEmpty && sessions.isEmpty
     }
 
@@ -101,7 +101,7 @@ public struct ItemOverlay: Codable, Sendable, Hashable {
         case notes, personalOrder, timeEntries, sessions
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         personalOrder = try container.decodeIfPresent(Int.self, forKey: .personalOrder)
@@ -115,28 +115,28 @@ public struct ItemOverlay: Codable, Sendable, Hashable {
 /// Backed up; the project document is not. Keyed by the project's LOCAL id,
 /// never by a provider key, so linking or unlinking a project never rewrites
 /// a single overlay key.
-public struct ProjectOverlay: Codable, Sendable, Hashable {
-    public let projectID: UUID
-    public var repos: [AttachedRepo]
-    public var vaultFolder: String?
-    public var planFile: String?
-    public var notes: String
-    public var personalOrder: Int?
+struct ProjectOverlay: Codable, Sendable, Hashable {
+    let projectID: UUID
+    var repos: [AttachedRepo]
+    var vaultFolder: String?
+    var planFile: String?
+    var notes: String
+    var personalOrder: Int?
     /// Keyed by `UUID.uuidString`, NOT by `UUID`. Swift encodes a `[UUID: T]`
     /// dictionary as a flat array of alternating keys and values, which is both
     /// unreadable in the snapshot a person may have to inspect by hand and
     /// impossible to decode leniently from `{}`. String keys give a real JSON
     /// object. Reach items through `item(_:)` / `setItem(_:for:)`, never the
     /// raw dictionary.
-    public var items: [String: ItemOverlay]
+    var items: [String: ItemOverlay]
 
-    public func item(_ itemID: UUID) -> ItemOverlay? { items[itemID.uuidString] }
+    func item(_ itemID: UUID) -> ItemOverlay? { items[itemID.uuidString] }
 
-    public mutating func setItem(_ overlay: ItemOverlay?, for itemID: UUID) {
+    mutating func setItem(_ overlay: ItemOverlay?, for itemID: UUID) {
         items[itemID.uuidString] = overlay
     }
 
-    public init(projectID: UUID) {
+    init(projectID: UUID) {
         self.projectID = projectID
         self.repos = []
         self.vaultFolder = nil
@@ -148,7 +148,7 @@ public struct ProjectOverlay: Codable, Sendable, Hashable {
 
     /// True when nothing here is worth keeping. An `items` entry holding an
     /// EMPTY `ItemOverlay` does not count, or pruning could never reclaim it.
-    public var isEmpty: Bool {
+    var isEmpty: Bool {
         repos.isEmpty && vaultFolder == nil && planFile == nil
             && notes.isEmpty && personalOrder == nil
             && items.values.allSatisfy(\.isEmpty)
@@ -158,7 +158,7 @@ public struct ProjectOverlay: Codable, Sendable, Hashable {
         case projectID, repos, vaultFolder, planFile, notes, personalOrder, items
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         projectID = try container.decode(UUID.self, forKey: .projectID)
         repos = try container.decodeIfPresent([AttachedRepo].self, forKey: .repos) ?? []

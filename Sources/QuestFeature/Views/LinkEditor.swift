@@ -82,43 +82,41 @@ struct LinkListView: View {
     var opener: any LinkOpener = WorkspaceLinkOpener()
 
     @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
             ForEach(links) { link in
-                let inert = isInert(link)
-                HStack(spacing: AinkradSpacing.xs) {
-                    Button {
-                        open(link)
-                    } label: {
-                        HStack(spacing: AinkradSpacing.xs) {
-                            AinkradIconGlyph(systemName: LinkSymbol.name(for: link.scheme))
-                            Text(link.label)
-                            if let repo = link.repo {
-                                Text(repo).font(.caption)
-                                    .foregroundStyle(theme.foreground.opacity(0.6))
-                            }
-                        }
-                        .foregroundStyle(
-                            inert
-                                ? theme.foreground.opacity(0.5)
-                                : theme.foreground)
+                AinkradListRow(
+                    onTap: { open(link) },
+                    leading: {
+                        AinkradIconGlyph(systemName: LinkSymbol.name(for: link.scheme))
+                            // An inert link cannot be opened; the kit row has no
+                            // dimmed title, so the glyph carries that tone.
+                            .opacity(isInert(link) ? skin.opacity.o50 : 1)
+                    },
+                    title: link.label,
+                    trailing: {
+                        if let repo = link.repo { AinkradCaption(repo) }
+                        AinkradIconButton(systemName: "minus.circle") { remove(link) }
+                            .help("Remove link")
+                            .accessibilityLabel("Remove link")
                     }
-                    .buttonStyle(.plain)
-                    // Both label and identifier are agent-writable, and the row
-                    // only shows the label — so without this the destination of
-                    // a clickable row is unobservable before clicking.
-                    .help(link.identifier)
-                    // `.help` is mouse-only, and the identifier is the sole
-                    // mitigation cited for accepting loopback and userinfo
-                    // URLs — so VoiceOver must announce it too, not just a
-                    // pointer hover.
-                    .accessibilityLabel("\(link.scheme.rawValue) link: \(link.identifier)")
-                    Spacer()
-                    AinkradIconButton(systemName: "minus.circle") { remove(link) }
-                        .help("Remove link")
-                        .accessibilityLabel("Remove link")
-                }
+                )
+                // Both label and identifier are agent-writable, and the row
+                // only shows the label — so without this the destination of
+                // a clickable row is unobservable before clicking.
+                .help(link.identifier)
+                // `.help` is mouse-only, and the identifier is the sole
+                // mitigation cited for accepting loopback and userinfo
+                // URLs — so VoiceOver must announce it too, not just a
+                // pointer hover. The tap-gesture row exposes no action of its
+                // own, so it is one element: open by default, remove by name.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(link.scheme.rawValue) link: \(link.identifier)")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { open(link) }
+                .accessibilityAction(named: "Remove link") { remove(link) }
             }
         }
         .foregroundStyle(theme.foreground)
