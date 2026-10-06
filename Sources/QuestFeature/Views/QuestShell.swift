@@ -134,8 +134,8 @@ struct QuestShellContent: View {
                     .padding(.top, AinkradSpacing.sm)
             }
 
-            // Also a structural zero: the `Divider()` below is the separation
-            // between sidebar and content, so any gap here would float it.
+            // Also a structural zero: no separator between sidebar and content
+            // (design bar, decision 18), and any gap here would float the sidebar.
             HStack(spacing: 0) {
                 QuestSidebar(
                     store: store, documents: documents,
@@ -144,7 +144,6 @@ struct QuestShellContent: View {
                     report: { report($0, status: $1) }
                 )
                 .frame(width: skin.size.s232)
-                Divider()
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
