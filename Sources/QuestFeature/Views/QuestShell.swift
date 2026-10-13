@@ -65,6 +65,7 @@ extension EnvironmentValues {
 /// `\.ainkradTheme`/`\.ainkradStatusColors`, which the host injects.
 struct QuestShellContent: View {
     @Environment(\.ainkradSkin) private var skin
+    @Environment(\.ainkradPaneIsFocused) private var isFocused
     @Bindable var store: ProjectStore
     let registry: ConnectionRegistry
     let documents: PluginDocumentStore
@@ -337,7 +338,9 @@ struct QuestShellContent: View {
     /// a table nothing reads, and let the chord shown on a button drift from
     /// the chord that actually fires.
     @ViewBuilder private var shortcuts: some View {
-        ForEach(KeyBindings.all, id: \.id) { binding in
+        // Only the focused pane claims keys: an unfocused one would take the
+        // chord from the pane you are working in, or from the host (FD36).
+        ForEach(isFocused ? KeyBindings.all : [], id: \.id) { binding in
             HiddenShortcutButton(
                 KeyboardShortcut(KeyEquivalent(binding.key), modifiers: binding.modifiers.eventModifiers)
             ) { activate(binding.id) }
