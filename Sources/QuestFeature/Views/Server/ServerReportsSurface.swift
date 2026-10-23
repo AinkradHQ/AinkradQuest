@@ -225,7 +225,7 @@ struct FlowScatter: View {
                     name: "Lead (created → done)",
                     points: done.enumerated().map { i, t in
                         AinkradChartPoint(x: Double(i + 1), y: Double(t.lead) / day, label: label(t))
-                    }, tone: .muted),
+                    }, tone: .accentViolet),
             ],
             threshold: flow?.p85Cycle.map {
                 AinkradChartThreshold(

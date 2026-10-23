@@ -24,7 +24,7 @@ struct ServerBacklogSurface: View {
         let groups = BacklogLogic.groups(shown, epics: snapshot.epics, all: snapshot.issues)
         return VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             BacklogFilters(store: store, project: project, snapshot: snapshot, order: order, filter: $filter) {
-                Faint("Rank order · \(shown.count) items · \(SprintLogic.points(shown)) pts")
+                Faint("Rank order · \(shown.count) items · \(SprintLogic.points(shown)) pts").fixedSize()
                 if project.mode == .scrum, let planned = snapshot.sprints.last(where: { $0.state == "planned" }) {
                     AinkradButton(title: "Plan sprint \(planned.name) →", style: .secondary, action: planSprint)
                         .compact().fixedSize()

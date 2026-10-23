@@ -56,6 +56,12 @@ struct ServerProjectSettings: View {
         .frame(width: skin.size.s460)
     }
 
+    /// A wrapping line of muted help.
+    private func note(_ text: String) -> some View {
+        Text(verbatim: text).questFont("t13").foregroundStyle(skin.color(skin.text.faint))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
     // MARK: - Project
 
     private var projectSection: some View {
@@ -93,7 +99,7 @@ struct ServerProjectSettings: View {
             $0.state != "done"
         }
         return VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            Faint("0 means no limit. The server refuses a move into a full column, agents' moves too.", size: "t13")
+            note("0 means no limit. The server refuses a move into a full column, agents' moves too.")
             ForEach(columns) { column in
                 AinkradFormRow(title: column.title, help: column.limit.map { "now \($0)" } ?? "now no limit") {
                     AinkradStepper(
@@ -158,11 +164,9 @@ struct ServerProjectSettings: View {
         let members = snapshot?.capacity.members ?? []
         return VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             if members.isEmpty {
-                Faint("No team owns this project, so there is no capacity to set.", size: "t13")
+                note("No team owns this project, so there is no capacity to set.")
             } else {
-                Faint(
-                    "Points each member takes on per sprint; a commit over the total needs a reason. 0 clears it.",
-                    size: "t13")
+                note("Points each member takes on per sprint; a commit over the total needs a reason. 0 clears it.")
                 ForEach(members) { member in
                     HStack(spacing: AinkradSpacing.sm) {
                         ActorFigure(actor: .agent(member.agentID), store: store)

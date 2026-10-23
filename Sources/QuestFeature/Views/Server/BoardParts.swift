@@ -187,7 +187,7 @@ struct KanbanStats: View {
 
     var body: some View {
         HStack(spacing: AinkradSpacing.lg) {
-            stat("Cycle time", flow?.meanCycle.map(FlowFormat.duration), flow.map { "avg, \($0.days) days" })
+            stat("Cycle time", flow?.meanCycle.map(FlowFormat.duration), flow.map { _ in "avg" })
             stat("Lead time", flow?.meanLead.map(FlowFormat.duration), nil)
             stat("Throughput", flow.map { "\(Int($0.perWeek.rounded()))" }, flow.map { _ in "/ week" })
         }
