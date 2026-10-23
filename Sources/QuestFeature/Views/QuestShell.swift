@@ -19,20 +19,36 @@ struct QuestShell: View {
     /// injects. This is the only `HostTheme` left in `Views/`.
     let theme: HostTheme
     let documents: PluginDocumentStore
+    /// Server mode (E12): once connected to Citadel, Quest reads the server instead of local files (decision #27).
+    let server: QuestServerStore
+    let openCitadel: () -> Void
+    @State private var showingConnect = false
 
     init(
         store: ProjectStore, registry: ConnectionRegistry, theme: HostTheme,
-        documents: PluginDocumentStore
+        documents: PluginDocumentStore, server: QuestServerStore, openCitadel: @escaping () -> Void
     ) {
         self.store = store
         self.registry = registry
         self.theme = theme
         self.documents = documents
+        self.server = server
+        self.openCitadel = openCitadel
     }
 
     var body: some View {
-        QuestShellContent(store: store, registry: registry, documents: documents)
-            .ainkradToastHost()
+        Group {
+            if server.isServerMode {
+                ServerShell(store: server, openCitadel: openCitadel)
+            } else {
+                QuestShellContent(store: store, registry: registry, documents: documents)
+                    .environment(\.questConnectServer, QuestNewProjectAction { showingConnect = true })
+                    .ainkradModal(isPresented: $showingConnect) {
+                        ServerConnectCard(store: server) { showingConnect = false }
+                    }
+            }
+        }
+        .ainkradToastHost()
     }
 }
 
@@ -257,7 +273,8 @@ struct QuestShellContent: View {
             switch surface {
             case .today:
                 TodaySurface(store: store, report: { report($0, status: $1) }, onOpen: open)
-            case .overview, .list, .board, .timeline:
+            // Backlog, Sprint and Reports are server-mode surfaces (`ServerShell`); never offered here.
+            case .overview, .list, .board, .timeline, .backlog, .sprint, .reports:
                 if let id = selectedProject, let document = store.openProject(id) {
                     switch surface {
                     case .overview:
@@ -275,7 +292,7 @@ struct QuestShellContent: View {
                             searchText: $searchText,
                             report: { report($0, status: $1) })
                     case .timeline: TimelineSurface(document: document)
-                    case .today: EmptyView()
+                    case .today, .backlog, .sprint, .reports: EmptyView()
                     }
                 } else {
                     let reason = EmptyReason.classify(
