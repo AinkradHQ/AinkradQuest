@@ -74,7 +74,8 @@ extension QuestServerStore {
 
     func updateProject(_ project: ServerProject, name: String, kanban: Bool, ownerApproves: Bool) async {
         guard let server else { return }
-        if let refused = await server.updateProject(project.id, name: name, kanban: kanban, ownerApproves: ownerApproves)
+        if let refused = await server.updateProject(
+            project.id, name: name, kanban: kanban, ownerApproves: ownerApproves)
         {
             return refuse("Couldn't save \(project.name)", refused)
         }

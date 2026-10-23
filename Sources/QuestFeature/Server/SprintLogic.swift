@@ -73,7 +73,7 @@ enum SprintLogic {
         return byOwner.map {
             AssigneeLoad(actor: $0.key, points: $0.value, capacity: team.capacity(of: $0.key) ?? share)
         }
-            .sorted { ($0.points, $1.actor.sortKey) > ($1.points, $0.actor.sortKey) }
+        .sorted { ($0.points, $1.actor.sortKey) > ($1.points, $0.actor.sortKey) }
     }
 
     /// The ideal line: from the first day's points to zero on the last day.

@@ -101,7 +101,11 @@ final class QuestServerStore {
     @ObservationIgnored private var lastSaved = Date.distantPast
 
     /// What an event asks to read again: one project's snapshot when the event names it, else every project's.
-    enum Reload: Hashable { case projectList, projects, project(Int64), approvals, runs, agents, requirements }
+    enum Reload: Hashable {
+        case projectList, projects
+        case project(Int64)
+        case approvals, runs, agents, requirements
+    }
 
     /// The project settings sheet, open on a section ("Raise limit…" opens it on the WIP limits).
     var settingsSheet: SettingsSection?

@@ -142,7 +142,9 @@ struct ServerReportsSurface: View {
     /// The retro's proposed knowledge entries, waiting ones first. Deciding them is the person's call in Citadel
     /// (decision #48); here they are read.
     @ViewBuilder private var retro: some View {
-        let items = (snapshot.review?.retro ?? []).sorted { ($0.status != "proposed" ? 1 : 0) < ($1.status != "proposed" ? 1 : 0) }
+        let items = (snapshot.review?.retro ?? []).sorted {
+            ($0.status != "proposed" ? 1 : 0) < ($1.status != "proposed" ? 1 : 0)
+        }
         if items.isEmpty {
             Faint("No retro proposals from the last sprint.", size: "t13")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

@@ -48,7 +48,10 @@ struct ServerInsightsTests {
         #expect(team.capacity(of: .agent(3)) == 11 && team.capacity(of: .agent(1)) == nil)
         #expect(team.members.last?.role == "product_owner")
         let loads = SprintLogic.loads(
-            [issue(1, owner: .agent(3), points: 11), issue(2, owner: .agent(4), points: 5), issue(3, owner: .agent(9))],
+            [
+                issue(1, owner: .agent(3), points: 11), issue(2, owner: .agent(4), points: 5),
+                issue(3, owner: .agent(9)),
+            ],
             capacity: 19, team: team)
         #expect(loads.map(\.capacity) == [11, 8, 7])
         #expect(loads[0].isFull && !loads[1].isFull)
@@ -84,7 +87,9 @@ struct ServerInsightsTests {
                 #"{"created_at": "2026-10-20T00:00:00.000Z", "started_at": "2026-10-21T00:00:00.000Z", "age_secs": 86400}"#
             ))
         #expect(ServerItemDetail.flowLine(open) == "age 1.0d")
-        #expect(ServerItemDetail.flowLine(IssueFlowInfo(cycle: 3_600, lead: 7_200, age: 7_200)) == "cycle 1h · lead 2h · age 2h")
+        #expect(
+            ServerItemDetail.flowLine(IssueFlowInfo(cycle: 3_600, lead: 7_200, age: 7_200))
+                == "cycle 1h · lead 2h · age 2h")
         #expect(ServerItemDetail.flowLine(nil) == nil)
     }
 
@@ -176,7 +181,8 @@ struct ServerStoreMinor9Tests {
     @Test("a refusal with an error id offers Copy error; one without does not")
     func copyError() {
         let store = QuestServerStore(documents: MemoryDocumentStore(), secrets: Secrets())
-        store.refuse("Couldn't commit S5", ServerAnswer(status: 409, code: "conflict", message: "over", errorID: "err_01J"))
+        store.refuse(
+            "Couldn't commit S5", ServerAnswer(status: 409, code: "conflict", message: "over", errorID: "err_01J"))
         #expect(store.notice?.actionTitle == "Copy error")
         #expect(store.notice?.message == "Couldn't commit S5: over")
         store.refuse("Couldn't commit S5", ServerAnswer(status: 0, code: "unreachable", message: "x"))
