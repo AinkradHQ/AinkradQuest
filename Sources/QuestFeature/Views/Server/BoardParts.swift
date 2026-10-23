@@ -40,7 +40,11 @@ struct ColumnPanel<Cards: View>: View {
                 .allowsHitTesting(false)
         )
         .animation(AinkradMotion.present, value: targeted)
-        .dropDestination(for: String.self) { ids, _ in onDrop(ids) } isTargeted: { targeted = $0 }
+        .dropDestination(for: String.self) { ids, _ in
+            onDrop(ids)
+        } isTargeted: {
+            targeted = $0
+        }
     }
 
     private var stroke: Color {
@@ -124,8 +128,13 @@ struct BurndownTile: View {
                 CapsLabel(text: "Burndown")
                 Spacer()
                 Faint(
-                    [left.map { "\($0) pts left" }, report.flatMap { SprintLogic.pace(burndown: $0.burndown, start: sprint?.startsOn, end: sprint?.endsOn) }]
-                        .compactMap { $0 }.joined(separator: " · "))
+                    [
+                        left.map { "\($0) pts left" },
+                        report.flatMap {
+                            SprintLogic.pace(burndown: $0.burndown, start: sprint?.startsOn, end: sprint?.endsOn)
+                        },
+                    ]
+                    .compactMap { $0 }.joined(separator: " · "))
             }
             BurndownChart(report: report, sprint: sprint).frame(height: skin.size.s80)
         }
@@ -154,7 +163,11 @@ struct BurndownChart: View {
                     isDashed: true),
                 AinkradChartSeries(
                     name: "Actual",
-                    points: points.map { AinkradChartPoint(x: day($0.day), y: Double($0.left), label: $0.day.formatted(date: .abbreviated, time: .omitted)) },
+                    points: points.map {
+                        AinkradChartPoint(
+                            x: day($0.day), y: Double($0.left),
+                            label: $0.day.formatted(date: .abbreviated, time: .omitted))
+                    },
                     tone: .accentSecondary),
             ],
             emptyMessage: "No burndown yet", format: { "\(Int($0)) pts" })

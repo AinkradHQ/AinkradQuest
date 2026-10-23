@@ -1,6 +1,6 @@
-import QuestCitadelAPI
 import Foundation
 import OpenAPIRuntime
+import QuestCitadelAPI
 
 /// Why a call to the server failed, in the terms the connect card speaks.
 enum ServerFailure: Error, Equatable {

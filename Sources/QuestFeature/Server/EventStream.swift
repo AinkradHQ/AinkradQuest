@@ -1,5 +1,5 @@
-import QuestCitadelAPI
 import Foundation
+import QuestCitadelAPI
 
 /// The live event stream with replay (E10.2): catch up over HTTP from the last seq read (`GET /events?after=`),
 /// then hold the WebSocket open with `Last-Event-ID` set to that seq, ping it, and on any drop start over after a

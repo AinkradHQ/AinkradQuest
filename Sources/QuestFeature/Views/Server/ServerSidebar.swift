@@ -19,7 +19,8 @@ struct ServerSidebar: View {
                     selection: Binding(
                         get: { String(store.company?.id ?? 0) },
                         set: { if let id = Int64($0) { store.select(company: id) } }),
-                    subtitle: "Quest · \(store.companies.count) \(store.companies.count == 1 ? "company" : "companies")")
+                    subtitle: "Quest · \(store.companies.count) \(store.companies.count == 1 ? "company" : "companies")"
+                )
             }
             AinkradListRow(
                 isSelected: surface == .today, onTap: { surface = .today },
@@ -35,7 +36,9 @@ struct ServerSidebar: View {
                                 store.select(project: project.id)
                                 if surface == .today { surface = .backlog }
                             },
-                            leading: { AinkradIconGlyph(systemName: project.mode == .kanban ? "rectangle.split.3x1" : "flag") },
+                            leading: {
+                                AinkradIconGlyph(systemName: project.mode == .kanban ? "rectangle.split.3x1" : "flag")
+                            },
                             title: project.name, trailing: { Faint(badge(project), size: "t10") })
                     }
                 }

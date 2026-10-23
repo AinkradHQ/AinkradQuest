@@ -96,7 +96,9 @@ final class QuestServerStore {
         self.session = session
         self.connector = connector ?? URLSessionEventSocket.connector(session: session)
         self.settings =
-            documents.data(forKey: ServerSettings.key).flatMap { try? JSONDecoder().decode(ServerSettings.self, from: $0) }
+            documents.data(forKey: ServerSettings.key).flatMap {
+                try? JSONDecoder().decode(ServerSettings.self, from: $0)
+            }
             ?? ServerSettings()
         self.serverDraft = settings.server ?? ""
     }

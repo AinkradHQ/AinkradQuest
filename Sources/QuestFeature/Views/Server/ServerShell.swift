@@ -88,10 +88,12 @@ struct ServerShell: View {
                     ServerBacklogSurface(store: store, project: project, snapshot: snapshot, search: searchText) {
                         surface = .sprint
                     }
-                case .sprint: SprintPlanningSurface(store: store, project: project, snapshot: snapshot, openCitadel: openCitadel)
-                case .board: ServerBoardSurface(store: store, project: project, snapshot: snapshot, search: searchText) {
-                    surface = .reports
-                }
+                case .sprint:
+                    SprintPlanningSurface(store: store, project: project, snapshot: snapshot, openCitadel: openCitadel)
+                case .board:
+                    ServerBoardSurface(store: store, project: project, snapshot: snapshot, search: searchText) {
+                        surface = .reports
+                    }
                 case .reports: ServerReportsSurface(store: store, project: project, snapshot: snapshot)
                 case .timeline: ServerTimelineSurface(project: project, snapshot: snapshot)
                 case .today: EmptyView()

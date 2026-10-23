@@ -70,7 +70,8 @@ extension CitadelServer {
     /// The company's runs that are live now: the cards' "working" lines.
     func liveRuns(company: Int64) async -> [ServerRun]? {
         await read("listCompanyRuns") {
-            guard case .ok(let ok) = try await client.listCompanyRuns(path: .init(id: company), query: .init(live: true))
+            guard
+                case .ok(let ok) = try await client.listCompanyRuns(path: .init(id: company), query: .init(live: true))
             else { return nil }
             return try ok.body.json.items.map(ServerRun.init)
         }
@@ -143,7 +144,9 @@ extension CitadelServer {
             case .before(let anchor): .init(anchorIssueId: anchor, to: .init(value1: .before))
             case .after(let anchor): .init(anchorIssueId: anchor, to: .init(value1: .after))
             }
-        if let refused = await write({ answer(try await client.moveIssue(path: .init(id: move.issue), body: .json(body))) }) {
+        if let refused = await write({
+            answer(try await client.moveIssue(path: .init(id: move.issue), body: .json(body)))
+        }) {
             return refused
         }
         guard case .some(let epic) = move.epic else { return nil }
@@ -159,7 +162,8 @@ extension CitadelServer {
             case .start: .start(.init(kind: .start))
             case .done: .done(.init(kind: .done))
             case .approve: .approve(.init(kind: .approve))
-            case .submitForReview(let reviewer): .submitForReview(.init(kind: .submitForReview, reviewer: reviewer.wire))
+            case .submitForReview(let reviewer):
+                .submitForReview(.init(kind: .submitForReview, reviewer: reviewer.wire))
             case .requestChanges(let assignee): .requestChanges(.init(assignee: assignee.wire, kind: .requestChanges))
             case .reopen(let next): .reopen(.init(kind: .reopen, next: next.wireNext))
             }
@@ -195,7 +199,12 @@ extension CitadelServer {
             answer(
                 try await client.setWipLimit(
                     path: .init(id: project),
-                    body: .json(.init(limit: limit.map { Int32(clamping: $0) }, state: .init(value1: .init(rawValue: state), value2: Schemas.IssueState.Value1Payload(rawValue: state) == nil ? state : nil)))))
+                    body: .json(
+                        .init(
+                            limit: limit.map { Int32(clamping: $0) },
+                            state: .init(
+                                value1: .init(rawValue: state),
+                                value2: Schemas.IssueState.Value1Payload(rawValue: state) == nil ? state : nil)))))
         }
     }
 

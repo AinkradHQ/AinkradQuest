@@ -83,14 +83,18 @@ struct ServerReportsSurface: View {
         return AinkradBarChart(
             title: "Velocity", bars: bars,
             threshold: snapshot.velocity.isEmpty
-                ? nil : AinkradChartThreshold(value: snapshot.velocityAverage, label: "avg \(Int(snapshot.velocityAverage.rounded()))", tone: .accentSecondary),
+                ? nil
+                : AinkradChartThreshold(
+                    value: snapshot.velocityAverage, label: "avg \(Int(snapshot.velocityAverage.rounded()))",
+                    tone: .accentSecondary),
             emptyMessage: "No sprints closed yet", format: { "\(Int($0)) pts" })
     }
 
     @ViewBuilder private var review: some View {
         if let sprint = lastClosed, let points = snapshot.velocity.first(where: { $0.sprintID == sprint.id }) {
             VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
-                Text(verbatim: "\(points.completed) of \(points.committed) pts done").questFont("t13", weight: "semibold")
+                Text(verbatim: "\(points.completed) of \(points.committed) pts done").questFont(
+                    "t13", weight: "semibold")
                 if !sprint.goal.isEmpty { Faint("Goal: \(sprint.goal)", size: "t13") }
                 Faint("The PO's written review isn't sent to clients yet.")
             }
@@ -136,7 +140,8 @@ struct ServerListSurface: View {
                             ForEach(group.items) { row($0) }
                         }
                     } else {
-                        ForEach(["in_progress", "in_review", "blocked", "todo", "backlog", "done"], id: \.self) { state in
+                        ForEach(["in_progress", "in_review", "blocked", "todo", "backlog", "done"], id: \.self) {
+                            state in
                             let items = issues.filter { $0.state == state }
                             if !items.isEmpty {
                                 AinkradSectionHeader(title: BoardLogic.title(state), subtitle: "\(items.count) items")
@@ -185,9 +190,13 @@ struct ServerOverviewSurface: View {
             VStack(alignment: .leading, spacing: AinkradSpacing.md) {
                 HStack(spacing: AinkradSpacing.lg) {
                     AinkradStatRow(label: "Open", value: "\(open.count)")
-                    AinkradStatRow(label: "Unestimated", value: "\(open.filter { $0.points == nil }.count)", status: .warning)
-                    AinkradStatRow(label: "Blocked", value: "\(open.filter { $0.state == "blocked" }.count)", status: .danger)
-                    AinkradStatRow(label: "Waiting on you", value: "\(open.filter { if case .human = $0.next { true } else { false } }.count)")
+                    AinkradStatRow(
+                        label: "Unestimated", value: "\(open.filter { $0.points == nil }.count)", status: .warning)
+                    AinkradStatRow(
+                        label: "Blocked", value: "\(open.filter { $0.state == "blocked" }.count)", status: .danger)
+                    AinkradStatRow(
+                        label: "Waiting on you",
+                        value: "\(open.filter { if case .human = $0.next { true } else { false } }.count)")
                 }
                 AinkradSectionHeader(title: "Epics")
                 ForEach(snapshot.epics) { epic in
@@ -232,10 +241,14 @@ struct ServerTimelineSurface: View {
                                 .frame(width: skin.size.s80, alignment: .leading)
                             GeometryReader { geo in
                                 let from = (sprint.startsOn ?? start).timeIntervalSince(start) / span
-                                let to = ((sprint.endsOn ?? sprint.startsOn ?? start).timeIntervalSince(start) + 86_400) / span
-                                AinkradStatusBar(value: 1, total: 1, kind: sprint.state == "active" ? .accent : .status(.neutral))
-                                    .frame(width: max(geo.size.width * min(to - from, 1), skin.size.s8))
-                                    .offset(x: geo.size.width * from)
+                                let to =
+                                    ((sprint.endsOn ?? sprint.startsOn ?? start).timeIntervalSince(start) + 86_400)
+                                    / span
+                                AinkradStatusBar(
+                                    value: 1, total: 1, kind: sprint.state == "active" ? .accent : .status(.neutral)
+                                )
+                                .frame(width: max(geo.size.width * min(to - from, 1), skin.size.s8))
+                                .offset(x: geo.size.width * from)
                             }
                             .frame(height: skin.size.s12)
                             Faint(SprintPlanningSurface.dates(sprint).replacingOccurrences(of: " · ", with: ""))

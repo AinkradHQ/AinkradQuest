@@ -49,7 +49,9 @@ final class ServerSweepTests: XCTestCase {
                         .background(skin.color(skin.palette.background))
                         .ainkradHostTheme(hostTheme)
                         .ainkradSkin(skin)
-                        .environment(\.ainkradTypography, AinkradTypography(fontFamilyName: theme == "neon" ? "Exo 2" : nil))
+                        .environment(
+                            \.ainkradTypography, AinkradTypography(fontFamilyName: theme == "neon" ? "Exo 2" : nil)
+                        )
                         .environment(\.colorScheme, .dark),
                     size: size, to: URL(fileURLWithPath: out).appendingPathComponent("\(name)-\(theme).png"))
             }
@@ -72,7 +74,10 @@ final class ServerSweepTests: XCTestCase {
                 wait(for: [done], timeout: 5)
                 try shoot("04-kanban-wip-refused", ServerShell(store: store, openCitadel: {}, surface: .board))
             }
-            try shoot("00-connect", ServerConnectCard(store: QuestServerStore(documents: MemoryDocumentStore(), secrets: SweepSecrets())) {})
+            try shoot(
+                "00-connect",
+                ServerConnectCard(store: QuestServerStore(documents: MemoryDocumentStore(), secrets: SweepSecrets())) {}
+            )
         }
         store.stop()
     }
@@ -105,12 +110,14 @@ final class ServerSweepTests: XCTestCase {
         await store.drop(todo, on: columns[1], project: project)
         XCTAssertEqual(store.snapshots[project.id]?.issues.first { $0.id == todo.id }?.state, "in_progress")
 
-        guard case .awaitingApproval(_, let approval) = SprintGate.state(
-            sprints: store.snapshots[project.id]?.sprints ?? [], approvals: store.approvals)
+        guard
+            case .awaitingApproval(_, let approval) = SprintGate.state(
+                sprints: store.snapshots[project.id]?.sprints ?? [], approvals: store.approvals)
         else { return XCTFail("the seeded S5 waits on the owner") }
         await store.decide(approval, approve: false, reply: "Too much for one sprint", project: project.id)
-        guard case .rejected(_, let reason) = SprintGate.state(
-            sprints: store.snapshots[project.id]?.sprints ?? [], approvals: store.approvals)
+        guard
+            case .rejected(_, let reason) = SprintGate.state(
+                sprints: store.snapshots[project.id]?.sprints ?? [], approvals: store.approvals)
         else { return XCTFail("rejected on the server") }
         XCTAssertEqual(reason, "Too much for one sprint")
         store.stop()

@@ -156,7 +156,8 @@ struct SprintPlanningSurface: View {
         case .awaitingApproval(_, let approval):
             AinkradDecisionBar(
                 icon: "flag.checkered", iconTint: .secondary, caption: "Awaiting approval",
-                title: "\(sprint.name) · \(SprintLogic.points(snapshot.issues.filter { $0.sprintID == sprint.id })) pts — "
+                title:
+                    "\(sprint.name) · \(SprintLogic.points(snapshot.issues.filter { $0.sprintID == sprint.id })) pts — "
                     + "edits are paused until you decide",
                 actions: [
                     .init(title: "Open in Citadel", style: .ghost, perform: openCitadel).borderless().secondaryAccent(),
@@ -187,7 +188,8 @@ struct SprintPlanningSurface: View {
 
     private var rejectForm: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
-            AinkradSectionHeader(title: "Reject the sprint plan", subtitle: "The reason wakes the PO and Lead to re-plan.")
+            AinkradSectionHeader(
+                title: "Reject the sprint plan", subtitle: "The reason wakes the PO and Lead to re-plan.")
             AinkradTextField(text: $reason, placeholder: "Why")
             HStack {
                 Spacer()
@@ -196,7 +198,10 @@ struct SprintPlanningSurface: View {
                     guard let approval = rejecting else { return }
                     rejecting = nil
                     let why = reason.trimmingCharacters(in: .whitespaces)
-                    Task { await store.decide(approval, approve: false, reply: why.isEmpty ? nil : why, project: project.id) }
+                    Task {
+                        await store.decide(
+                            approval, approve: false, reply: why.isEmpty ? nil : why, project: project.id)
+                    }
                 }
             }
         }

@@ -201,7 +201,11 @@ struct BacklogRow: View {
             row
         }
         .animation(AinkradMotion.present, value: targeted)
-        .dropDestination(for: String.self) { ids, _ in onDrop(ids) } isTargeted: { targeted = $0 }
+        .dropDestination(for: String.self) { ids, _ in
+            onDrop(ids)
+        } isTargeted: {
+            targeted = $0
+        }
     }
 
     private var row: some View {
@@ -256,7 +260,10 @@ struct BacklogRow: View {
             },
             AinkradMenuItem(title: "Move to bottom", systemName: "arrow.down.to.line") {
                 guard let last = order.last, last.id != issue.id else { return }
-                Task { await store.rerank(RankMove(issue: issue.id, place: .after(last.id), epic: nil), project: project.id) }
+                Task {
+                    await store.rerank(
+                        RankMove(issue: issue.id, place: .after(last.id), epic: nil), project: project.id)
+                }
             },
         ]
         if let planned = store.snapshots[project.id]?.sprints.last(where: { $0.state == "planned" }) {

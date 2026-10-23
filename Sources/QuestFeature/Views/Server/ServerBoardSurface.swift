@@ -18,7 +18,9 @@ struct ServerBoardSurface: View {
     @State private var open: ServerIssue?
 
     enum Scope: String, CaseIterable, Hashable {
-        case all = "All", mine = "Mine", working = "Agents working"
+        case all = "All"
+        case mine = "Mine"
+        case working = "Agents working"
     }
 
     private var sprint: ServerSprint? { SprintLogic.active(snapshot.sprints) }
@@ -48,7 +50,8 @@ struct ServerBoardSurface: View {
                 header
                 Spacer(minLength: AinkradSpacing.md)
                 if project.mode == .scrum {
-                    BurndownTile(snapshot: snapshot, sprint: sprint).frame(width: skin.size.s360).onTapGesture(perform: openReports)
+                    BurndownTile(snapshot: snapshot, sprint: sprint).frame(width: skin.size.s360).onTapGesture(
+                        perform: openReports)
                 } else {
                     KanbanStats().onTapGesture(perform: openReports)
                 }

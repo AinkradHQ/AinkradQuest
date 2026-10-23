@@ -35,7 +35,8 @@ enum BoardLogic {
         let done = mode == .kanban ? "Done · this week" : "Done"
         return [
             ServerColumn(state: "todo", title: todo, states: ["backlog", "todo", "blocked"], limit: limits["todo"]),
-            ServerColumn(state: "in_progress", title: "In progress", states: ["in_progress"], limit: limits["in_progress"]),
+            ServerColumn(
+                state: "in_progress", title: "In progress", states: ["in_progress"], limit: limits["in_progress"]),
             ServerColumn(state: "in_review", title: review, states: ["in_review"], limit: limits["in_review"]),
             ServerColumn(state: "done", title: done, states: ["done"], limit: nil),
         ]
@@ -56,7 +57,8 @@ enum BoardLogic {
         let count = issues.filter { $0.state == column.state }.count
         guard count >= limit else { return nil }
         return BoardRefusal(
-            message: "\(column.title) is full (\(count) / \(limit)). Finish or move one out before starting \(issue.key).",
+            message:
+                "\(column.title) is full (\(count) / \(limit)). Finish or move one out before starting \(issue.key).",
             fullColumn: column.title)
     }
 
@@ -79,7 +81,8 @@ enum BoardLogic {
         case ("done", "todo"), ("cancelled", "todo"): return .success(.reopen(next: assignee))
         default:
             return .failure(
-                BoardRefusal(message: "Citadel has no step from \(title(issue.state)) to \(title(target)) for \(issue.key)."))
+                BoardRefusal(
+                    message: "Citadel has no step from \(title(issue.state)) to \(title(target)) for \(issue.key)."))
         }
     }
 

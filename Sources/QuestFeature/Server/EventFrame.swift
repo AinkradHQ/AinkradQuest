@@ -1,5 +1,5 @@
-import QuestCitadelAPI
 import Foundation
+import QuestCitadelAPI
 
 /// One frame of the event stream (a WebSocket text frame, or one item of an HTTP replay page), decoded on its own.
 ///

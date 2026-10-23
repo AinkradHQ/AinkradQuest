@@ -68,7 +68,9 @@ enum BacklogLogic {
         let epicChange: Int64?? = targetEpic == currentEpic ? .none : .some(targetEpic)
         if slot == from, epicChange == nil { return nil }
         let place: RankMove.Place =
-            if rest.isEmpty { .top } else if slot < rest.count { .before(rest[slot].id) } else { .after(rest[rest.count - 1].id) }
+            if rest.isEmpty { .top } else if slot < rest.count { .before(rest[slot].id) } else {
+                .after(rest[rest.count - 1].id)
+            }
         return RankMove(issue: issue, place: place, epic: epicChange)
     }
 

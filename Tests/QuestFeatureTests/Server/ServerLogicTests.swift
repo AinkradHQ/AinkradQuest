@@ -111,7 +111,8 @@ struct BacklogOrderingTests {
         let backlog = [issue(1, rank: 1), issue(2, rank: 2, epic: 20), issue(3, rank: 3, epic: 10)]
         let all = backlog + [issue(9, rank: 9, state: "done", epic: 20)]
         let groups = BacklogLogic.groups(
-            backlog, epics: [ServerEpic(id: 10, title: "A", status: "open"), ServerEpic(id: 20, title: "B", status: "open")],
+            backlog,
+            epics: [ServerEpic(id: 10, title: "A", status: "open"), ServerEpic(id: 20, title: "B", status: "open")],
             all: all)
         #expect(groups.map(\.epic?.id) == [20, 10, nil])
         #expect(groups[0].done == 1 && groups[0].total == 2)
@@ -215,27 +216,37 @@ struct BoardRulesTests {
         let me = ServerActor.human(1)
         let qa = ServerActor.agent(6)
         #expect(BoardLogic.step(for: issue(1, rank: 0), to: "todo", reviewer: qa, me: me) == .success(.ready))
-        #expect(BoardLogic.step(for: issue(1, rank: 0, state: "todo"), to: "in_progress", reviewer: qa, me: me) == .success(.start))
+        #expect(
+            BoardLogic.step(for: issue(1, rank: 0, state: "todo"), to: "in_progress", reviewer: qa, me: me)
+                == .success(.start))
         #expect(
             BoardLogic.step(for: issue(1, rank: 0, state: "in_progress"), to: "in_review", reviewer: qa, me: me)
                 == .success(.submitForReview(reviewer: qa)))
-        #expect(BoardLogic.step(for: issue(1, rank: 0, state: "in_review"), to: "done", reviewer: qa, me: me) == .success(.approve))
         #expect(
-            BoardLogic.step(for: issue(1, rank: 0, state: "in_review", owner: .agent(3)), to: "in_progress", reviewer: qa, me: me)
+            BoardLogic.step(for: issue(1, rank: 0, state: "in_review"), to: "done", reviewer: qa, me: me)
+                == .success(.approve))
+        #expect(
+            BoardLogic.step(
+                for: issue(1, rank: 0, state: "in_review", owner: .agent(3)), to: "in_progress", reviewer: qa, me: me)
                 == .success(.requestChanges(assignee: .agent(3))))
-        #expect(BoardLogic.step(for: issue(1, rank: 0, state: "done"), to: "todo", reviewer: qa, me: me) == .success(.reopen(next: me)))
+        #expect(
+            BoardLogic.step(for: issue(1, rank: 0, state: "done"), to: "todo", reviewer: qa, me: me)
+                == .success(.reopen(next: me)))
     }
 
     @Test("a move with no machine step, or review with no QA agent, is refused here")
     func refusals() {
         let me = ServerActor.human(1)
-        guard case .failure = BoardLogic.step(for: issue(1, rank: 0, state: "in_progress"), to: "todo", reviewer: nil, me: me)
+        guard
+            case .failure = BoardLogic.step(
+                for: issue(1, rank: 0, state: "in_progress"), to: "todo", reviewer: nil, me: me)
         else {
             Issue.record("in progress → to do has no step")
             return
         }
-        guard case .failure(let noQA) = BoardLogic.step(
-            for: issue(1, rank: 0, state: "in_progress"), to: "in_review", reviewer: nil, me: me)
+        guard
+            case .failure(let noQA) = BoardLogic.step(
+                for: issue(1, rank: 0, state: "in_progress"), to: "in_review", reviewer: nil, me: me)
         else {
             Issue.record("review without a QA agent must refuse")
             return
@@ -249,7 +260,9 @@ struct SprintGateTests {
     let planned = ServerSprint(id: 6, name: "S5", goal: "", state: "planned")
     let active = ServerSprint(id: 5, name: "S4", goal: "", state: "active")
 
-    private func approval(_ id: Int64, _ status: String, sprint: Int64 = 6, kind: String = "sprint_commit", reply: String? = nil)
+    private func approval(
+        _ id: Int64, _ status: String, sprint: Int64 = 6, kind: String = "sprint_commit", reply: String? = nil
+    )
         -> ServerApproval
     {
         ServerApproval(id: id, kind: kind, status: status, sprintID: sprint, issueID: nil, requestedBy: 1, reply: reply)
@@ -278,7 +291,8 @@ struct SprintGateTests {
     @Test("the newest decision wins: a rejection carries its reason, an approval elsewhere is ignored")
     func rejected() {
         let gate = SprintGate.state(
-            sprints: [planned], approvals: [approval(3, "rejected", reply: "too big"), approval(4, "approved", sprint: 99)])
+            sprints: [planned],
+            approvals: [approval(3, "rejected", reply: "too big"), approval(4, "approved", sprint: 99)])
         #expect(gate == .rejected(planned, reason: "too big"))
     }
 
@@ -292,7 +306,11 @@ struct SprintGateTests {
         #expect(loads.map(\.actor) == [.agent(3), .agent(4)])
         #expect(loads[0].points == 11 && loads[0].capacity == 10 && loads[0].isFull)
         #expect(!loads[1].isFull)
-        #expect(SprintLogic.velocityMark([.init(sprintID: 1, committed: 30, completed: 27), .init(sprintID: 2, committed: 30, completed: 30), .init(sprintID: 3, committed: 30, completed: 33), .init(sprintID: 4, committed: 1, completed: 1)]) == 30)
+        #expect(
+            SprintLogic.velocityMark([
+                .init(sprintID: 1, committed: 30, completed: 27), .init(sprintID: 2, committed: 30, completed: 30),
+                .init(sprintID: 3, committed: 30, completed: 33), .init(sprintID: 4, committed: 1, completed: 1),
+            ]) == 30)
     }
 }
 
@@ -306,7 +324,10 @@ struct RequirementGroupingTests {
     @Test("groups follow the requirement number; items with none come last")
     func order() {
         let groups = RequirementGrouping.groups(
-            [issue(1, rank: 0), issue(2, rank: 0, requirement: 12), issue(3, rank: 0, requirement: 8), issue(4, rank: 0, requirement: 12)],
+            [
+                issue(1, rank: 0), issue(2, rank: 0, requirement: 12), issue(3, rank: 0, requirement: 8),
+                issue(4, rank: 0, requirement: 12),
+            ],
             requirements: requirements)
         #expect(groups.map(\.requirement?.key) == ["R-8", "R-12", nil])
         #expect(groups[1].items.map(\.id) == [2, 4])
@@ -322,7 +343,8 @@ struct RequirementGroupingTests {
     @Test("server mode offers List next to Backlog, and no Sprint tab for Kanban")
     func surfaces() {
         let scrum = SurfaceVisibility.offeredOnServer(kanban: false)
-        #expect(scrum.contains(.list) && scrum.contains(.backlog) && scrum.contains(.sprint) && scrum.contains(.reports))
+        #expect(
+            scrum.contains(.list) && scrum.contains(.backlog) && scrum.contains(.sprint) && scrum.contains(.reports))
         #expect(!SurfaceVisibility.offeredOnServer(kanban: true).contains(.sprint))
         #expect(!SurfaceVisibility.offered(hasProject: true).contains(.backlog))
     }
