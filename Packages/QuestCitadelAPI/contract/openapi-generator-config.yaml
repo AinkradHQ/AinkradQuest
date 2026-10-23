@@ -27,3 +27,17 @@ filter:
     - listRequirements
     - listCompanyRuns
     - listEvents
+    - commitSprint
+    - getSprintReview
+    - listLabels
+    - createLabel
+    - renameLabel
+    - deleteLabel
+    - labelIssue
+    - unlabelIssue
+    - getTeamCapacity
+    - setMemberCapacity
+    - getProjectFlow
+    - getIssueFlow
+    - createProject
+    - updateProject
