@@ -4462,33 +4462,44 @@ public struct Client: APIProtocol {
             }
         )
     }
-    /// - Remark: HTTP `GET /api/v1/requirements`.
-    /// - Remark: Generated from `#/paths//api/v1/requirements/get(listRequirements)`.
-    public func listRequirements(_ input: Operations.ListRequirements.Input) async throws -> Operations.ListRequirements.Output {
+    /// - Remark: HTTP `POST /api/v1/projects/{id}/wip`.
+    /// - Remark: Generated from `#/paths//api/v1/projects/{id}/wip/post(setWipLimit)`.
+    public func setWipLimit(_ input: Operations.SetWipLimit.Input) async throws -> Operations.SetWipLimit.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.ListRequirements.id,
+            forOperation: Operations.SetWipLimit.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/api/v1/requirements",
-                    parameters: []
+                    template: "/api/v1/projects/{}/wip",
+                    parameters: [
+                        input.path.id
+                    ]
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
                     soar_path: path,
-                    method: .get
+                    method: .post
                 )
                 suppressMutabilityWarning(&request)
                 converter.setAcceptHeader(
                     in: &request.headerFields,
                     contentTypes: input.headers.accept
                 )
-                return (request, nil)
+                let body: OpenAPIRuntime.HTTPBody?
+                switch input.body {
+                case let .json(value):
+                    body = try converter.setRequiredRequestBodyAsJSON(
+                        value,
+                        headerFields: &request.headerFields,
+                        contentType: "application/json; charset=utf-8"
+                    )
+                }
+                return (request, body)
             },
             deserializer: { response, responseBody in
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.ListRequirements.Output.Ok.Body
+                    let body: Operations.SetWipLimit.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -4498,7 +4509,7 @@ public struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            [Components.Schemas.Requirement].self,
+                            [Components.Schemas.WipLimit].self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)
@@ -4674,18 +4685,16 @@ public struct Client: APIProtocol {
             }
         )
     }
-    /// - Remark: HTTP `GET /api/v1/requirements/{id}/tree`.
-    /// - Remark: Generated from `#/paths//api/v1/requirements/{id}/tree/get(getRequirementTree)`.
-    public func getRequirementTree(_ input: Operations.GetRequirementTree.Input) async throws -> Operations.GetRequirementTree.Output {
+    /// - Remark: HTTP `GET /api/v1/requirements`.
+    /// - Remark: Generated from `#/paths//api/v1/requirements/get(listRequirements)`.
+    public func listRequirements(_ input: Operations.ListRequirements.Input) async throws -> Operations.ListRequirements.Output {
         try await client.send(
             input: input,
-            forOperation: Operations.GetRequirementTree.id,
+            forOperation: Operations.ListRequirements.id,
             serializer: { input in
                 let path = try converter.renderedPath(
-                    template: "/api/v1/requirements/{}/tree",
-                    parameters: [
-                        input.path.id
-                    ]
+                    template: "/api/v1/requirements",
+                    parameters: []
                 )
                 var request: HTTPTypes.HTTPRequest = .init(
                     soar_path: path,
@@ -4702,7 +4711,7 @@ public struct Client: APIProtocol {
                 switch response.status.code {
                 case 200:
                     let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
-                    let body: Operations.GetRequirementTree.Output.Ok.Body
+                    let body: Operations.ListRequirements.Output.Ok.Body
                     let chosenContentType = try converter.bestContentType(
                         received: contentType,
                         options: [
@@ -4712,7 +4721,7 @@ public struct Client: APIProtocol {
                     switch chosenContentType {
                     case "application/json":
                         body = try await converter.getResponseBodyAsJSON(
-                            Components.Schemas.RequirementTree.self,
+                            [Components.Schemas.Requirement].self,
                             from: responseBody,
                             transforming: { value in
                                 .json(value)

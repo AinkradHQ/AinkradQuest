@@ -12,6 +12,10 @@ enum ServerFailure: Error, Equatable {
     case status(Int)
 }
 
+/// Copied from AinkradCitadelPlugin (`Connection/`, `Events/` — as are this folder's ServerAddress, Backoff,
+/// DeviceKeyStore, EventFrame, EventSocket and EventStream); keep them in step. Why a copy and not a shared
+/// package: Packages/QuestCitadelAPI/Package.swift.
+///
 /// One server, one device key, one company: the generated client for commands, plus the two requests made outside
 /// it — the event stream's upgrade and its HTTP replay, which must decode event by event (`EventFrame`).
 struct CitadelServer: Sendable {
@@ -48,17 +52,9 @@ struct CitadelServer: Sendable {
         switch output {
         case .ok(let ok):
             guard let me = try? ok.body.json else { throw .status(200) }
-            return ServerIdentity(companies: me.companies, version: me.versions.server, latestSeq: me.latestSeq)
-        case .unauthorized: throw .rejected
-        case .undocumented(let status, _): throw .status(status)
-        default: throw .status(0)
-        }
-    }
-
-    func agentCount(company: Int64) async throws(ServerFailure) -> Int {
-        let output = try await call { try await client.listAgents(path: .init(id: company)) }
-        switch output {
-        case .ok(let ok): return ((try? ok.body.json) ?? []).count
+            return ServerIdentity(
+                companies: me.companies, version: me.versions.server, latestSeq: me.latestSeq, userID: me.user.id,
+                userName: me.user.name)
         case .unauthorized: throw .rejected
         case .undocumented(let status, _): throw .status(status)
         default: throw .status(0)
@@ -125,6 +121,9 @@ struct ServerIdentity: Sendable {
     /// The server's version, `0.1.0`.
     let version: String
     let latestSeq: Int64
+    /// The person this device acts as (the server's one admin).
+    let userID: Int64
+    let userName: String
 }
 
 /// A page of `GET /events`.

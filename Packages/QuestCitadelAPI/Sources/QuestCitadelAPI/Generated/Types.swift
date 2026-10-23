@@ -65,12 +65,12 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /api/v1/projects/{id}/wip`.
     /// - Remark: Generated from `#/paths//api/v1/projects/{id}/wip/get(listWipLimits)`.
     func listWipLimits(_ input: Operations.ListWipLimits.Input) async throws -> Operations.ListWipLimits.Output
+    /// - Remark: HTTP `POST /api/v1/projects/{id}/wip`.
+    /// - Remark: Generated from `#/paths//api/v1/projects/{id}/wip/post(setWipLimit)`.
+    func setWipLimit(_ input: Operations.SetWipLimit.Input) async throws -> Operations.SetWipLimit.Output
     /// - Remark: HTTP `GET /api/v1/requirements`.
     /// - Remark: Generated from `#/paths//api/v1/requirements/get(listRequirements)`.
     func listRequirements(_ input: Operations.ListRequirements.Input) async throws -> Operations.ListRequirements.Output
-    /// - Remark: HTTP `GET /api/v1/requirements/{id}/tree`.
-    /// - Remark: Generated from `#/paths//api/v1/requirements/{id}/tree/get(getRequirementTree)`.
-    func getRequirementTree(_ input: Operations.GetRequirementTree.Input) async throws -> Operations.GetRequirementTree.Output
     /// - Remark: HTTP `GET /api/v1/sprints/{id}/report`.
     /// - Remark: Generated from `#/paths//api/v1/sprints/{id}/report/get(getSprintReport)`.
     func getSprintReport(_ input: Operations.GetSprintReport.Input) async throws -> Operations.GetSprintReport.Output
@@ -314,21 +314,23 @@ extension APIProtocol {
             headers: headers
         ))
     }
+    /// - Remark: HTTP `POST /api/v1/projects/{id}/wip`.
+    /// - Remark: Generated from `#/paths//api/v1/projects/{id}/wip/post(setWipLimit)`.
+    public func setWipLimit(
+        path: Operations.SetWipLimit.Input.Path,
+        headers: Operations.SetWipLimit.Input.Headers = .init(),
+        body: Operations.SetWipLimit.Input.Body
+    ) async throws -> Operations.SetWipLimit.Output {
+        try await setWipLimit(Operations.SetWipLimit.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
     /// - Remark: HTTP `GET /api/v1/requirements`.
     /// - Remark: Generated from `#/paths//api/v1/requirements/get(listRequirements)`.
     public func listRequirements(headers: Operations.ListRequirements.Input.Headers = .init()) async throws -> Operations.ListRequirements.Output {
         try await listRequirements(Operations.ListRequirements.Input(headers: headers))
-    }
-    /// - Remark: HTTP `GET /api/v1/requirements/{id}/tree`.
-    /// - Remark: Generated from `#/paths//api/v1/requirements/{id}/tree/get(getRequirementTree)`.
-    public func getRequirementTree(
-        path: Operations.GetRequirementTree.Input.Path,
-        headers: Operations.GetRequirementTree.Input.Headers = .init()
-    ) async throws -> Operations.GetRequirementTree.Output {
-        try await getRequirementTree(Operations.GetRequirementTree.Input(
-            path: path,
-            headers: headers
-        ))
     }
     /// - Remark: HTTP `GET /api/v1/sprints/{id}/report`.
     /// - Remark: Generated from `#/paths//api/v1/sprints/{id}/report/get(getSprintReport)`.

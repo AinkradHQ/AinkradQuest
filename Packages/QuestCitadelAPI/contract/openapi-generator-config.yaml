@@ -15,6 +15,7 @@ filter:
     - getSprintReport
     - getVelocity
     - listWipLimits
+    - setWipLimit
     - moveIssue
     - transitionIssue
     - setIssueSprint
@@ -24,6 +25,5 @@ filter:
     - listApprovals
     - decideApproval
     - listRequirements
-    - getRequirementTree
     - listCompanyRuns
     - listEvents
