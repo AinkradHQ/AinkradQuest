@@ -1,0 +1,29 @@
+generate: [types, client]
+accessModifier: public
+namingStrategy: idiomatic
+# Quest reads only what its tabs show; everything else stays out of its bundle.
+filter:
+  operations:
+    - getMe
+    - listAgents
+    - listProjects
+    - getBacklog
+    - listProjectIssues
+    - createIssue
+    - listEpics
+    - listSprints
+    - getSprintReport
+    - getVelocity
+    - listWipLimits
+    - moveIssue
+    - transitionIssue
+    - setIssueSprint
+    - setIssueEpic
+    - estimateIssue
+    - moveToBacklog
+    - listApprovals
+    - decideApproval
+    - listRequirements
+    - getRequirementTree
+    - listCompanyRuns
+    - listEvents
