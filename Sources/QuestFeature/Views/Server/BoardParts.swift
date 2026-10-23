@@ -79,8 +79,9 @@ struct BoardCard: View {
                 HStack(spacing: AinkradSpacing.xs) {
                     IssueKey(key: issue.key)
                     RequirementTag(requirement: store.requirement(issue.requirementID))
+                    LabelChips(labels: issue.labels)
                     if issue.state == "blocked" { AinkradBadge(text: "Blocked", status: .danger) }
-                    if issue.state == "done" { AinkradBadge(text: "✓ done", status: .success) }
+                    if issue.state == "done" { AinkradBadge(text: doneText, status: .success) }
                     Spacer(minLength: 0)
                     if project.mode == .scrum, issue.state != "done", let points = issue.points {
                         AinkradPointsPill(points: points)
@@ -99,6 +100,12 @@ struct BoardCard: View {
         .rim(rim)
         .opacity(store.bounced == issue.id ? skin.opacity.o70 : 1)
         .animation(AinkradMotion.present, value: store.bounced)
+    }
+
+    /// "✓ cycle 1.2d" when the flow window has the item's cycle time.
+    private var doneText: String {
+        let cycle = store.snapshots[project.id]?.flow?.issues.first { $0.issueID == issue.id }?.cycle
+        return cycle.map { "✓ cycle \(FlowFormat.duration(Double($0)))" } ?? "✓ done"
     }
 
     private var rim: AinkradChartTone? {
@@ -174,31 +181,41 @@ struct BurndownChart: View {
     }
 }
 
-/// Kanban header stats. Citadel does not report cycle time, lead time or throughput yet, so they read "—".
+/// Kanban header stats over the server's flow window: mean cycle and lead time, and weekly throughput.
 struct KanbanStats: View {
+    let flow: FlowInfo?
+
     var body: some View {
         HStack(spacing: AinkradSpacing.lg) {
-            stat("Cycle time")
-            stat("Lead time")
-            stat("Throughput")
+            stat("Cycle time", flow?.meanCycle.map(FlowFormat.duration), flow.map { _ in "avg" })
+            stat("Lead time", flow?.meanLead.map(FlowFormat.duration), nil)
+            stat("Throughput", flow.map { "\(Int($0.perWeek.rounded()))" }, flow.map { _ in "/ week" })
         }
-        .help("Citadel doesn't report cycle time, lead time or throughput yet.")
+        .help(flow.map { "\($0.throughput) items done in the last \($0.days) days" } ?? "No flow times yet")
     }
 
-    private func stat(_ label: String) -> some View {
+    private func stat(_ label: String, _ value: String?, _ unit: String?) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: AinkradSpacing.xs) {
             CapsLabel(text: label)
-            Text("—").questFont("t18", weight: "bold")
+            Text(verbatim: value ?? "–").questFont("t18", weight: "bold")
+            if let unit, value != nil { Faint(unit) }
         }
     }
 }
 
-/// An item's details in server mode: read-only here — Citadel owns the issue.
+/// An item's details in server mode: Citadel owns the issue; here its labels can change, and its flow times
+/// (cycle, lead, age) are read when it opens.
 struct ServerItemDetail: View {
     let store: QuestServerStore
     let issue: ServerIssue
     let onClose: () -> Void
     @Environment(\.ainkradSkin) private var skin
+    @State private var flow: IssueFlowInfo?
+
+    /// The live copy, so a label change shows while the sheet is open.
+    private var current: ServerIssue {
+        store.snapshots[issue.projectID]?.issues.first { $0.id == issue.id } ?? issue
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
@@ -216,11 +233,31 @@ struct ServerItemDetail: View {
                     .frame(maxHeight: skin.size.s240)
             }
             WorkingLine(issue: issue, store: store)
+            HStack(spacing: AinkradSpacing.sm) {
+                CapsLabel(text: "Labels")
+                LabelChips(labels: current.labels)
+                AinkradMenuButton(items: LabelChips.menu(store: store, issue: current, project: issue.projectID)) {
+                    AinkradIconGlyph(systemName: "tag", size: skin.size.s12)
+                }
+                .fixedSize()
+                Spacer()
+                if let line = Self.flowLine(flow) { Faint(line) }
+            }
             HStack {
                 Spacer()
                 AinkradButton(title: "Close", style: .secondary, action: onClose)
             }
         }
         .frame(width: skin.size.s460)
+        .task { flow = await store.flow(of: issue) }
+    }
+
+    /// `cycle 1.2d · lead 3.0d · age 4.1d` — only the times the issue has.
+    nonisolated static func flowLine(_ flow: IssueFlowInfo?) -> String? {
+        guard let flow else { return nil }
+        let parts = [("cycle", flow.cycle), ("lead", flow.lead), ("age", flow.age)].compactMap { name, secs in
+            secs.map { "\(name) \(FlowFormat.duration(Double($0)))" }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }

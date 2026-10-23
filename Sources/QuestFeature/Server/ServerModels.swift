@@ -28,6 +28,7 @@ extension Schemas.Harness: OpenWord {}
 extension Schemas.AgentStatus: OpenWord {}
 extension Schemas.RunState: OpenWord {}
 extension Schemas.CompanyKind: OpenWord {}
+extension Schemas.TeamRole: OpenWord {}
 
 /// Who acts on an issue: an agent, the person, or nobody yet.
 enum ServerActor: Equatable, Hashable, Sendable {
@@ -73,12 +74,15 @@ struct ServerIssue: Identifiable, Equatable, Hashable, Sendable {
     var next: ServerActor
     /// The run holding the issue right now.
     var runID: Int64?
+    var labels: [ServerLabel] = []
 
     var isOpen: Bool { !["done", "cancelled"].contains(state) }
 }
 
 struct ServerEpic: Identifiable, Equatable, Sendable {
     let id: Int64
+    /// `CIT-E10`.
+    var key = ""
     var title: String
     var status: String
 }
@@ -202,12 +206,13 @@ extension ServerIssue {
             id: issue.id, key: issue.key, projectID: issue.projectId, kind: issue.kind.word, title: issue.title,
             body: issue.body, state: issue.state.word, rank: issue.rank, points: issue.points.map(Int.init),
             epicID: issue.epicId, sprintID: issue.sprintId, requirementID: issue.requirementId,
-            owner: ServerActor(issue.owner), next: ServerActor(issue.nextActor), runID: issue.checkoutRunId)
+            owner: ServerActor(issue.owner), next: ServerActor(issue.nextActor), runID: issue.checkoutRunId,
+            labels: issue.labels.map(ServerLabel.init))
     }
 }
 
 extension ServerEpic {
-    init(_ epic: Schemas.Epic) { self.init(id: epic.id, title: epic.title, status: epic.status.word) }
+    init(_ epic: Schemas.Epic) { self.init(id: epic.id, key: epic.key, title: epic.title, status: epic.status.word) }
 }
 
 extension ServerSprint {

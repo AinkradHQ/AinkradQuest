@@ -135,6 +135,8 @@ struct BacklogFilter: Equatable, Sendable {
     var epic: Pick<Int64> = .all
     var assignee: ServerActor?
     var requirement: Pick<Int64> = .all
+    /// `.some(id)`: carries that label; `.none`: carries none.
+    var label: Pick<Int64> = .all
     var unestimated = false
     var text = ""
 
@@ -145,8 +147,16 @@ struct BacklogFilter: Equatable, Sendable {
         return issues.filter { issue in
             (kind == nil || issue.kind == kind) && epic.matches(issue.epicID)
                 && (assignee == nil || issue.owner == assignee) && requirement.matches(issue.requirementID)
-                && (!unestimated || issue.points == nil)
+                && (!unestimated || issue.points == nil) && Self.labelMatches(label, issue.labels)
                 && (query.isEmpty || issue.title.lowercased().contains(query) || issue.key.lowercased().contains(query))
+        }
+    }
+
+    private static func labelMatches(_ pick: Pick<Int64>, _ labels: [ServerLabel]) -> Bool {
+        switch pick {
+        case .all: true
+        case .none: labels.isEmpty
+        case .some(let id): labels.contains { $0.id == id }
         }
     }
 }

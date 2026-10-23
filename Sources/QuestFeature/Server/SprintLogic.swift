@@ -62,14 +62,18 @@ enum SprintLogic {
         return Double(last.reduce(0) { $0 + $1.completed }) / Double(last.count)
     }
 
-    /// Points per owner in the sprint, heaviest first. The server keeps no per-person capacity yet, so each
-    /// assignee's capacity is the sprint capacity shared evenly (`nil` capacity: no bar limit).
-    static func loads(_ sprintIssues: [ServerIssue], capacity: Int?) -> [AssigneeLoad] {
+    /// Points per owner in the sprint, heaviest first, against each member's own capacity (`team`). An owner
+    /// with none set gets the sprint capacity shared evenly (`nil` capacity: no bar limit).
+    static func loads(
+        _ sprintIssues: [ServerIssue], capacity: Int?, team: TeamCapacityInfo = TeamCapacityInfo()
+    ) -> [AssigneeLoad] {
         var byOwner: [ServerActor: Int] = [:]
         for issue in sprintIssues where issue.owner != .none { byOwner[issue.owner, default: 0] += issue.points ?? 0 }
         let share = capacity.map { byOwner.isEmpty ? 0 : Int((Double($0) / Double(byOwner.count)).rounded(.up)) } ?? 0
-        return byOwner.map { AssigneeLoad(actor: $0.key, points: $0.value, capacity: share) }
-            .sorted { ($0.points, $1.actor.sortKey) > ($1.points, $0.actor.sortKey) }
+        return byOwner.map {
+            AssigneeLoad(actor: $0.key, points: $0.value, capacity: team.capacity(of: $0.key) ?? share)
+        }
+        .sorted { ($0.points, $1.actor.sortKey) > ($1.points, $0.actor.sortKey) }
     }
 
     /// The ideal line: from the first day's points to zero on the last day.

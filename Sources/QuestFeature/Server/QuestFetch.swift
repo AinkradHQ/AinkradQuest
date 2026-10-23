@@ -6,6 +6,8 @@ struct ServerAnswer: Error, Equatable, Sendable {
     var status: Int
     var code: String
     var message: String
+    /// `err_…`, unique to this answer: what "Copy error" copies, so the server's log line can be found.
+    var errorID: String?
 
     static func unreachable(_ error: Error) -> ServerAnswer {
         ServerAnswer(status: 0, code: "unreachable", message: error.localizedDescription)
@@ -24,6 +26,11 @@ struct ProjectSnapshot: Equatable, Sendable {
     var velocityAverage: Double = 0
     /// The active and planned sprints' reports, by sprint id.
     var reports: [Int64: SprintReportInfo] = [:]
+    var labels: [ServerLabel] = []
+    var capacity = TeamCapacityInfo()
+    var flow: FlowInfo?
+    /// The last closed sprint's review and retro proposals.
+    var review: SprintReviewInfo?
 }
 
 /// Quest's reads and writes on the Citadel API. Reads answer `nil` when they fail (logged); writes answer the
@@ -101,11 +108,26 @@ extension CitadelServer {
             else { return nil }
             return try ok.body.json
         }
+        async let labels = read("listLabels") { () async throws -> [ServerLabel]? in
+            guard case .ok(let ok) = try await client.listLabels(path: .init(id: project)) else { return nil }
+            return try ok.body.json.map(ServerLabel.init)
+        }
+        async let capacity = read("getTeamCapacity") { () async throws -> TeamCapacityInfo? in
+            guard case .ok(let ok) = try await client.getTeamCapacity(path: .init(id: project)) else { return nil }
+            return TeamCapacityInfo(try ok.body.json)
+        }
+        async let flow = read("getProjectFlow") { () async throws -> FlowInfo? in
+            guard case .ok(let ok) = try await client.getProjectFlow(path: .init(id: project)) else { return nil }
+            return FlowInfo(try ok.body.json)
+        }
         guard let issues = await issues else { return nil }
         var snapshot = ProjectSnapshot(issues: issues)
         snapshot.epics = await epics ?? []
         snapshot.sprints = await sprints ?? []
         snapshot.limits = await limits ?? [:]
+        snapshot.labels = await labels ?? []
+        snapshot.capacity = await capacity ?? TeamCapacityInfo()
+        snapshot.flow = await flow
         if let velocity = await velocity {
             snapshot.velocityAverage = velocity.average
             snapshot.velocity = velocity.sprints.map {
@@ -115,7 +137,24 @@ extension CitadelServer {
         for sprint in snapshot.sprints where sprint.state != "closed" {
             if let report = await report(sprint: sprint.id) { snapshot.reports[sprint.id] = report }
         }
+        if let closed = snapshot.sprints.filter({ $0.state == "closed" }).max(by: { $0.id < $1.id }) {
+            snapshot.review = await review(sprint: closed.id)
+        }
         return snapshot
+    }
+
+    func review(sprint: Int64) async -> SprintReviewInfo? {
+        await read("getSprintReview") {
+            guard case .ok(let ok) = try await client.getSprintReview(path: .init(id: sprint)) else { return nil }
+            return SprintReviewInfo(try ok.body.json)
+        }
+    }
+
+    func flow(issue: Int64) async -> IssueFlowInfo? {
+        await read("getIssueFlow") {
+            guard case .ok(let ok) = try await client.getIssueFlow(path: .init(id: issue)) else { return nil }
+            return IssueFlowInfo(try ok.body.json)
+        }
     }
 
     func report(sprint: Int64) async -> SprintReportInfo? {
@@ -128,7 +167,7 @@ extension CitadelServer {
     // MARK: - Writes
 
     /// Runs a write; `nil` = done, else the server's refusal in its own words.
-    private func write(_ work: () async throws -> ServerAnswer?) async -> ServerAnswer? {
+    fileprivate func write(_ work: () async throws -> ServerAnswer?) async -> ServerAnswer? {
         do {
             return try await work()
         } catch {
@@ -212,6 +251,78 @@ extension CitadelServer {
         await write {
             answer(
                 try await client.createIssue(path: .init(id: project), body: .json(.init(epicId: epic, title: title))))
+        }
+    }
+}
+
+extension CitadelServer {
+    /// The owner's commit (decision #10): the sprint starts at once. Over the team's capacity it needs a reason.
+    func commit(sprint: Int64, overrideReason: String?) async -> ServerAnswer? {
+        await write {
+            answer(
+                try await client.commitSprint(
+                    path: .init(id: sprint), body: .json(.init(overrideReason: overrideReason))))
+        }
+    }
+
+    func createLabel(project: Int64, name: String) async -> ServerAnswer? {
+        await write { answer(try await client.createLabel(path: .init(id: project), body: .json(.init(name: name)))) }
+    }
+
+    func renameLabel(project: Int64, label: Int64, name: String) async -> ServerAnswer? {
+        await write {
+            answer(
+                try await client.renameLabel(path: .init(id: project, labelId: label), body: .json(.init(name: name))))
+        }
+    }
+
+    func deleteLabel(project: Int64, label: Int64) async -> ServerAnswer? {
+        await write { answer(try await client.deleteLabel(path: .init(id: project, labelId: label))) }
+    }
+
+    /// Puts the label on the issue, or takes it off.
+    func setLabel(issue: Int64, label: Int64, on: Bool) async -> ServerAnswer? {
+        await write {
+            on
+                ? answer(try await client.labelIssue(path: .init(id: issue, labelId: label)))
+                : answer(try await client.unlabelIssue(path: .init(id: issue, labelId: label)))
+        }
+    }
+
+    /// A member's points per sprint (`nil` clears it).
+    func setCapacity(project: Int64, agent: Int64, capacity: Int?) async -> ServerAnswer? {
+        await write {
+            answer(
+                try await client.setMemberCapacity(
+                    path: .init(id: project, agentId: agent),
+                    body: .json(.init(capacity: capacity.map { Int32(clamping: $0) }))))
+        }
+    }
+
+    func createProject(company: Int64, name: String, key: String, kanban: Bool, ownerApproves: Bool) async
+        -> ServerAnswer?
+    {
+        await write {
+            answer(
+                try await client.createProject(
+                    path: .init(id: company),
+                    body: .json(
+                        .init(
+                            key: key, mode: .init(value1: kanban ? .kanban : .scrum), name: name,
+                            sprintApproval: .init(value1: ownerApproves ? .owner : .productOwner)))))
+        }
+    }
+
+    /// The project's name, mode and sprint-approval policy.
+    func updateProject(_ project: Int64, name: String, kanban: Bool, ownerApproves: Bool) async -> ServerAnswer? {
+        await write {
+            answer(
+                try await client.updateProject(
+                    path: .init(id: project),
+                    body: .json(
+                        .init(
+                            mode: .init(value1: kanban ? .kanban : .scrum), name: name,
+                            sprintApproval: .init(value1: ownerApproves ? .owner : .productOwner)))))
         }
     }
 }

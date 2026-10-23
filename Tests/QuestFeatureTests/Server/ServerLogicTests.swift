@@ -27,7 +27,8 @@ struct ServerMappingTests {
             """
             {"id": 62, "key": "CIT-62", "project_id": 1, "number": 62, "kind": "story", "title": "APNs push",
              "body": "b", "state": "in_review", "rank": 1.5, "points": 8, "epic_id": 10, "sprint_id": 5,
-             "requirement_id": 12, "checkout_run_id": 7,
+             "requirement_id": 12, "checkout_run_id": 7, "priority": false,
+             "labels": [{"id": 4, "project_id": 1, "name": "security"}],
              "owner": {"kind": "agent", "agent_id": 3}, "next_actor": {"kind": "human", "user_id": 1}}
             """)
         let mapped = ServerIssue(wire)
@@ -39,6 +40,7 @@ struct ServerMappingTests {
         #expect(mapped.owner == .agent(3))
         #expect(mapped.next == .human(1))
         #expect(mapped.runID == 7)
+        #expect(mapped.labels == [ServerLabel(id: 4, name: "security")])
         #expect(mapped.isOpen)
     }
 
@@ -48,7 +50,7 @@ struct ServerMappingTests {
             Schemas.Issue.self,
             """
             {"id": 1, "key": "CIT-1", "project_id": 1, "number": 1, "kind": "chore", "title": "t", "body": "",
-             "state": "parked", "rank": 0}
+             "state": "parked", "rank": 0, "priority": false, "labels": []}
             """)
         let mapped = ServerIssue(wire)
         #expect(mapped.state == "parked")

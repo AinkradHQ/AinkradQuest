@@ -74,6 +74,24 @@ final class ServerSweepTests: XCTestCase {
                 wait(for: [done], timeout: 5)
                 try shoot("04-kanban-wip-refused", ServerShell(store: store, openCitadel: {}, surface: .board))
             }
+            // API minor 9: the project settings' sections, New project, and an item's labels and flow times.
+            if let citadel = store.companyProjects.first(where: { $0.mode == .scrum }) {
+                store.select(project: citadel.id)
+                store.notice = nil
+                for (index, section) in SettingsSection.allCases.enumerated() {
+                    store.settingsSheet = section
+                    try shoot(
+                        "1\(index)-settings-\(section.rawValue.lowercased().replacingOccurrences(of: " ", with: "-"))",
+                        ServerShell(store: store, openCitadel: {}, surface: .board))
+                }
+                store.settingsSheet = nil
+                try shoot("14-new-project", Self.sheet(ServerNewProjectForm(store: store) {}))
+                if let labeled = store.snapshots[citadel.id]?.issues.last(where: {
+                    $0.state == "done" && !$0.labels.isEmpty
+                }) {
+                    try shoot("15-item-detail", Self.sheet(ServerItemDetail(store: store, issue: labeled) {}))
+                }
+            }
             try shoot(
                 "00-connect",
                 ServerConnectCard(store: QuestServerStore(documents: MemoryDocumentStore(), secrets: SweepSecrets())) {}
@@ -110,17 +128,29 @@ final class ServerSweepTests: XCTestCase {
         await store.drop(todo, on: columns[1], project: project)
         XCTAssertEqual(store.snapshots[project.id]?.issues.first { $0.id == todo.id }?.state, "in_progress")
 
+        // API minor 9 (seed9: S5 is a draft): a label on and off, a member's capacity, and the owner's commit,
+        // which the server refuses while S4 runs — with an error id behind "Copy error".
+        let label = try XCTUnwrap(store.snapshots[project.id]?.labels.first)
+        await store.toggle(label, on: last, project: project.id)
+        XCTAssertTrue(store.snapshots[project.id]?.issues.first { $0.id == last.id }?.labels.contains(label) == true)
+        let labeled = try XCTUnwrap(store.snapshots[project.id]?.issues.first { $0.id == last.id })
+        await store.toggle(label, on: labeled, project: project.id)
+        XCTAssertFalse(store.snapshots[project.id]?.issues.first { $0.id == last.id }?.labels.contains(label) == true)
+        let member = try XCTUnwrap(store.snapshots[project.id]?.capacity.members.last)
+        await store.setCapacity(9, agent: member.agentID, project: project.id)
+        XCTAssertEqual(store.snapshots[project.id]?.capacity.capacity(of: .agent(member.agentID)), 9)
         guard
-            case .awaitingApproval(_, let approval) = SprintGate.state(
+            case .draft(let planned) = SprintGate.state(
                 sprints: store.snapshots[project.id]?.sprints ?? [], approvals: store.approvals)
-        else { return XCTFail("the seeded S5 waits on the owner") }
-        await store.decide(approval, approve: false, reply: "Too much for one sprint", project: project.id)
-        guard
-            case .rejected(_, let reason) = SprintGate.state(
-                sprints: store.snapshots[project.id]?.sprints ?? [], approvals: store.approvals)
-        else { return XCTFail("rejected on the server") }
-        XCTAssertEqual(reason, "Too much for one sprint")
+        else { return XCTFail("the seeded S5 is a draft") }
+        await store.commit(planned, overrideReason: "fits", project: project.id)
+        XCTAssertEqual(store.notice?.actionTitle, "Copy error", store.notice?.message ?? "no notice")
         store.stop()
+    }
+
+    /// A modal's content as the kit modal frames it: padded on a panel, centred.
+    static func sheet(_ content: some View) -> some View {
+        content.padding(AinkradSpacing.lg).ainkradPanel().frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     static func registerHostFonts() {

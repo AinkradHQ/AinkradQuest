@@ -1,4 +1,5 @@
 import AinkradAppKit
+import AppKit
 import Foundation
 import Observation
 import QuestCitadelAPI
@@ -33,6 +34,20 @@ struct ServerNotice: Equatable, Identifiable {
     var action: (@MainActor () -> Void)?
 
     static func == (a: ServerNotice, b: ServerNotice) -> Bool { a.id == b.id }
+
+    /// "Copy error": the refusal's `error_id` on the pasteboard.
+    @MainActor static func copy(_ errorID: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(errorID, forType: .string)
+    }
+}
+
+/// Where the project settings sheet opens.
+enum SettingsSection: String, CaseIterable, Hashable, Sendable {
+    case project = "Project"
+    case limits = "WIP limits"
+    case labels = "Labels"
+    case capacity = "Capacity"
 }
 
 /// Quest in server mode: one Citadel server and company, its projects and their backlog / sprints / board, kept
@@ -81,11 +96,19 @@ final class QuestServerStore {
     @ObservationIgnored var server: CitadelServer?
     @ObservationIgnored private var stream: EventStream?
     @ObservationIgnored private var work: Task<Void, Never>?
-    @ObservationIgnored private var pending: Set<Reload> = []
+    @ObservationIgnored private(set) var pending: Set<Reload> = []
     @ObservationIgnored private var reloadTask: Task<Void, Never>?
     @ObservationIgnored private var lastSaved = Date.distantPast
 
-    enum Reload: Hashable { case projects, approvals, runs, agents, requirements }
+    /// What an event asks to read again: one project's snapshot when the event names it, else every project's.
+    enum Reload: Hashable {
+        case projectList, projects
+        case project(Int64)
+        case approvals, runs, agents, requirements
+    }
+
+    /// The project settings sheet, open on a section ("Raise limit…" opens it on the WIP limits).
+    var settingsSheet: SettingsSection?
 
     init(
         documents: PluginDocumentStore, secrets: PluginSecretStore, session: URLSession = CitadelServer.makeSession(),
@@ -260,8 +283,6 @@ final class QuestServerStore {
     }
 
     /// Every project of the company: Today reads across them.
-    // ponytail: re-reads all of the company's projects on an issue event; scope by the event's project when the
-    // audit details carry one.
     func reloadProjects() async {
         guard let server else { return }
         for project in companyProjects {
@@ -276,7 +297,14 @@ final class QuestServerStore {
         guard case .audit(let audit) = event.payload else { return }
         let area = audit.action.split(separator: ".").first.map(String.init) ?? ""
         switch area {
-        case "issue", "sprint", "epic", "wip", "project", "comment": pending.insert(.projects)
+        case "issue", "label":
+            // `issue.*` events name their project (`project_id`); `label.*` ones as `project`.
+            let key = area == "issue" ? "project_id" : "project"
+            pending.insert(Self.int(audit.details.value[key] ?? nil).map(Reload.project) ?? .projects)
+        case "sprint", "epic", "wip", "comment", "member": pending.insert(.projects)
+        case "project":
+            pending.insert(.projectList)
+            pending.insert(.projects)
         case "approval":
             pending.insert(.approvals)
             pending.insert(.projects)
@@ -312,7 +340,26 @@ final class QuestServerStore {
             if due.contains(.runs) { runs = await server.liveRuns(company: company) ?? runs }
             if due.contains(.agents) { agents = await server.agents(company: company) ?? agents }
             if due.contains(.requirements) { requirements = await server.requirements() ?? requirements }
-            if due.contains(.projects) { await reloadProjects() }
+            if due.contains(.projectList) {
+                projects = await server.projects(company: company) ?? projects
+            }
+            if due.contains(.projects) {
+                await reloadProjects()
+            } else {
+                for case .project(let id) in due where companyProjects.contains(where: { $0.id == id }) {
+                    await refresh(id)
+                }
+            }
+        }
+    }
+
+    /// A JSON number from an event's details.
+    nonisolated static func int(_ value: (any Sendable)?) -> Int64? {
+        switch value {
+        case let n as Int: Int64(n)
+        case let n as Int64: n
+        case let n as Double: Int64(exactly: n)
+        default: nil
         }
     }
 

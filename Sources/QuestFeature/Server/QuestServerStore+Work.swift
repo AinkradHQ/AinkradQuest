@@ -70,14 +70,19 @@ extension QuestServerStore {
         }
     }
 
-    /// "Raise limit…": one more card allowed in that column.
+    /// "Raise limit…": the project settings, open on the WIP limits (mockup 04).
     func raiseLimit(project: ServerProject, column: ServerColumn) async {
+        select(project: project.id)
+        settingsSheet = .limits
+    }
+
+    /// A column's WIP limit (`nil` removes it).
+    func setLimit(_ limit: Int?, state: String, project: Int64) async {
         guard let server else { return }
-        let current = snapshots[project.id]?.limits[column.state] ?? 0
-        if let refused = await server.setLimit(project: project.id, state: column.state, limit: current + 1) {
-            return refuse("Couldn't raise the limit", refused)
+        if let refused = await server.setLimit(project: project, state: state, limit: limit) {
+            return refuse("Couldn't change the limit", refused)
         }
-        await refresh(project.id)
+        await refresh(project)
     }
 
     /// Into the planned sprint, or back to the backlog (sprint planning 02). Paused while the commit waits.
@@ -120,10 +125,15 @@ extension QuestServerStore {
         snapshots[project] = fresh
     }
 
-    private func refuse(_ title: String, _ answer: ServerAnswer) {
+    /// The server's refusal in its own words, with "Copy error" when it gave the answer an id.
+    func refuse(_ title: String, _ answer: ServerAnswer) {
         let said = answer.message.isEmpty ? "the server answered \(answer.status)" : answer.message
         notice = ServerNotice(
             message: answer.status == 0 ? "\(title): the server did not answer." : "\(title): \(said)",
             status: .danger)
+        if let id = answer.errorID, !id.isEmpty {
+            notice?.actionTitle = "Copy error"
+            notice?.action = { ServerNotice.copy(id) }
+        }
     }
 }
