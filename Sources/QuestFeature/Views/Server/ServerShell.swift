@@ -13,6 +13,7 @@ struct ServerShell: View {
     @State private var searchText = ""
     @FocusState private var searchFocused: Bool
     @State private var showingNewItem = false
+    @State private var showingNewProject = false
 
     init(store: QuestServerStore, openCitadel: @escaping () -> Void, surface: QuestSurface = .backlog) {
         self.store = store
@@ -29,10 +30,11 @@ struct ServerShell: View {
                 showsSwitcher: project != nil && surface != .today,
                 surfaces: SurfaceVisibility.offeredOnServer(kanban: project?.mode == .kanban),
                 showsSettings: project != nil, actionsEnabled: !showingNewItem, showsTrash: false,
-                onNew: { if project != nil { showingNewItem = true } }, onSettings: openCitadel, onTrash: {})
+                onNew: { if project != nil { showingNewItem = true } else { showingNewProject = true } },
+                onSettings: { store.settingsSheet = .project }, onTrash: {})
             connectionBanner
             HStack(spacing: 0) {
-                ServerSidebar(store: store, surface: $surface).frame(width: skin.size.s232)
+                ServerSidebar(store: store, surface: $surface) { showingNewProject = true }.frame(width: skin.size.s232)
                 content.frame(maxWidth: .infinity, maxHeight: .infinity)
                     .overlay(alignment: .bottom) {
                         ServerNoticeBar(store: store).padding(.bottom, AinkradSpacing.md)
@@ -48,6 +50,18 @@ struct ServerShell: View {
         .ainkradModal(isPresented: $showingNewItem) {
             if let project {
                 NewServerItemForm(store: store, project: project) { showingNewItem = false }.id(project.id)
+            }
+        }
+        .ainkradModal(isPresented: $showingNewProject) {
+            ServerNewProjectForm(store: store) { showingNewProject = false }
+        }
+        .ainkradModal(
+            isPresented: Binding(
+                get: { store.settingsSheet != nil && project != nil }, set: { if !$0 { store.settingsSheet = nil } })
+        ) {
+            if let project, let section = store.settingsSheet {
+                ServerProjectSettings(store: store, project: project, section: section) { store.settingsSheet = nil }
+                    .id(project.id)
             }
         }
     }
@@ -105,7 +119,7 @@ struct ServerShell: View {
         } else {
             AinkradEmptyState(
                 icon: "square.stack.3d.up", title: "No projects here",
-                message: "This company has no projects yet. Create one in Citadel.")
+                message: "This company has no projects yet. New project in the sidebar makes one.")
         }
     }
 

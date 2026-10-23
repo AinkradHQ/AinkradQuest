@@ -210,3 +210,34 @@ struct ServerNoticeBar: View {
         }
     }
 }
+
+/// An item's labels as small neutral badges, at most two and "+N".
+struct LabelChips: View {
+    let labels: [ServerLabel]
+
+    var body: some View {
+        if !labels.isEmpty {
+            HStack(spacing: AinkradSpacing.xs) {
+                ForEach(labels.prefix(2)) { AinkradBadge(text: $0.name) }
+                if labels.count > 2 { Faint("+\(labels.count - 2)") }
+            }
+            .help(labels.map(\.name).joined(separator: ", "))
+        }
+    }
+
+    /// The ⋯ menu's label items: each of the project's labels toggles on the item (✓ when on), then
+    /// "Manage labels…".
+    @MainActor static func menu(store: QuestServerStore, issue: ServerIssue, project: Int64) -> [AinkradMenuItem] {
+        let labels = store.snapshots[project]?.labels ?? []
+        var items = labels.map { label in
+            AinkradMenuItem(
+                title: label.name, systemName: issue.labels.contains { $0.id == label.id } ? "checkmark" : "tag"
+            ) {
+                Task { await store.toggle(label, on: issue, project: project) }
+            }
+        }
+        items.append(AinkradMenuItem(title: "Manage labels…", systemName: "tag") { store.settingsSheet = .labels })
+        items[0] = items[0].startingGroup()
+        return items
+    }
+}

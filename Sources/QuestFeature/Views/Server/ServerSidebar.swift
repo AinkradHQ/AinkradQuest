@@ -6,6 +6,7 @@ import SwiftUI
 struct ServerSidebar: View {
     @Bindable var store: QuestServerStore
     @Binding var surface: QuestSurface
+    let newProject: () -> Void
     @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradStatusColors) private var status
 
@@ -44,6 +45,8 @@ struct ServerSidebar: View {
                 }
             }
             Spacer(minLength: 0)
+            AinkradButton(title: "New project", style: .secondary, icon: "plus", action: newProject)
+                .help("A new project in \(store.company?.name ?? "this company") on \(store.host)")
             footer
         }
         .padding(AinkradSpacing.md)

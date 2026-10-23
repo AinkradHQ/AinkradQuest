@@ -85,6 +85,7 @@ struct BacklogFilters<Trailing: View>: View {
         HStack(spacing: AinkradSpacing.sm) {
             kindSelect
             epicSelect
+            labelSelect
             assigneeSelect
             requirementSelect
             AinkradToggleButton(
@@ -113,6 +114,18 @@ struct BacklogFilters<Trailing: View>: View {
             case .all: "Epic: all"
             case .none: "No epic"
             case .some(let id): snapshot.epics.first { $0.id == id }?.title ?? "Epic"
+            }
+        }
+        .fixedSize()
+    }
+
+    private var labelSelect: some View {
+        let picks: [BacklogFilter.Pick<Int64>] = [.all] + snapshot.labels.map { .some($0.id) } + [.none]
+        return AinkradSelect(items: picks, selection: $filter.label) { pick -> String in
+            switch pick {
+            case .all: "Label: all"
+            case .none: "No label"
+            case .some(let id): snapshot.labels.first { $0.id == id }?.name ?? "Label"
             }
         }
         .fixedSize()
@@ -158,6 +171,7 @@ private struct EpicHeader: View {
                     group.epic == nil ? skin.color(skin.text.faint) : skin.color(skin.palette.accentViolet))
             Text(verbatim: group.epic?.title ?? "No epic").questFont("t13", weight: "bold")
                 .foregroundStyle(group.epic == nil ? skin.color(skin.text.muted) : skin.color(skin.text.primary))
+            if let key = group.epic?.key, !key.isEmpty { IssueKey(key: key) }
             if group.epic != nil {
                 AinkradStatusBar(value: Double(group.done), total: Double(max(group.total, 1)), kind: .accent)
                     .frame(width: skin.size.s120)
@@ -218,6 +232,7 @@ struct BacklogRow: View {
             Text(verbatim: issue.title).questFont("t13").foregroundStyle(skin.color(skin.text.primary)).lineLimit(1)
             Spacer(minLength: AinkradSpacing.sm)
             RequirementTag(requirement: store.requirement(issue.requirementID))
+            LabelChips(labels: issue.labels)
             AinkradPointsPill(
                 points: Binding(
                     get: { issue.points },
@@ -272,6 +287,6 @@ struct BacklogRow: View {
                     Task { await store.setSprint(issue, to: planned.id, project: project.id) }
                 })
         }
-        return items
+        return items + LabelChips.menu(store: store, issue: issue, project: project.id)
     }
 }

@@ -1,8 +1,9 @@
 import AinkradAppKit
 import SwiftUI
 
-/// Reports (mockup 05): velocity and the active sprint's burndown (Scrum), cycle / lead time, the last sprint's
-/// review and the retro's knowledge proposals. What Citadel does not report yet says so instead of inventing data.
+/// Reports (mockup 05): velocity and the active sprint's burndown (Scrum), cycle / lead time over the server's
+/// flow window, the last closed sprint's review and the retro's knowledge proposals. Kanban projects show the
+/// cycle-time chart only.
 struct ServerReportsSurface: View {
     let store: QuestServerStore
     let project: ServerProject
@@ -21,20 +22,17 @@ struct ServerReportsSurface: View {
                     }
                     .frame(height: skin.size.s240)
                 }
-                tile("Cycle and lead time · 30 days") {
-                    AinkradScatterChart(
-                        title: "Cycle and lead time", series: [],
-                        emptyMessage: "Citadel doesn't report cycle and lead time yet.")
+                tile("Cycle and lead time\(snapshot.flow.map { " · \($0.days) days" } ?? "")") {
+                    FlowScatter(flow: snapshot.flow, issues: snapshot.issues)
                 }
-                .frame(height: skin.size.s180)
-                HStack(alignment: .top, spacing: AinkradSpacing.md) {
-                    tile("Sprint review\(lastClosed.map { " · \($0.name)" } ?? "")") { review }
-                    tile("Retro → knowledge proposals") {
-                        Faint("Citadel doesn't send retro proposals to clients yet.", size: "t13")
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(height: skin.size.s200)
+                if project.mode == .scrum {
+                    HStack(alignment: .top, spacing: AinkradSpacing.md) {
+                        tile("Sprint review\(lastClosed.map { " · \($0.name)" } ?? "")") { review }
+                        tile("Retro → knowledge proposals") { retro }
                     }
+                    .frame(minHeight: skin.size.s200)
                 }
-                .frame(minHeight: skin.size.s200)
             }
             .padding(.horizontal, AinkradSpacing.md)
             .padding(.bottom, AinkradSpacing.md)
@@ -90,18 +88,148 @@ struct ServerReportsSurface: View {
             emptyMessage: "No sprints closed yet", format: { "\(Int($0)) pts" })
     }
 
+    /// What the server stored when the sprint closed: done vs committed, velocity against the sprints before,
+    /// what carried over, what was blocked or escalated.
     @ViewBuilder private var review: some View {
-        if let sprint = lastClosed, let points = snapshot.velocity.first(where: { $0.sprintID == sprint.id }) {
+        if let sprint = lastClosed {
+            let summary = snapshot.review?.sprintID == sprint.id ? snapshot.review?.summary : nil
+            let points = snapshot.velocity.first { $0.sprintID == sprint.id }
             VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
-                Text(verbatim: "\(points.completed) of \(points.committed) pts done").questFont(
-                    "t13", weight: "semibold")
+                if let done = summary?.completed ?? points?.completed,
+                    let committed = summary?.committed ?? points?.committed
+                {
+                    Text(verbatim: "\(done) of \(committed) pts done\(Self.delta(summary?.velocity))")
+                        .questFont("t13", weight: "semibold")
+                }
                 if !sprint.goal.isEmpty { Faint("Goal: \(sprint.goal)", size: "t13") }
-                Faint("The PO's written review isn't sent to clients yet.")
+                if let summary {
+                    ForEach(Self.lines(summary), id: \.self) { line in
+                        Text(verbatim: "• \(line)").questFont("t13").lineLimit(2)
+                    }
+                } else {
+                    Faint("The review is written when the sprint closes.")
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             Faint("No sprint has closed yet.", size: "t13")
         }
+    }
+
+    /// ` · +3 vs avg` / ` · −2 vs avg`.
+    static func delta(_ velocity: SprintReviewInfo.Summary.Velocity?) -> String {
+        guard let delta = velocity?.delta else { return "" }
+        let rounded = Int(delta.rounded())
+        return " · \(rounded >= 0 ? "+" : "−")\(abs(rounded)) vs avg"
+    }
+
+    static func lines(_ summary: SprintReviewInfo.Summary) -> [String] {
+        var lines: [String] = []
+        if !summary.carried.isEmpty {
+            lines.append("Carried over: " + summary.carried.map { "\($0.key) (\($0.title))" }.joined(separator: ", "))
+        }
+        if !summary.blocked.isEmpty {
+            lines.append("Blocked: " + summary.blocked.map { "\($0.key) ×\($0.times)" }.joined(separator: ", "))
+        }
+        if !summary.escalated.isEmpty {
+            lines.append(
+                "Loop breaker escalated: " + summary.escalated.map { "\($0.key) ×\($0.times)" }.joined(separator: ", "))
+        }
+        if lines.isEmpty { lines.append("Nothing carried over, blocked or escalated.") }
+        return lines
+    }
+
+    /// The retro's proposed knowledge entries, waiting ones first. Deciding them is the person's call in Citadel
+    /// (decision #48); here they are read.
+    @ViewBuilder private var retro: some View {
+        let items = (snapshot.review?.retro ?? []).sorted { ($0.status != "proposed" ? 1 : 0) < ($1.status != "proposed" ? 1 : 0) }
+        if items.isEmpty {
+            Faint("No retro proposals from the last sprint.", size: "t13")
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        } else {
+            VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+                if let waiting = snapshot.review?.waiting, waiting > 0 {
+                    AinkradBadge(text: "\(waiting) to review", status: .warning)
+                }
+                ForEach(items) { item in RetroRow(item: item, store: store) }
+            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+    }
+}
+
+/// One retro proposal: its kind (landmine red, decision accent), title, who proposed it, and where it stands.
+private struct RetroRow: View {
+    let item: SprintReviewInfo.Retro
+    let store: QuestServerStore
+    @Environment(\.ainkradSkin) private var skin
+    @Environment(\.ainkradStatusColors) private var status
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: skin.size.s2) {
+            HStack(spacing: AinkradSpacing.sm) {
+                Text(skin.labelCased(item.kind.capitalized)).questFont("t10", weight: "semibold")
+                    .foregroundStyle(kindColor)
+                Text(verbatim: item.title).questFont("t13").lineLimit(1)
+                Spacer(minLength: AinkradSpacing.xs)
+                switch item.status {
+                case "accepted": AinkradBadge(text: "Accepted", status: .success)
+                case "rejected": AinkradBadge(text: "Rejected", status: .danger)
+                default: AinkradBadge(text: "Proposed", status: .warning)
+                }
+            }
+            Faint(byline)
+        }
+        .help(item.body)
+    }
+
+    private var byline: String {
+        let who = item.proposedBy.flatMap { store.agent($0)?.name }.map { "from \($0)" }
+        return [who, item.reason ?? (item.body.isEmpty ? nil : item.body)].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private var kindColor: Color {
+        switch item.kind {
+        case "landmine": status.danger
+        case "decision": skin.color(skin.palette.accentSecondary)
+        default: skin.color(skin.palette.accentViolet)
+        }
+    }
+}
+
+/// Cycle (in progress → done) and lead (created → done) time of each item done in the flow window, in the
+/// order they were done, with the 85th-percentile cycle line. Hover names the item and its times.
+struct FlowScatter: View {
+    let flow: FlowInfo?
+    let issues: [ServerIssue]
+
+    var body: some View {
+        let keys = Dictionary(issues.map { ($0.id, $0.key) }, uniquingKeysWith: { a, _ in a })
+        let done = flow?.issues ?? []
+        let day = 86_400.0
+        let label: (FlowInfo.Times) -> String = { t in
+            let cycle = t.cycle.map { "cycle \(FlowFormat.duration(Double($0))) · " } ?? ""
+            return "\(keys[t.issueID] ?? "#\(t.issueID)") · \(cycle)lead \(FlowFormat.duration(Double(t.lead)))"
+        }
+        AinkradScatterChart(
+            title: "Cycle and lead time",
+            series: [
+                AinkradChartSeries(
+                    name: "Cycle (in progress → done)",
+                    points: done.enumerated().compactMap { i, t in
+                        t.cycle.map { AinkradChartPoint(x: Double(i + 1), y: Double($0) / day, label: label(t)) }
+                    }, tone: .accentSecondary),
+                AinkradChartSeries(
+                    name: "Lead (created → done)",
+                    points: done.enumerated().map { i, t in
+                        AinkradChartPoint(x: Double(i + 1), y: Double(t.lead) / day, label: label(t))
+                    }, tone: .muted),
+            ],
+            threshold: flow?.p85Cycle.map {
+                AinkradChartThreshold(
+                    value: $0 / day, label: "p85 cycle \(FlowFormat.duration($0))", tone: .warning)
+            },
+            emptyMessage: "Nothing done in the flow window yet", format: { String(format: "%.1fd", $0) })
     }
 }
 

@@ -53,7 +53,7 @@ struct ServerBoardSurface: View {
                     BurndownTile(snapshot: snapshot, sprint: sprint).frame(width: skin.size.s360).onTapGesture(
                         perform: openReports)
                 } else {
-                    KanbanStats().onTapGesture(perform: openReports)
+                    KanbanStats(flow: snapshot.flow).onTapGesture(perform: openReports)
                 }
             }
             ScrollView([.horizontal, .vertical]) {

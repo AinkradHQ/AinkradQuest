@@ -13,6 +13,8 @@ struct SprintPlanningSurface: View {
     @Environment(\.ainkradSkin) private var skin
     @State private var rejecting: ServerApproval?
     @State private var reason = ""
+    /// Committing over capacity: the server wants a reason.
+    @State private var overCommit: ServerSprint?
 
     private var gate: SprintGate { SprintGate.state(sprints: snapshot.sprints, approvals: store.approvals) }
 
@@ -32,6 +34,9 @@ struct SprintPlanningSurface: View {
             .animation(AinkradMotion.present, value: gate)
             .ainkradModal(isPresented: Binding(get: { rejecting != nil }, set: { if !$0 { rejecting = nil } })) {
                 rejectForm
+            }
+            .ainkradModal(isPresented: Binding(get: { overCommit != nil }, set: { if !$0 { overCommit = nil } })) {
+                overCommitForm
             }
         } else {
             AinkradEmptyState(
@@ -87,7 +92,7 @@ struct SprintPlanningSurface: View {
         let issues = BacklogLogic.ranked(snapshot.issues.filter { $0.sprintID == sprint.id })
         let points = SprintLogic.points(issues)
         let report = snapshot.reports[sprint.id]
-        let capacity = report?.capacity
+        let capacity = report?.capacity ?? snapshot.capacity.total
         let velocity = SprintLogic.velocityMark(snapshot.velocity)
         return VStack(alignment: .leading, spacing: AinkradSpacing.md) {
             HStack(alignment: .firstTextBaseline) {
@@ -133,7 +138,7 @@ struct SprintPlanningSurface: View {
     private func capacityColumn(_ issues: [ServerIssue], capacity: Int?) -> some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             CapsLabel(text: "Capacity by assignee")
-            ForEach(SprintLogic.loads(issues, capacity: capacity)) { load in
+            ForEach(SprintLogic.loads(issues, capacity: capacity, team: snapshot.capacity)) { load in
                 HStack(spacing: AinkradSpacing.sm) {
                     ActorFigure(actor: load.actor, store: store)
                     Text(verbatim: store.name(load.actor) ?? "Unassigned").questFont("t13").lineLimit(1)
@@ -174,16 +179,50 @@ struct SprintPlanningSurface: View {
             .transition(.move(edge: .bottom).combined(with: .opacity))
         default:
             HStack {
-                Faint(
-                    project.ownerApprovesSprints
-                        ? "The product owner commits the plan; it then waits here for your approval."
-                        : "The product owner commits the plan and the sprint starts.")
+                Faint("Your commit is the owner's approval: \(sprint.name) starts at once.")
                 Spacer()
-                AinkradButton(title: "Commit sprint →", style: .primary) {}
-                    .disabled(true)
-                    .help("Citadel commits sprints through the product owner only — no endpoint for people yet.")
+                AinkradButton(title: "Commit sprint →", style: .primary) { commit(sprint) }
+                    .disabled(snapshot.issues.allSatisfy { $0.sprintID != sprint.id })
             }
         }
+    }
+
+    private var plannedPoints: (points: Int, capacity: Int?) {
+        let points = SprintLogic.points(snapshot.issues.filter { $0.sprintID == gate.sprint?.id })
+        return (points, gate.sprint.flatMap { snapshot.reports[$0.id]?.capacity } ?? snapshot.capacity.total)
+    }
+
+    /// Within capacity it commits; over it, the reason form opens first (the server refuses without one).
+    private func commit(_ sprint: ServerSprint) {
+        let (points, capacity) = plannedPoints
+        if let capacity, points > capacity {
+            reason = ""
+            overCommit = sprint
+        } else {
+            Task { await store.commit(sprint, overrideReason: nil, project: project.id) }
+        }
+    }
+
+    private var overCommitForm: some View {
+        let (points, capacity) = plannedPoints
+        return VStack(alignment: .leading, spacing: AinkradSpacing.md) {
+            AinkradSectionHeader(
+                title: "Commit over capacity",
+                subtitle: "\(points) pts against \(capacity ?? 0) pts of team capacity. Say why it still fits.")
+            AinkradTextField(text: $reason, placeholder: "Why")
+            HStack {
+                Spacer()
+                AinkradButton(title: "Cancel", style: .ghost) { overCommit = nil }
+                AinkradButton(title: "Commit anyway", style: .primary) {
+                    guard let sprint = overCommit else { return }
+                    overCommit = nil
+                    let why = reason.trimmingCharacters(in: .whitespaces)
+                    Task { await store.commit(sprint, overrideReason: why, project: project.id) }
+                }
+                .disabled(reason.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        }
+        .frame(width: skin.size.s420)
     }
 
     private var rejectForm: some View {
