@@ -1,5 +1,7 @@
 enum QuestSurface: String, CaseIterable, Identifiable, Sendable {
     case today, overview, list, board, timeline
+    /// Server mode only (E12): Citadel's backlog, sprint planning and reports.
+    case backlog, sprint, reports
 
     var id: String { rawValue }
     static let landing = QuestSurface.today
@@ -11,6 +13,9 @@ enum QuestSurface: String, CaseIterable, Identifiable, Sendable {
         case .list: "List"
         case .board: "Board"
         case .timeline: "Timeline"
+        case .backlog: "Backlog"
+        case .sprint: "Sprint"
+        case .reports: "Reports"
         }
     }
 
@@ -21,6 +26,9 @@ enum QuestSurface: String, CaseIterable, Identifiable, Sendable {
         case .list: "list.bullet.indent"
         case .board: "rectangle.split.3x1"
         case .timeline: "calendar.day.timeline.left"
+        case .backlog: "list.number"
+        case .sprint: "flag.checkered"
+        case .reports: "chart.bar.xaxis"
         }
     }
 
@@ -35,7 +43,15 @@ enum SurfaceVisibility {
     /// Surfaces for the header switcher. `Today` is deliberately absent: it is
     /// cross-project and lives in the sidebar, not the per-project switcher.
     static func offered(hasProject: Bool) -> [QuestSurface] {
-        hasProject ? QuestSurface.allCases.filter(\.requiresProject) : [.today]
+        hasProject ? [.overview, .list, .board, .timeline] : [.today]
+    }
+
+    /// Server mode's switcher (decision #36): List stays, Backlog and Reports join, and Sprint only for a Scrum
+    /// project — a Kanban project has no sprints.
+    static func offeredOnServer(kanban: Bool) -> [QuestSurface] {
+        kanban
+            ? [.overview, .list, .backlog, .board, .reports, .timeline]
+            : [.overview, .list, .backlog, .sprint, .board, .reports, .timeline]
     }
 
     static func showsSwitcher(hasProject: Bool) -> Bool { hasProject }

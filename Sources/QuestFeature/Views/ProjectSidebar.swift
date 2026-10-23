@@ -46,6 +46,8 @@ struct QuestNewProjectAction: Equatable {
 
 extension EnvironmentValues {
     @Entry var questNewProject: QuestNewProjectAction = .unwired
+    /// Opens "Connect to Citadel" (E12). Same wrapper as `questNewProject`; a no-op outside the shell.
+    @Entry var questConnectServer: QuestNewProjectAction = QuestNewProjectAction {}
 }
 
 struct QuestSidebar: View {
@@ -59,6 +61,7 @@ struct QuestSidebar: View {
 
     @State private var filter: ProjectStateFilter = .active
     @Environment(\.questNewProject) private var newProject
+    @Environment(\.questConnectServer) private var connectServer
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
@@ -109,6 +112,10 @@ struct QuestSidebar: View {
 
             Spacer(minLength: 0)
 
+            AinkradButton(title: "Connect to Citadel…", style: .ghost, icon: "server.rack") {
+                connectServer()
+            }
+            .help("Use a Citadel server's projects instead of this Mac's. This Mac's projects are kept.")
             AinkradButton(title: "New project", style: .secondary, icon: "plus") {
                 newProject()
             }

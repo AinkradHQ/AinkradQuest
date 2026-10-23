@@ -111,6 +111,16 @@ public struct QuestApp: AinkradApp {
         }
     }
 
+    /// Cached per host, the same shape as `stores`: server mode's connection, event stream and loaded projects
+    /// (E12) must be the one the window shows.
+    @MainActor private static let serverStores = PluginInstanceStorage<QuestServerStore>()
+
+    @MainActor static func serverStore(for host: HostServices) -> QuestServerStore {
+        serverStores.value(for: instance(of: host)) {
+            QuestServerStore(documents: host.documents, secrets: host.secrets)
+        }
+    }
+
     public static func makeRootView(host: HostServices) -> AnyView {
         makeRootView(host: host, mode: .advanced)
     }
@@ -194,6 +204,7 @@ extension QuestApp: AinkradAppTeardown {
         // captures this instance's store. Leaving it registered would let the
         // assistant keep driving an app the user shut.
         mcpServers.remove(instance)
+        serverStores.remove(instance)?.stop()
     }
 }
 
@@ -211,14 +222,16 @@ extension QuestApp: AinkradAppModes {
             return AnyView(
                 QuestShell(
                     store: store(for: host), registry: registry(for: host),
-                    theme: host.theme, documents: host.documents))
+                    theme: host.theme, documents: host.documents, server: serverStore(for: host),
+                    openCitadel: { host.apps.open(appID: "citadel", payload: nil) }))
         // Resilient enum: fall back to advanced, never to a stripped view for a
         // mode this build does not understand.
         @unknown default:
             return AnyView(
                 QuestShell(
                     store: store(for: host), registry: registry(for: host),
-                    theme: host.theme, documents: host.documents))
+                    theme: host.theme, documents: host.documents, server: serverStore(for: host),
+                    openCitadel: { host.apps.open(appID: "citadel", payload: nil) }))
         }
     }
 }

@@ -13,6 +13,8 @@ struct QuestHeader: View {
     @Binding var searchText: String
     var searchFocused: FocusState<Bool>.Binding
     let showsSwitcher: Bool
+    /// The switcher's tabs; server mode offers its own set (`SurfaceVisibility.offeredOnServer`).
+    var surfaces = SurfaceVisibility.offered(hasProject: true)
     /// The gear acts on the selected project, so it is withheld — not merely
     /// inert — when there is none.
     let showsSettings: Bool
@@ -20,6 +22,8 @@ struct QuestHeader: View {
     /// scoped overlay, so an editor put up by a surface does not cover this
     /// row — the shell has to switch it off explicitly.
     let actionsEnabled: Bool
+    /// Server mode has no trash: Citadel cancels, it never deletes.
+    var showsTrash = true
     let onNew: () -> Void
     let onSettings: () -> Void
     let onTrash: () -> Void
@@ -30,7 +34,7 @@ struct QuestHeader: View {
             // is empty and the search field carries the row on its own.
             if showsSwitcher {
                 AinkradSegmentedPicker(
-                    items: SurfaceVisibility.offered(hasProject: true),
+                    items: surfaces,
                     selection: $surface
                 ) { $0.title }
                 .transition(.opacity)
@@ -51,7 +55,7 @@ struct QuestHeader: View {
                 iconAction("gearshape", "Project settings", onSettings)
                     .transition(.opacity)
             }
-            iconAction("trash", "Trash", onTrash)
+            if showsTrash { iconAction("trash", "Trash", onTrash) }
         }
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)

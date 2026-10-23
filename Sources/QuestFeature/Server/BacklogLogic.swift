@@ -111,3 +111,40 @@ enum BacklogLogic {
         return RankMove(issue: issue, place: place, epic: .some(original.epicID))
     }
 }
+
+/// The backlog's filters (type, epic, assignee, requirement, "Unestimated") and the header's search. `nil` is
+/// "all"; `Filter.none` picks the items with no epic / no requirement.
+struct BacklogFilter: Equatable, Sendable {
+    enum Pick<T: Hashable & Sendable>: Hashable, Sendable {
+        case all
+        case none
+        case some(T)
+
+        func matches(_ value: T?) -> Bool {
+            switch self {
+            case .all: true
+            case .none: value == nil
+            case .some(let wanted): value == wanted
+            }
+        }
+    }
+
+    var kind: String?
+    var epic: Pick<Int64> = .all
+    var assignee: ServerActor?
+    var requirement: Pick<Int64> = .all
+    var unestimated = false
+    var text = ""
+
+    var isActive: Bool { self != BacklogFilter(text: text) }
+
+    func apply(_ issues: [ServerIssue]) -> [ServerIssue] {
+        let query = text.trimmingCharacters(in: .whitespaces).lowercased()
+        return issues.filter { issue in
+            (kind == nil || issue.kind == kind) && epic.matches(issue.epicID)
+                && (assignee == nil || issue.owner == assignee) && requirement.matches(issue.requirementID)
+                && (!unestimated || issue.points == nil)
+                && (query.isEmpty || issue.title.lowercased().contains(query) || issue.key.lowercased().contains(query))
+        }
+    }
+}
