@@ -153,6 +153,14 @@ struct SprintReportInfo: Equatable, Sendable {
 // MARK: - Mapping from the wire
 
 enum ServerDay {
+    /// Whole days from `start` to `end`, counted in UTC as the server writes days.
+    static func days(from start: Date, to end: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+        return calendar.dateComponents([.day], from: calendar.startOfDay(for: start), to: calendar.startOfDay(for: end))
+            .day ?? 0
+    }
+
     /// `YYYY-MM-DD` as the server writes a sprint or burndown day, read in UTC.
     static func parse(_ text: String?) -> Date? {
         guard let text else { return nil }

@@ -9,10 +9,16 @@ struct ServerShell: View {
     /// Opens the Citadel app (the gear, "Open in Citadel").
     let openCitadel: () -> Void
     @Environment(\.ainkradSkin) private var skin
-    @State private var surface: QuestSurface = .backlog
+    @State private var surface: QuestSurface
     @State private var searchText = ""
     @FocusState private var searchFocused: Bool
     @State private var showingNewItem = false
+
+    init(store: QuestServerStore, openCitadel: @escaping () -> Void, surface: QuestSurface = .backlog) {
+        self.store = store
+        self.openCitadel = openCitadel
+        _surface = State(initialValue: surface)
+    }
 
     private var project: ServerProject? { store.selectedProject }
 
@@ -28,10 +34,10 @@ struct ServerShell: View {
             HStack(spacing: 0) {
                 ServerSidebar(store: store, surface: $surface).frame(width: skin.size.s232)
                 content.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .overlay(alignment: .bottom) {
+                        ServerNoticeBar(store: store).padding(.bottom, AinkradSpacing.md)
+                    }
             }
-        }
-        .overlay(alignment: .bottom) {
-            ServerNoticeBar(store: store).padding(.bottom, AinkradSpacing.md)
         }
         .animation(AinkradMotion.present, value: store.notice)
         .ainkradPanel()

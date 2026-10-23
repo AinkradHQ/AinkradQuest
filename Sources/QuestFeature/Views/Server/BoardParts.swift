@@ -57,6 +57,7 @@ struct BoardCard: View {
     let issue: ServerIssue
     let onOpen: () -> Void
     @Environment(\.ainkradSkin) private var skin
+    @Environment(\.ainkradStatusColors) private var status
 
     private var merge: ServerApproval? {
         store.approvals.first { $0.kind == "pr_merge" && $0.status == "pending" && $0.issueID == issue.id }
@@ -67,8 +68,10 @@ struct BoardCard: View {
             VStack(alignment: .leading, spacing: AinkradSpacing.xs) {
                 Text(verbatim: issue.title).questFont("t13").lineLimit(2)
                     .foregroundStyle(skin.color(issue.state == "done" ? skin.text.muted : skin.text.primary))
-                WorkingLine(issue: issue, store: store)
-                if merge != nil { Faint("QA passed · merge waits on you") }
+                WorkingLine(issue: issue, store: store, hidesWaiting: merge != nil)
+                if merge != nil {
+                    Text("QA passed · merge waits on you").questFont("t11").foregroundStyle(status.warning)
+                }
                 HStack(spacing: AinkradSpacing.xs) {
                     IssueKey(key: issue.key)
                     RequirementTag(requirement: store.requirement(issue.requirementID))

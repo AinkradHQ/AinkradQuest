@@ -145,6 +145,8 @@ struct Faint: View {
 struct WorkingLine: View {
     let issue: ServerIssue
     let store: QuestServerStore
+    /// The card says it itself ("merge waits on you").
+    var hidesWaiting = false
     @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradStatusColors) private var status
     @Environment(\.ainkradReduceMotion) private var reduceMotion
@@ -172,7 +174,7 @@ struct WorkingLine: View {
             let since = run.startedAt.map { " · \(Self.age($0))" } ?? ""
             return ("\(who) \(verb)\(since)", skin.color(skin.palette.accentSecondary), true)
         }
-        if issue.isOpen, case .human = issue.next, issue.state == "in_review" {
+        if !hidesWaiting, issue.isOpen, case .human = issue.next, issue.state == "in_review" {
             return ("waits on you", status.warning, false)
         }
         return nil

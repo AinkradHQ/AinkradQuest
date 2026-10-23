@@ -50,7 +50,7 @@ struct ServerSidebar: View {
     private func badge(_ project: ServerProject) -> String {
         guard project.mode == .scrum else { return "Kanban" }
         guard let sprint = store.snapshots[project.id].flatMap({ SprintLogic.active($0.sprints) }) else { return "" }
-        let day = sprint.startsOn.map { Calendar.current.dateComponents([.day], from: $0, to: Date()).day ?? 0 }
+        let day = sprint.startsOn.map { ServerDay.days(from: $0, to: Date()) }
         return day.map { "\(sprint.name) · day \($0 + 1)" } ?? sprint.name
     }
 

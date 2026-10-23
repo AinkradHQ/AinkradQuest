@@ -69,7 +69,8 @@ struct ServerReportsSurface: View {
         }
         for sprint in snapshot.sprints where sprint.state != "closed" {
             guard let report = snapshot.reports[sprint.id] else { continue }
-            let committed = Double(report.committed ?? 0)
+            let committed = Double(
+                report.committed ?? SprintLogic.points(snapshot.issues.filter { $0.sprintID == sprint.id }))
             let done = sprint.state == "active" ? Double(report.completed) : 0
             bars.append(
                 AinkradChartBar(

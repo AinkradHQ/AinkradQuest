@@ -115,9 +115,9 @@ struct ServerBoardSurface: View {
 
     static func day(_ sprint: ServerSprint) -> String {
         guard let start = sprint.startsOn else { return "" }
-        let day = (Calendar.current.dateComponents([.day], from: start, to: Date()).day ?? 0) + 1
+        let day = ServerDay.days(from: start, to: Date()) + 1
         guard let end = sprint.endsOn else { return " · day \(day)" }
-        let length = (Calendar.current.dateComponents([.day], from: start, to: end).day ?? 0) + 1
+        let length = ServerDay.days(from: start, to: end) + 1
         return " · day \(min(day, length)) of \(length)"
     }
 
