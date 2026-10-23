@@ -253,7 +253,7 @@ struct ServerItemDetail: View {
     }
 
     /// `cycle 1.2d · lead 3.0d · age 4.1d` — only the times the issue has.
-    static func flowLine(_ flow: IssueFlowInfo?) -> String? {
+    nonisolated static func flowLine(_ flow: IssueFlowInfo?) -> String? {
         guard let flow else { return nil }
         let parts = [("cycle", flow.cycle), ("lead", flow.lead), ("age", flow.age)].compactMap { name, secs in
             secs.map { "\(name) \(FlowFormat.duration(Double($0)))" }

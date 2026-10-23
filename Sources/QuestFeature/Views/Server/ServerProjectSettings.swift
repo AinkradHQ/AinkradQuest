@@ -209,7 +209,7 @@ struct ServerNewProjectForm: View {
     /// What the server takes: 1–10 capitals and digits, starting with a letter.
     var keyIsValid: Bool { Self.isValidKey(key) }
 
-    static func isValidKey(_ key: String) -> Bool {
+    nonisolated static func isValidKey(_ key: String) -> Bool {
         guard let first = key.unicodeScalars.first, (1...10).contains(key.unicodeScalars.count) else { return false }
         let capitals = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         return capitals.contains(first)

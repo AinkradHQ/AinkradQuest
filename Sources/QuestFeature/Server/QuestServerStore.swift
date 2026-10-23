@@ -96,7 +96,7 @@ final class QuestServerStore {
     @ObservationIgnored var server: CitadelServer?
     @ObservationIgnored private var stream: EventStream?
     @ObservationIgnored private var work: Task<Void, Never>?
-    @ObservationIgnored private var pending: Set<Reload> = []
+    @ObservationIgnored private(set) var pending: Set<Reload> = []
     @ObservationIgnored private var reloadTask: Task<Void, Never>?
     @ObservationIgnored private var lastSaved = Date.distantPast
 

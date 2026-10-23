@@ -117,13 +117,13 @@ struct ServerReportsSurface: View {
     }
 
     /// ` · +3 vs avg` / ` · −2 vs avg`.
-    static func delta(_ velocity: SprintReviewInfo.Summary.Velocity?) -> String {
+    nonisolated static func delta(_ velocity: SprintReviewInfo.Summary.Velocity?) -> String {
         guard let delta = velocity?.delta else { return "" }
         let rounded = Int(delta.rounded())
         return " · \(rounded >= 0 ? "+" : "−")\(abs(rounded)) vs avg"
     }
 
-    static func lines(_ summary: SprintReviewInfo.Summary) -> [String] {
+    nonisolated static func lines(_ summary: SprintReviewInfo.Summary) -> [String] {
         var lines: [String] = []
         if !summary.carried.isEmpty {
             lines.append("Carried over: " + summary.carried.map { "\($0.key) (\($0.title))" }.joined(separator: ", "))
